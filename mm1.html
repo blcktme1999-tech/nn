@@ -71,7 +71,7 @@
       <label for="unitName">單位名稱</label>
       <input id="unitName" required maxlength="40" placeholder="例如：刑事警察大隊">
       <label for="entryCode">後端預設代碼（中文）</label>
-      <input id="entryCode" required maxlength="20" placeholder="請輸入：警民視訊接入">
+      <input id="entryCode" required maxlength="20" placeholder="請輸入：警民視訊接入" value="警民視訊接入">
       <div class="callout">預設代碼：<strong>警民視訊接入</strong>。輸入正確後，系統會自動跳轉到視訊後台頁。</div>
       <button class="submit" type="submit">進 入 視 訊</button>
       <div id="reportResult" class="result" aria-live="polite"></div>
@@ -92,6 +92,13 @@
       result.className = 'result show' + (error ? ' error' : '');
     }
 
+    // 忽略空白與常見標點，降低中文輸入法造成的比對失敗。
+    function normalizeCode(value) {
+      return value.replace(/\s+/g, '').replace(/[，。、「」『』,.]/g, '');
+    }
+
+    entryCode.value = presetCode;
+
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const unit = unitName.value.trim();
@@ -102,8 +109,8 @@
         return;
       }
 
-      if (code !== presetCode) {
-        show('代碼錯誤，請輸入正確的中文預設代碼。', true);
+      if (normalizeCode(code) !== normalizeCode(presetCode)) {
+        show('代碼錯誤，請輸入「警民視訊接入」。', true);
         return;
       }
 
