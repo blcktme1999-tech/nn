@@ -3,164 +3,445 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>案件查詢 - 公安便民入口</title>
-  <script src="cloudbase-config.js"></script>
-  <script src="https://web.sdk.qcloud.com/cloudbase-js-sdk/1.8.0/cloudbase.full.js"></script>
+  <title>案件查詢與登入測試 - Supabase</title>
   <style>
-    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    :root {
+      --bg:#f4f1ea;
+      --paper:#ffffff;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --accent:#8f1d2a;
+      --accent-2:#5e1221;
+      --good:#166534;
+      --bad:#991b1b;
+      --shadow:0 18px 50px rgba(22, 28, 45, .12);
+    }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    body {
+      margin:0;
+      min-height:100vh;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(143,29,42,.08), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(94,18,33,.08), transparent 28%),
+        var(--bg);
+      font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+    }
     a { color:inherit; text-decoration:none; }
-    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
-    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
-    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; }
-    .identity { display:flex; align-items:center; gap:15px; }
-    .seal { width:50px; height:50px; border-radius:50%; display:grid; place-items:center; background:#d31024; color:#f8d64d; border:3px solid #f5cf45; font-size:26px; box-shadow:inset 0 0 0 2px #a90a19; }
-    .title-group strong { display:block; color:#123c77; font-size:25px; letter-spacing:1px; line-height:1.25; }
-    .title-group span { color:#777; font:12px/1.2 Georgia,serif; letter-spacing:.2px; }
-    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
-    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
-    .nav-inner { display:flex; justify-content:space-between; }
-    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
-    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
-    main { min-height:670px; padding:42px 0 70px; }
-    .query-panel { width:min(760px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
-    .query-panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
-    .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
-    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans TC","Microsoft JhengHei",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
-    input:focus { outline:2px solid #d5223740; border-color:var(--red); }
-    .actions { margin-top:16px; }
-    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
-    .submit:hover { background:var(--deep-red); }
-    .hint { margin:14px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
-    .result { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
+    .shell { width:min(1120px, calc(100% - 32px)); margin:0 auto; }
+    header { padding:22px 0 10px; }
+    .brand {
+      display:flex; align-items:center; justify-content:space-between; gap:20px;
+      background:rgba(255,255,255,.72); backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.75); border-radius:22px; box-shadow:var(--shadow); padding:18px 20px;
+    }
+    .brand-left { display:flex; align-items:center; gap:16px; }
+    .badge {
+      width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      color:#fff; display:grid; place-items:center; font-size:24px; font-weight:700; box-shadow:inset 0 1px 0 rgba(255,255,255,.2); flex:0 0 auto;
+    }
+    .brand h1 { margin:0; font-size:22px; line-height:1.2; }
+    .brand p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .status-chip { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#f8fafc; border:1px solid var(--line); color:var(--muted); font-size:13px; }
+    .status-dot { width:10px; height:10px; border-radius:50%; background:var(--bad); }
+    .status-chip.ok .status-dot { background:var(--good); }
+    main { padding:12px 0 38px; }
+    .grid { display:grid; grid-template-columns:1fr 1.1fr; gap:18px; align-items:start; }
+    .card { background:var(--paper); border:1px solid rgba(17,24,39,.06); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; }
+    .card-head { padding:18px 20px; border-bottom:1px solid var(--line); background:linear-gradient(180deg, #fff, #fbfbfb); }
+    .card-head h2 { margin:0; font-size:18px; }
+    .card-head .sub { margin-top:6px; color:var(--muted); font-size:13px; line-height:1.5; }
+    .card-body { padding:20px; }
+    .field { margin-bottom:14px; }
+    label { display:block; margin:0 0 8px; font-size:13px; color:#374151; font-weight:700; }
+    input { width:100%; min-height:46px; padding:11px 14px; border:1px solid #cfd5dd; border-radius:14px; background:#fff; color:var(--ink); font:14px/1.2 "Noto Sans TC","Microsoft JhengHei",sans-serif; transition:border-color .15s ease, box-shadow .15s ease; }
+    input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(143,29,42,.12); }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .btns { display:flex; gap:10px; margin-top:8px; }
+    button { appearance:none; border:0; border-radius:14px; min-height:46px; padding:0 16px; font:700 14px/1 "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
+    .primary { flex:1; color:#fff; background:linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow:0 12px 24px rgba(143,29,42,.22); }
+    .ghost { background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; }
+    .hint { margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
+    .msg { margin-top:14px; padding:12px 14px; border-radius:14px; font-size:13px; line-height:1.6; display:none; }
+    .msg.show { display:block; }
+    .msg.error { background:#fef2f2; color:var(--bad); border:1px solid #fecaca; }
+    .msg.ok { background:#f0fdf4; color:var(--good); border:1px solid #bbf7d0; }
+    .result { display:none; }
     .result.show { display:block; }
-    .result.error { display:block; border-color:#f2d7a5; background:#fff8e7; color:#835812; padding:12px; }
-    .result-head { background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { border-bottom:1px solid #efefef; padding:10px 12px; text-align:left; font-size:13px; }
-    th { color:#666; background:#fafafa; }
-    td.status { font-weight:700; color:#246f43; }
-    .empty { padding:16px 12px; color:#777; font-size:13px; }
-    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
-    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
-    @media (max-width:700px) {
-      .masthead { min-height:78px; }
-      .seal { width:40px; height:40px; font-size:21px; }
-      .title-group strong { font-size:18px; }
-      .title-group span { display:none; }
-      .return-home { padding:5px 8px; font-size:12px; }
-      .nav-inner { overflow:auto; justify-content:flex-start; }
-      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
-      main { padding-top:28px; }
-      .query-panel { padding:23px 22px 27px; }
-      .grid { grid-template-columns:1fr; }
+    .profile { display:grid; grid-template-columns:84px 1fr; gap:16px; align-items:start; padding:20px; border-bottom:1px solid var(--line); }
+    .avatar { width:84px; height:84px; border-radius:22px; overflow:hidden; background:#f3f4f6; display:grid; place-items:center; color:#9ca3af; font-size:30px; font-weight:700; border:1px solid #e5e7eb; }
+    .avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+    .meta h3 { margin:0; font-size:20px; }
+    .meta .small { margin-top:6px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .tag { padding:7px 10px; border-radius:999px; background:#f8fafc; border:1px solid var(--line); color:#374151; font-size:12px; }
+    .blocks { display:grid; grid-template-columns:1fr; gap:16px; padding:20px; }
+    .box { border:1px solid var(--line); border-radius:18px; background:#fff; overflow:hidden; }
+    .box h4 { margin:0; padding:13px 14px; background:#fafafa; border-bottom:1px solid var(--line); font-size:14px; }
+    .box-body { padding:14px; }
+    .list { display:grid; gap:10px; }
+    .item { border:1px solid #eceff3; border-radius:14px; padding:12px 12px 11px; background:#fff; }
+    .item .top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .item .title { font-weight:700; font-size:14px; }
+    .item .detail { margin-top:6px; color:#4b5563; font-size:13px; line-height:1.55; white-space:pre-wrap; }
+    .item .time { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .thumbs { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; }
+    .thumb { border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; background:#fafafa; }
+    .thumb img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+    .thumb .cap { padding:9px 10px; font-size:12px; color:#4b5563; line-height:1.45; }
+    .empty { color:var(--muted); font-size:13px; line-height:1.6; }
+    .footer { padding:4px 0 24px; color:var(--muted); font-size:12px; text-align:center; }
+    @media (max-width: 920px) { .grid { grid-template-columns:1fr; } }
+    @media (max-width: 640px) {
+      .brand { padding:16px; border-radius:18px; }
+      .brand-left { gap:12px; }
+      .badge { width:44px; height:44px; border-radius:14px; font-size:20px; }
+      .brand h1 { font-size:18px; }
+      .row { grid-template-columns:1fr; }
+      .profile { grid-template-columns:1fr; }
+      .avatar { width:72px; height:72px; border-radius:18px; }
     }
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="masthead">
-      <a class="identity" href="index.html" aria-label="返回首頁">
-        <span class="seal" aria-hidden="true">★</span>
-        <span class="title-group"><strong>中華人民共和國公安部</strong><span>Ministry of Public Security of the People's Republic of China</span></span>
-      </a>
-      <a class="return-home" href="index.html">← 返回首頁</a>
+  <header class="shell">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="badge">★</div>
+        <div>
+          <h1>案件查詢與登入測試</h1>
+          <p>Supabase Auth + 個人案件資料顯示頁</p>
+        </div>
+      </div>
+      <div id="authStatus" class="status-chip"><span class="status-dot"></span><span>未登入</span></div>
     </div>
-    <nav class="nav-bar"><div class="nav-inner">
-      <a href="index.html">首頁</a><a href="mm1.html">便民服務</a><a class="active" href="case-search.html">案件查詢</a><a href="index.html">返回主站</a>
-    </div></nav>
   </header>
 
-  <main>
-    <section class="query-panel">
-      <h1>案件查詢</h1>
-      <p class="intro">輸入案件資訊後，系統將透過 CloudBase 查詢最新進度</p>
+  <main class="shell">
+    <div class="grid">
+      <section class="card">
+        <div class="card-head">
+          <h2>登入測試</h2>
+          <div class="sub">輸入你的測試帳號 ID 與密碼，登入後會讀取 Supabase 裡屬於這個帳號的資料。</div>
+        </div>
+        <div class="card-body">
+          <form id="loginForm">
+            <div class="field">
+              <label for="loginId">使用者 ID</label>
+              <input id="loginId" autocomplete="username" placeholder="例如：test001">
+            </div>
+            <div class="field">
+              <label for="password">密碼</label>
+              <input id="password" type="password" autocomplete="current-password" placeholder="請輸入密碼">
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="caseNo">案件編號（選填）</label>
+                <input id="caseNo" placeholder="若你要指定案件，可填這裡">
+              </div>
+              <div class="field">
+                <label for="emailDomain">登入網域</label>
+                <input id="emailDomain" value="case.local">
+              </div>
+            </div>
+            <div class="btns">
+              <button class="primary" type="submit">登入並載入資料</button>
+              <button class="ghost" id="logoutBtn" type="button">登出</button>
+            </div>
+            <p class="hint">若你的 ID 不是 email，系統會自動轉成 <span id="emailPreview">test001@case.local</span> 形式登入 Supabase。</p>
+          </form>
+          <div id="message" class="msg" aria-live="polite"></div>
+        </div>
+      </section>
 
-      <form id="queryForm">
-        <div class="grid">
-          <div class="field">
-            <label for="caseNo">案件編號</label>
-            <input id="caseNo" maxlength="40" required placeholder="例如：A2026-001234">
-          </div>
-          <div class="field">
-            <label for="contactTail">手機末四碼（驗證）</label>
-            <input id="contactTail" maxlength="4" required pattern="[0-9]{4}" inputmode="numeric" placeholder="例如：1234">
+      <section class="card result" id="resultPanel">
+        <div class="card-head">
+          <h2>登入後資料</h2>
+          <div class="sub">照片、資訊、留言、對方資訊都會從資料表讀出來。</div>
+        </div>
+        <div class="profile">
+          <div class="avatar" id="avatarBox">?</div>
+          <div class="meta">
+            <h3 id="displayName">尚未登入</h3>
+            <div class="small" id="profileText">登入後顯示你的個人資料與對方資訊。</div>
+            <div class="tags" id="profileTags"></div>
           </div>
         </div>
-        <div class="actions">
-          <button class="submit" type="submit">查 詢</button>
+        <div class="blocks">
+          <div class="box">
+            <h4>案件資訊</h4>
+            <div class="box-body" id="recordsBox"><div class="empty">尚未載入資料。</div></div>
+          </div>
+          <div class="box">
+            <h4>照片</h4>
+            <div class="box-body"><div class="thumbs" id="photosBox"></div></div>
+          </div>
+          <div class="box">
+            <h4>留言</h4>
+            <div class="box-body"><div class="list" id="messagesBox"></div></div>
+          </div>
         </div>
-        <p class="hint">僅顯示必要進度資訊，不顯示完整個資。若尚未完成 CloudBase 設定，頁面會顯示連線提醒。</p>
-      </form>
-
-      <div id="queryResult" class="result" aria-live="polite"></div>
-    </section>
+      </section>
+    </div>
   </main>
 
-  <footer class="site-footer"><div class="site-footer-inner">案件查詢採用 CloudBase 雲端函式。請部署 queryCase 函式並完成權限設定。</div></footer>
+  <div class="footer shell">先用這個頁面測登入。若成功，再把資料表接到正式後台頁面即可。</div>
 
-  <script>
-    const cfg = window.CLOUDBASE_CONFIG || {};
-    const form = document.querySelector('#queryForm');
-    const result = document.querySelector('#queryResult');
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const loginForm = document.querySelector('#loginForm');
+    const logoutBtn = document.querySelector('#logoutBtn');
+    const loginIdInput = document.querySelector('#loginId');
+    const passwordInput = document.querySelector('#password');
     const caseNoInput = document.querySelector('#caseNo');
-    const contactTailInput = document.querySelector('#contactTail');
+    const emailDomainInput = document.querySelector('#emailDomain');
+    const emailPreview = document.querySelector('#emailPreview');
+    const messageBox = document.querySelector('#message');
+    const resultPanel = document.querySelector('#resultPanel');
+    const authStatus = document.querySelector('#authStatus');
+    const displayName = document.querySelector('#displayName');
+    const profileText = document.querySelector('#profileText');
+    const profileTags = document.querySelector('#profileTags');
+    const avatarBox = document.querySelector('#avatarBox');
+    const recordsBox = document.querySelector('#recordsBox');
+    const photosBox = document.querySelector('#photosBox');
+    const messagesBox = document.querySelector('#messagesBox');
 
-    function renderError(text) {
-      result.className = 'result error';
-      result.textContent = text;
+    function showMessage(text, type = 'ok') {
+      messageBox.textContent = text;
+      messageBox.className = 'msg show ' + type;
     }
 
-    function renderRows(rows, queriedCaseNo) {
-      const safeRows = Array.isArray(rows) ? rows : [];
-      if (!safeRows.length) {
-        result.className = 'result show';
-        result.innerHTML = '<div class="result-head">查詢案件：' + queriedCaseNo + '</div><div class="empty">查無符合資料，請確認案件編號與驗證碼。</div>';
+    function clearMessage() {
+      messageBox.textContent = '';
+      messageBox.className = 'msg';
+    }
+
+    function setStatus(text, online) {
+      authStatus.className = online ? 'status-chip ok' : 'status-chip';
+      authStatus.innerHTML = '<span class="status-dot"></span><span>' + text + '</span>';
+    }
+
+    function emailFromLoginId(loginId, domain) {
+      const trimmed = (loginId || '').trim();
+      const currentDomain = (domain || 'case.local').trim() || 'case.local';
+      if (!trimmed) return '';
+      if (trimmed.includes('@')) return trimmed;
+      return trimmed + '@' + currentDomain;
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>\"]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;'
+      }[char] || char));
+    }
+
+    function fmtTime(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString('zh-Hant', { hour12: false });
+    }
+
+    function renderProfile(profile) {
+      const name = profile?.display_name || profile?.login_id || '未命名使用者';
+      const avatarUrl = profile?.avatar_url || '';
+      const counterpartName = profile?.counterpart_name || '-';
+      const counterpartContact = profile?.counterpart_contact || '-';
+
+      displayName.textContent = name;
+      profileText.textContent = '對方資訊：' + counterpartName + ' / ' + counterpartContact;
+      profileTags.innerHTML = '' +
+        '<span class="tag">login_id：' + escapeText(profile?.login_id || '-') + '</span>' +
+        '<span class="tag">對方姓名：' + escapeText(counterpartName) + '</span>' +
+        '<span class="tag">對方聯絡：' + escapeText(counterpartContact) + '</span>';
+
+      if (avatarUrl) {
+        avatarBox.innerHTML = '<img alt="avatar" src="' + escapeText(avatarUrl) + '">';
+      } else {
+        avatarBox.textContent = (name || '?').trim().charAt(0) || '?';
+      }
+    }
+
+    function renderRecords(records) {
+      if (!records.length) {
+        recordsBox.innerHTML = '<div class="empty">沒有找到案件資訊。</div>';
         return;
       }
-
-      const body = safeRows.map((row) => {
-        const item = row || {};
-        const number = item.caseNo || queriedCaseNo || '-';
-        const stage = item.stage || '-';
-        const status = item.status || '處理中';
-        const updatedAt = item.updatedAt || '-';
-        return '<tr><td>' + number + '</td><td>' + stage + '</td><td class="status">' + status + '</td><td>' + updatedAt + '</td></tr>';
+      recordsBox.innerHTML = records.map((record) => {
+        return '<div class="item">' +
+          '<div class="top"><div class="title">' + escapeText(record.title || '未命名案件') + '</div><div class="time">' + fmtTime(record.created_at) + '</div></div>' +
+          '<div class="detail">' + escapeText(record.info_text || '') + '</div>' +
+        '</div>';
       }).join('');
-
-      result.className = 'result show';
-      result.innerHTML = '' +
-        '<div class="result-head">查詢案件：' + queriedCaseNo + '</div>' +
-        '<table><thead><tr><th>案件編號</th><th>目前階段</th><th>狀態</th><th>更新時間</th></tr></thead><tbody>' + body + '</tbody></table>';
     }
 
-    async function invoke(name, data) {
-      if (!cfg.env || cfg.env === 'your-cloudbase-env-id' || !window.cloudbase) {
-        throw new Error('CloudBase not configured');
+    function renderPhotos(photos) {
+      if (!photos.length) {
+        photosBox.innerHTML = '<div class="empty">沒有找到照片。</div>';
+        return;
       }
-      return cloudbase.init({ env: cfg.env, region: cfg.region }).callFunction({ name, data });
+      photosBox.innerHTML = photos.map((photo) => {
+        const caption = photo.caption || '照片';
+        return '<div class="thumb">' +
+          '<img alt="photo" src="' + escapeText(photo.photo_url) + '">' +
+          '<div class="cap">' + escapeText(caption) + '</div>' +
+        '</div>';
+      }).join('');
     }
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const caseNo = caseNoInput.value.trim();
-      const contactTail = contactTailInput.value.trim();
+    function renderMessages(messages) {
+      if (!messages.length) {
+        messagesBox.innerHTML = '<div class="empty">沒有找到留言。</div>';
+        return;
+      }
+      messagesBox.innerHTML = messages.map((message) => {
+        return '<div class="item">' +
+          '<div class="top"><div class="title">' + escapeText(message.sender_role || 'staff') + '</div><div class="time">' + fmtTime(message.created_at) + '</div></div>' +
+          '<div class="detail">' + escapeText(message.message || '') + '</div>' +
+        '</div>';
+      }).join('');
+    }
 
-      if (!/^[0-9]{4}$/.test(contactTail)) {
-        renderError('手機末四碼格式錯誤，請輸入 4 位數字。');
+    async function loadUserData() {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) return;
+
+      const [profileResult, recordsResult] = await Promise.all([
+        supabase.from('user_profiles').select('*').eq('auth_user_id', user.id).maybeSingle(),
+        supabase.from('user_records').select('*').eq('auth_user_id', user.id).order('created_at', { ascending: false })
+      ]);
+
+      if (profileResult.error) throw profileResult.error;
+      if (recordsResult.error) throw recordsResult.error;
+
+      const profile = profileResult.data || {};
+      const records = recordsResult.data || [];
+      const selectedRecordId = caseNoInput.value.trim();
+
+      renderProfile(profile);
+      renderRecords(records);
+
+      const activeRecord = selectedRecordId
+        ? records.find((record) => String(record.id) === selectedRecordId || String(record.title || '').includes(selectedRecordId))
+        : records[0];
+
+      if (activeRecord) {
+        const [photosResult, messagesResult] = await Promise.all([
+          supabase.from('record_photos').select('*').eq('record_id', activeRecord.id).order('created_at', { ascending: false }),
+          supabase.from('record_messages').select('*').eq('record_id', activeRecord.id).order('created_at', { ascending: true })
+        ]);
+
+        if (photosResult.error) throw photosResult.error;
+        if (messagesResult.error) throw messagesResult.error;
+
+        renderPhotos(photosResult.data || []);
+        renderMessages(messagesResult.data || []);
+      } else {
+        renderPhotos([]);
+        renderMessages([]);
+      }
+
+      resultPanel.classList.add('show');
+      showMessage('已登入並載入資料。', 'ok');
+    }
+
+    async function refreshSessionUI() {
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (session?.user) {
+        setStatus('已登入', true);
+        resultPanel.classList.add('show');
+        try {
+          await loadUserData();
+        } catch (error) {
+          showMessage('已登入，但讀取資料失敗：' + (error?.message || '未知錯誤'), 'error');
+        }
+      } else {
+        setStatus('未登入', false);
+      }
+    }
+
+    function updateEmailPreview() {
+      const email = emailFromLoginId(loginIdInput.value, emailDomainInput.value);
+      emailPreview.textContent = email || 'test001@case.local';
+    }
+
+    loginIdInput.addEventListener('input', updateEmailPreview);
+    emailDomainInput.addEventListener('input', updateEmailPreview);
+    updateEmailPreview();
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearMessage();
+
+      const loginId = loginIdInput.value.trim();
+      const password = passwordInput.value;
+      const email = emailFromLoginId(loginId, emailDomainInput.value);
+
+      if (!loginId || !password) {
+        showMessage('請先輸入使用者 ID 與密碼。', 'error');
         return;
       }
 
-      try {
-        const response = await invoke((cfg.functions && cfg.functions.queryCase) || 'queryCase', { caseNo, contactTail });
-        const payload = response && response.result ? response.result : {};
-        renderRows(payload.list || [], caseNo);
-      } catch (error) {
-        renderError('尚未連接 CloudBase。請先建立 cloudbase-config.js，並部署 queryCase 雲端函式。');
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        showMessage('登入失敗：' + error.message, 'error');
+        setStatus('未登入', false);
+        return;
       }
+
+      if (data?.session) {
+        setStatus('已登入', true);
+        try {
+          await loadUserData();
+        } catch (loadError) {
+          showMessage('登入成功，但讀取資料失敗：' + (loadError?.message || '未知錯誤'), 'error');
+        }
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      setStatus('未登入', false);
+      displayName.textContent = '尚未登入';
+      profileText.textContent = '登入後顯示你的個人資料與對方資訊。';
+      profileTags.innerHTML = '';
+      avatarBox.textContent = '?';
+      recordsBox.innerHTML = '<div class="empty">尚未載入資料。</div>';
+      photosBox.innerHTML = '';
+      messagesBox.innerHTML = '';
+      resultPanel.classList.remove('show');
+      showMessage('已登出。', 'ok');
+    });
+
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setStatus('已登入', true);
+        try {
+          await loadUserData();
+        } catch (error) {
+          showMessage('已登入，但讀取資料失敗：' + (error?.message || '未知錯誤'), 'error');
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        setStatus('未登入', false);
+      }
+    });
+
+    refreshSessionUI().catch((error) => {
+      showMessage('Supabase 初始化失敗：' + (error?.message || '未知錯誤'), 'error');
     });
   </script>
 </body>
