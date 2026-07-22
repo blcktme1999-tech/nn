@@ -113,7 +113,7 @@
         <div class="actions">
           <button class="submit" type="submit">登 入</button>
         </div>
-        <p class="hint">若你的 ID 不是 email，系統會自動轉成 test001@case.local 形式登入 Supabase。登入後會顯示照片、資訊、留言與對方資訊。</p>
+        <p class="hint">若你的 ID 不是 email，系統會自動轉成 test001@case.local 形式登入 Supabase。關閉瀏覽器後不會保留登入狀態。</p>
       </form>
 
       <div id="message" class="msg" aria-live="polite"></div>
@@ -151,7 +151,13 @@
 
     const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
 
     const loginForm = document.querySelector('#loginForm');
     const loginIdInput = document.querySelector('#loginId');
