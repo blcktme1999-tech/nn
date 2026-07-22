@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>視訊功能 - 公安便民入口</title>
+  <script src="agora-config.js"></script>
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; }
+    .identity { display:flex; align-items:center; gap:15px; }
+    .seal { width:50px; height:50px; border-radius:50%; display:grid; place-items:center; background:#d31024; color:#f8d64d; border:3px solid #f5cf45; font-size:26px; box-shadow:inset 0 0 0 2px #a90a19; }
+    .title-group strong { display:block; color:#123c77; font-size:25px; letter-spacing:1px; line-height:1.25; }
+    .title-group span { color:#777; font:12px/1.2 Georgia,serif; letter-spacing:.2px; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .panel { width:min(860px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .sub { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; line-height:1.6; }
+    .info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+    .rtc-config { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:13px; font-weight:700; }
+    .field input { width:100%; min-height:38px; padding:8px 10px; border:1px solid #cfcfcf; border-radius:4px; color:#333; font:13px "Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    .field input:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .box { border:1px solid #ececec; border-radius:6px; background:#fafafa; padding:14px; }
+    .box h3 { margin:0 0 8px; color:#123c77; font-size:16px; }
+    .box p { margin:0; color:#555; font-size:13px; line-height:1.7; }
+    .video-stage { margin-top:14px; border:1px solid #ddd; border-radius:8px; overflow:hidden; background:#111827; color:#fff; }
+    .video-stage .toolbar { display:flex; flex-wrap:wrap; gap:10px; padding:12px; background:#1f2937; }
+    .video-stage button { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
+    .video-stage .primary { background:#dc2626; color:#fff; }
+    .video-stage .ghost { background:#374151; color:#fff; }
+    .canvas { min-height:360px; display:grid; grid-template-columns:2fr 1fr; gap:1px; background:#374151; }
+    .window { min-height:360px; background:#0f172a; padding:16px; }
+    .window .inner { max-width:360px; }
+    .window h2 { margin:0 0 10px; font-size:26px; }
+    .window p { margin:0; color:#cbd5e1; line-height:1.7; font-size:14px; }
+    .local-wrap { width:100%; height:100%; min-height:328px; border:1px solid #334155; border-radius:8px; overflow:hidden; background:#0b1220; position:relative; }
+    .local-wrap .tips { height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:#94a3b8; padding:14px; }
+    #localPlayer { width:100%; height:100%; min-height:328px; }
+    .side { display:grid; gap:1px; }
+    .tile { background:#111827; padding:16px; display:flex; flex-direction:column; justify-content:center; }
+    .tile strong { display:block; margin-bottom:6px; font-size:14px; }
+    .tile span { color:#cbd5e1; font-size:13px; line-height:1.6; }
+    #remotePlayers { display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+    .remote-card { border:1px solid #374151; border-radius:8px; overflow:hidden; background:#0b1220; }
+    .remote-head { padding:6px 8px; font-size:12px; color:#cbd5e1; background:#1f2937; }
+    .remote-player { width:100%; height:160px; }
+    .status { margin-top:14px; padding:12px 14px; border-radius:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-size:13px; line-height:1.6; }
+    .status.error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:800px) {
+      .info, .canvas, .rtc-config { grid-template-columns:1fr; }
+      .window, .side { min-height:auto; }
+    }
+    @media (max-width:640px) {
+      .masthead { min-height:78px; }
+      .seal { width:40px; height:40px; font-size:21px; }
+      .title-group strong { font-size:18px; }
+      .title-group span { display:none; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      main { padding-top:28px; }
+      .panel { padding:23px 22px 27px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index (2).html" aria-label="返回首頁">
+        <span class="seal" aria-hidden="true">★</span>
+        <span class="title-group"><strong>中華人民共和國公安部</strong><span>Ministry of Public Security of the People's Republic of China</span></span>
+      </a>
+      <a class="return-home" href="index (2).html">← 返回首頁</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index (2).html">首頁</a><a href="mm1.html">便民服務</a><a href="case-search.html">案件查詢</a><a class="active" href="video-room.html">視訊功能</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h1>視訊報案後台</h1>
+      <p class="sub">這裡已接入 Agora Web SDK。先填 App ID 與 Token（若有），即可啟動多人視訊。</p>
+
+      <div class="info">
+        <div class="box">
+          <h3>單位名稱</h3>
+          <p id="unitName">-</p>
+        </div>
+        <div class="box">
+          <h3>登入代碼</h3>
+          <p id="codeValue">-</p>
+        </div>
+      </div>
+
+      <div class="rtc-config">
+        <div class="field">
+          <label for="d6700fec9f9a4cec92815fa7d1951ac8">Agora App ID</label>
+          <input id="d6700fec9f9a4cec92815fa7d1951ac8" placeholder="請輸入 App ID">
+        </div>
+        <div class="field">
+          <label for="tokenInput">Token（測試可留空）</label>
+          <input id="tokenInput" placeholder="有 Token 就貼上，否則可留空">
+        </div>
+        <div class="field">
+          <label for="channelInput">會議頻道</label>
+          <input id="channelInput" placeholder="例如：police_room_01">
+        </div>
+        <div class="field">
+          <label for="uidInput">使用者 UID（選填）</label>
+          <input id="uidInput" placeholder="可留空由系統自動分配">
+        </div>
+      </div>
+
+      <div class="video-stage">
+        <div class="toolbar">
+          <button class="primary" id="startCallBtn" type="button">啟動視訊</button>
+          <button class="ghost" id="leaveBtn" type="button">離開會議</button>
+          <button class="ghost" id="muteBtn" type="button">麥克風靜音</button>
+          <button class="ghost" id="cameraBtn" type="button">鏡頭關閉</button>
+        </div>
+        <div class="canvas">
+          <div class="window">
+            <div class="local-wrap">
+              <div id="localTips" class="tips">尚未加入會議，請先點擊「啟動視訊」。</div>
+              <div id="localPlayer"></div>
+            </div>
+          </div>
+          <div class="side">
+            <div class="tile"><strong>會議狀態</strong><span id="callStatus">尚未啟動，請點擊「啟動視訊」。</span></div>
+            <div class="tile"><strong>遠端參與者</strong><span id="memberCount">0 人</span></div>
+            <div class="tile"><strong>報案提示</strong><span>可將此頁擴充成多方會議、錄影存證與留言同步。</span></div>
+            <div class="tile"><strong>遠端畫面</strong><div id="remotePlayers"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="status" class="status">已通過中文代碼驗證，現在可以進行視訊功能操作。</div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="site-footer-inner">視訊功能頁為前端入口示範，後續可替換成正式 Agora 視訊後台。</div></footer>
+
+  <script>
+    if (!window.AgoraRTC) {
+      document.querySelector('#status').className = 'status error';
+      document.querySelector('#status').textContent = 'Agora SDK 載入失敗，請檢查網路或 CDN。';
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const unit = params.get('unit') || '-';
+    const code = params.get('code') || '-';
+    const cfg = window.AGORA_CONFIG || {};
+    const unitName = document.querySelector('#unitName');
+    const codeValue = document.querySelector('#codeValue');
+    const callStatus = document.querySelector('#callStatus');
+    const memberCount = document.querySelector('#memberCount');
+    const statusBox = document.querySelector('#status');
+    const startCallBtn = document.querySelector('#startCallBtn');
+    const leaveBtn = document.querySelector('#leaveBtn');
+    const muteBtn = document.querySelector('#muteBtn');
+    const cameraBtn = document.querySelector('#cameraBtn');
+    const localPlayer = document.querySelector('#localPlayer');
+    const localTips = document.querySelector('#localTips');
+    const remotePlayers = document.querySelector('#remotePlayers');
+    const appIdInput = document.querySelector('#appIdInput');
+    const tokenInput = document.querySelector('#tokenInput');
+    const channelInput = document.querySelector('#channelInput');
+    const uidInput = document.querySelector('#uidInput');
+
+    let muted = false;
+    let cameraOff = false;
+    let joined = false;
+    const remoteUserMap = new Map();
+
+    const client = window.AgoraRTC ? AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }) : null;
+    const localTracks = { audioTrack: null, videoTrack: null };
+
+    function channelFromUnit(value) {
+      const input = (value || '').trim();
+      if (!input) return 'police_room_demo';
+      let hash = '';
+      for (let i = 0; i < input.length; i += 1) {
+        hash += input.charCodeAt(i).toString(16);
+      }
+      return ('police_' + hash).slice(0, 48);
+    }
+
+    function showStatus(text, error) {
+      statusBox.textContent = text;
+      statusBox.className = error ? 'status error' : 'status';
+    }
+
+    function updateMemberCount() {
+      memberCount.textContent = remoteUserMap.size + ' 人';
+    }
+
+    function setControlsWhenJoined(value) {
+      joined = value;
+      startCallBtn.disabled = value;
+      leaveBtn.disabled = !value;
+      muteBtn.disabled = !value;
+      cameraBtn.disabled = !value;
+      appIdInput.disabled = value;
+      tokenInput.disabled = value;
+      channelInput.disabled = value;
+      uidInput.disabled = value;
+    }
+
+    function resetCallUi() {
+      remotePlayers.innerHTML = '';
+      remoteUserMap.clear();
+      updateMemberCount();
+      localPlayer.innerHTML = '';
+      localTips.style.display = 'flex';
+      callStatus.textContent = '尚未啟動，請點擊「啟動視訊」。';
+      muteBtn.textContent = '麥克風靜音';
+      cameraBtn.textContent = '鏡頭關閉';
+      muted = false;
+      cameraOff = false;
+    }
+
+    function ensureRemoteCard(uid) {
+      const id = 'remote_' + uid;
+      let card = document.getElementById(id);
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'remote-card';
+        card.id = id;
+        card.innerHTML = '<div class="remote-head">參與者 UID：' + uid + '</div><div class="remote-player" id="player_' + uid + '"></div>';
+        remotePlayers.appendChild(card);
+      }
+      return document.getElementById('player_' + uid);
+    }
+
+    function removeRemoteCard(uid) {
+      const card = document.getElementById('remote_' + uid);
+      if (card && card.parentNode) {
+        card.parentNode.removeChild(card);
+      }
+      remoteUserMap.delete(uid);
+      updateMemberCount();
+    }
+
+    async function joinAgora() {
+      if (!client) {
+        showStatus('Agora 尚未可用，請檢查 SDK 載入。', true);
+        return;
+      }
+
+      const appId = appIdInput.value.trim();
+      const token = tokenInput.value.trim() || null;
+      const channel = channelInput.value.trim();
+      const rawUid = uidInput.value.trim();
+
+      if (!appId) {
+        showStatus('請先輸入 Agora App ID。', true);
+        return;
+      }
+
+      try {
+        const uid = rawUid ? Number(rawUid) || rawUid : null;
+        const joinedUid = await client.join(appId, channel, token, uid);
+        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+        localTracks.audioTrack = tracks[0];
+        localTracks.videoTrack = tracks[1];
+
+        localTips.style.display = 'none';
+        localTracks.videoTrack.play(localPlayer);
+        await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
+
+        setControlsWhenJoined(true);
+        callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '）';
+        showStatus('視訊已啟動，正在進行多人會議。', false);
+      } catch (error) {
+        showStatus('啟動視訊失敗：' + (error && error.message ? error.message : '未知錯誤'), true);
+      }
+    }
+
+    async function leaveAgora() {
+      if (!client || !joined) return;
+      try {
+        if (localTracks.audioTrack) {
+          localTracks.audioTrack.stop();
+          localTracks.audioTrack.close();
+        }
+        if (localTracks.videoTrack) {
+          localTracks.videoTrack.stop();
+          localTracks.videoTrack.close();
+        }
+        localTracks.audioTrack = null;
+        localTracks.videoTrack = null;
+        await client.leave();
+      } finally {
+        setControlsWhenJoined(false);
+        resetCallUi();
+        showStatus('已離開視訊會議。', false);
+      }
+    }
+
+    unitName.textContent = unit;
+    codeValue.textContent = code;
+    appIdInput.value = cfg.appId || '';
+    tokenInput.value = cfg.token || '';
+    channelInput.value = cfg.channel || channelFromUnit(unit);
+    uidInput.value = cfg.uid || '';
+
+    setControlsWhenJoined(false);
+    leaveBtn.disabled = true;
+    muteBtn.disabled = true;
+    cameraBtn.disabled = true;
+
+    if (client) {
+      client.on('user-published', async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        remoteUserMap.set(user.uid, user);
+        updateMemberCount();
+
+        if (mediaType === 'video') {
+          const player = ensureRemoteCard(user.uid);
+          user.videoTrack.play(player);
+        }
+        if (mediaType === 'audio') {
+          user.audioTrack.play();
+        }
+      });
+
+      client.on('user-unpublished', (user, mediaType) => {
+        if (mediaType === 'video') {
+          removeRemoteCard(user.uid);
+        }
+      });
+
+      client.on('user-left', (user) => {
+        removeRemoteCard(user.uid);
+      });
+    }
+
+    startCallBtn.addEventListener('click', joinAgora);
+    leaveBtn.addEventListener('click', leaveAgora);
+
+    muteBtn.addEventListener('click', async () => {
+      if (!localTracks.audioTrack) return;
+      muted = !muted;
+      await localTracks.audioTrack.setEnabled(!muted);
+      muteBtn.textContent = muted ? '取消靜音' : '麥克風靜音';
+      callStatus.textContent = muted ? '麥克風已靜音。' : '麥克風已開啟。';
+    });
+
+    cameraBtn.addEventListener('click', async () => {
+      if (!localTracks.videoTrack) return;
+      cameraOff = !cameraOff;
+      await localTracks.videoTrack.setEnabled(!cameraOff);
+      cameraBtn.textContent = cameraOff ? '鏡頭開啟' : '鏡頭關閉';
+      callStatus.textContent = cameraOff ? '鏡頭已關閉。' : '鏡頭已開啟。';
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (joined) {
+        leaveAgora();
+      }
+    });
+  </script>
+</body>
+</html>
