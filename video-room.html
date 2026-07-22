@@ -185,6 +185,7 @@
     let muted = false;
     let cameraOff = false;
     let joined = false;
+    let joining = false;
     const remoteUserMap = new Map();
 
     const client = window.AgoraRTC ? AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }) : null;
@@ -200,6 +201,11 @@
       return ('police_' + hash).slice(0, 48);
     }
 
+    function isLikelyAgoraToken(value) {
+      const token = (value || '').trim();
+      return token.length > 40;
+    }
+
     function showStatus(text, error) {
       statusBox.textContent = text;
       statusBox.className = error ? 'status error' : 'status';
@@ -211,7 +217,7 @@
 
     function setControlsWhenJoined(value) {
       joined = value;
-      startCallBtn.disabled = value;
+      startCallBtn.disabled = value || joining;
       leaveBtn.disabled = !value;
       muteBtn.disabled = !value;
       cameraBtn.disabled = !value;
@@ -219,6 +225,7 @@
       tokenInput.disabled = value;
       channelInput.disabled = value;
       uidInput.disabled = value;
+      startCallBtn.textContent = value ? '已連線' : (joining ? '連線中...' : '啟動視訊');
     }
 
     function resetCallUi() {
@@ -262,6 +269,11 @@
         return;
       }
 
+      if (joined || joining) {
+        showStatus('目前正在連線或已在會議中，請稍候。', true);
+        return;
+      }
+
       const appId = appIdInput.value.trim();
       const token = tokenInput.value.trim() || null;
       const channel = channelInput.value.trim();
@@ -271,6 +283,15 @@
         showStatus('請先輸入 Agora App ID。', true);
         return;
       }
+
+      if (!channel) {
+        showStatus('請先輸入會議頻道。', true);
+        return;
+      }
+
+      joining = true;
+      setControlsWhenJoined(false);
+      callStatus.textContent = '連線中，請稍候...';
 
       try {
         const uid = rawUid ? Number(rawUid) || rawUid : null;
@@ -287,12 +308,48 @@
         callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '）';
         showStatus('視訊已啟動，正在進行多人會議。', false);
       } catch (error) {
-        showStatus('啟動視訊失敗：' + (error && error.message ? error.message : '未知錯誤'), true);
+        const rawMessage = error && error.message ? error.message : '未知錯誤';
+        const normalized = String(rawMessage).toUpperCase();
+
+        if (normalized.includes('ALREADY IN CONNECTING/CONNECTED STATE')) {
+          try {
+            await client.leave();
+          } catch (_) {
+            // ignore leave errors during recovery
+          }
+          resetCallUi();
+          showStatus('連線程序重疊，已嘗試重置連線。請再按一次「啟動視訊」。', true);
+          return;
+        }
+
+        if (normalized.includes('CAN_NOT_GET_GATEWAY_SERVER') || normalized.includes('DYNAMIC USE STATIC KEY')) {
+          const hint = isLikelyAgoraToken(tokenInput.value)
+            ? '請確認 Token 與 App ID、頻道名稱一致，且 Token 尚未過期。'
+            : '此 Agora 專案看起來需要 Token。請到 Agora Console 產生臨時 Token 後貼到 Token 欄位，或改用未啟用證書的測試專案。';
+          showStatus('啟動視訊失敗：' + hint, true);
+          return;
+        }
+
+        if (normalized.includes('INVALID APP ID')) {
+          showStatus('啟動視訊失敗：App ID 無效，請確認貼上的是 Agora Console 的專案 App ID。', true);
+          return;
+        }
+
+        if (normalized.includes('TOKEN EXPIRED')) {
+          showStatus('啟動視訊失敗：Token 已過期，請重新簽發 Token。', true);
+          return;
+        }
+
+        showStatus('啟動視訊失敗：' + rawMessage, true);
+      } finally {
+        joining = false;
+        setControlsWhenJoined(joined);
       }
     }
 
     async function leaveAgora() {
-      if (!client || !joined) return;
+      if (!client || joining) return;
+      if (!joined) return;
       try {
         if (localTracks.audioTrack) {
           localTracks.audioTrack.stop();
