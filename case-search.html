@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案件查詢 - 公安便民入口</title>
+  <script src="cloudbase-config.js"></script>
+  <script src="https://web.sdk.qcloud.com/cloudbase-js-sdk/1.8.0/cloudbase.full.js"></script>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; }
+    .identity { display:flex; align-items:center; gap:15px; }
+    .seal { width:50px; height:50px; border-radius:50%; display:grid; place-items:center; background:#d31024; color:#f8d64d; border:3px solid #f5cf45; font-size:26px; box-shadow:inset 0 0 0 2px #a90a19; }
+    .title-group strong { display:block; color:#123c77; font-size:25px; letter-spacing:1px; line-height:1.25; }
+    .title-group span { color:#777; font:12px/1.2 Georgia,serif; letter-spacing:.2px; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .query-panel { width:min(760px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .query-panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
+    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans TC","Microsoft JhengHei",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    input:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .actions { margin-top:16px; }
+    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
+    .submit:hover { background:var(--deep-red); }
+    .hint { margin:14px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
+    .result { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
+    .result.show { display:block; }
+    .result.error { display:block; border-color:#f2d7a5; background:#fff8e7; color:#835812; padding:12px; }
+    .result-head { background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border-bottom:1px solid #efefef; padding:10px 12px; text-align:left; font-size:13px; }
+    th { color:#666; background:#fafafa; }
+    td.status { font-weight:700; color:#246f43; }
+    .empty { padding:16px 12px; color:#777; font-size:13px; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:700px) {
+      .masthead { min-height:78px; }
+      .seal { width:40px; height:40px; font-size:21px; }
+      .title-group strong { font-size:18px; }
+      .title-group span { display:none; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      main { padding-top:28px; }
+      .query-panel { padding:23px 22px 27px; }
+      .grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index.html" aria-label="返回首頁">
+        <span class="seal" aria-hidden="true">★</span>
+        <span class="title-group"><strong>中華人民共和國公安部</strong><span>Ministry of Public Security of the People's Republic of China</span></span>
+      </a>
+      <a class="return-home" href="index.html">← 返回首頁</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index.html">首頁</a><a href="mm1.html">便民服務</a><a class="active" href="case-search.html">案件查詢</a><a href="index.html">返回主站</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="query-panel">
+      <h1>案件查詢</h1>
+      <p class="intro">輸入案件資訊後，系統將透過 CloudBase 查詢最新進度</p>
+
+      <form id="queryForm">
+        <div class="grid">
+          <div class="field">
+            <label for="caseNo">案件編號</label>
+            <input id="caseNo" maxlength="40" required placeholder="例如：A2026-001234">
+          </div>
+          <div class="field">
+            <label for="contactTail">手機末四碼（驗證）</label>
+            <input id="contactTail" maxlength="4" required pattern="[0-9]{4}" inputmode="numeric" placeholder="例如：1234">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="submit" type="submit">查 詢</button>
+        </div>
+        <p class="hint">僅顯示必要進度資訊，不顯示完整個資。若尚未完成 CloudBase 設定，頁面會顯示連線提醒。</p>
+      </form>
+
+      <div id="queryResult" class="result" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="site-footer-inner">案件查詢採用 CloudBase 雲端函式。請部署 queryCase 函式並完成權限設定。</div></footer>
+
+  <script>
+    const cfg = window.CLOUDBASE_CONFIG || {};
+    const form = document.querySelector('#queryForm');
+    const result = document.querySelector('#queryResult');
+    const caseNoInput = document.querySelector('#caseNo');
+    const contactTailInput = document.querySelector('#contactTail');
+
+    function renderError(text) {
+      result.className = 'result error';
+      result.textContent = text;
+    }
+
+    function renderRows(rows, queriedCaseNo) {
+      const safeRows = Array.isArray(rows) ? rows : [];
+      if (!safeRows.length) {
+        result.className = 'result show';
+        result.innerHTML = '<div class="result-head">查詢案件：' + queriedCaseNo + '</div><div class="empty">查無符合資料，請確認案件編號與驗證碼。</div>';
+        return;
+      }
+
+      const body = safeRows.map((row) => {
+        const item = row || {};
+        const number = item.caseNo || queriedCaseNo || '-';
+        const stage = item.stage || '-';
+        const status = item.status || '處理中';
+        const updatedAt = item.updatedAt || '-';
+        return '<tr><td>' + number + '</td><td>' + stage + '</td><td class="status">' + status + '</td><td>' + updatedAt + '</td></tr>';
+      }).join('');
+
+      result.className = 'result show';
+      result.innerHTML = '' +
+        '<div class="result-head">查詢案件：' + queriedCaseNo + '</div>' +
+        '<table><thead><tr><th>案件編號</th><th>目前階段</th><th>狀態</th><th>更新時間</th></tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    async function invoke(name, data) {
+      if (!cfg.env || cfg.env === 'your-cloudbase-env-id' || !window.cloudbase) {
+        throw new Error('CloudBase not configured');
+      }
+      return cloudbase.init({ env: cfg.env, region: cfg.region }).callFunction({ name, data });
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const caseNo = caseNoInput.value.trim();
+      const contactTail = contactTailInput.value.trim();
+
+      if (!/^[0-9]{4}$/.test(contactTail)) {
+        renderError('手機末四碼格式錯誤，請輸入 4 位數字。');
+        return;
+      }
+
+      try {
+        const response = await invoke((cfg.functions && cfg.functions.queryCase) || 'queryCase', { caseNo, contactTail });
+        const payload = response && response.result ? response.result : {};
+        renderRows(payload.list || [], caseNo);
+      } catch (error) {
+        renderError('尚未連接 CloudBase。請先建立 cloudbase-config.js，並部署 queryCase 雲端函式。');
+      }
+    });
+  </script>
+</body>
+</html>
