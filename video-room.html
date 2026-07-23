@@ -444,6 +444,18 @@
         const rawMessage = error && error.message ? error.message : '未知錯誤';
         const normalized = String(rawMessage).toUpperCase();
 
+        if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
+          try {
+            await client.leave();
+          } catch (_) {
+            // ignore leave errors during permission recovery
+          }
+          resetCallUi();
+          callStatus.textContent = '尚未啟動，請允許相機與麥克風權限後重試。';
+          showStatus('啟動視訊失敗：瀏覽器拒絕相機或麥克風權限。請點網址列左側的網站設定，將 Camera/Microphone 改為 Allow，重新整理後再試。', true);
+          return;
+        }
+
         if (normalized.includes('ALREADY IN CONNECTING/CONNECTED STATE')) {
           try {
             await client.leave();
