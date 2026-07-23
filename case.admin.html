@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案件後台管理 - 公安便民入口</title>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; }
+    .identity { display:flex; align-items:center; gap:15px; }
+    .seal { width:50px; height:50px; border-radius:50%; display:grid; place-items:center; background:#d31024; color:#f8d64d; border:3px solid #f5cf45; font-size:26px; box-shadow:inset 0 0 0 2px #a90a19; }
+    .title-group strong { display:block; color:#123c77; font-size:25px; letter-spacing:1px; line-height:1.25; }
+    .title-group span { color:#777; font:12px/1.2 Georgia,serif; letter-spacing:.2px; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .panel { width:min(920px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
+    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans TC","Microsoft JhengHei",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    textarea { min-height:96px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .actions { margin-top:16px; }
+    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
+    .submit:hover { background:var(--deep-red); }
+    .msg { margin-top:14px; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
+    .msg.show { display:block; }
+    .msg.error { border:1px solid #f2d7a5; background:#fff8e7; color:#835812; }
+    .msg.ok { border:1px solid #cfe7d5; background:#f2fbf4; color:#246f43; }
+    .admin { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
+    .admin.show { display:block; }
+    .admin-head { background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
+    .section { padding:14px 12px 16px; border-bottom:1px solid #efefef; }
+    .section:last-child { border-bottom:0; }
+    .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
+    .admin-btn.alt { background:#8d1726; }
+    .admin-note { font-size:12px; color:#666; line-height:1.6; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:700px) {
+      .masthead { min-height:78px; }
+      .seal { width:40px; height:40px; font-size:21px; }
+      .title-group strong { font-size:18px; }
+      .title-group span { display:none; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      .panel { padding:23px 22px 27px; }
+      .login-grid { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index (2).html" aria-label="返回首頁">
+        <span class="seal" aria-hidden="true">★</span>
+        <span class="title-group"><strong>中華人民共和國公安部</strong><span>Ministry of Public Security of the People's Republic of China</span></span>
+      </a>
+      <a class="return-home" href="index (2).html">← 返回首頁</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index (2).html">首頁</a><a href="mm1.html">便民服務</a><a href="case-search.html">案件查詢</a><a class="active" href="case-admin.html">後台管理</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h1>案件後台管理</h1>
+      <p class="intro">此頁提供給管理員（你的客戶）維護資料庫：姓名、案件編號、內容與照片。</p>
+
+      <form id="loginForm">
+        <div class="login-grid">
+          <div class="field">
+            <label for="loginId">管理員帳號</label>
+            <input id="loginId" autocomplete="username" placeholder="例如：admin001">
+          </div>
+          <div class="field">
+            <label for="password">密碼</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="請輸入密碼">
+          </div>
+        </div>
+        <div class="actions"><button class="submit" type="submit">登 入 後 台</button></div>
+      </form>
+
+      <div id="message" class="msg" aria-live="polite"></div>
+
+      <div id="adminPanel" class="admin" aria-live="polite">
+        <div class="admin-head">資料維護操作</div>
+
+        <div class="section">
+          <h4>基本資料</h4>
+          <div class="form-row">
+            <div class="field">
+              <label for="displayNameEdit">姓名</label>
+              <input id="displayNameEdit" placeholder="例如：王小明">
+            </div>
+            <div class="field">
+              <label for="avatarUrlEdit">頭像網址</label>
+              <input id="avatarUrlEdit" placeholder="https://...">
+            </div>
+          </div>
+          <div class="inline-actions"><button class="admin-btn" id="saveProfileBtn" type="button">儲存基本資料</button></div>
+        </div>
+
+        <div class="section">
+          <h4>案件資料</h4>
+          <p class="admin-note">你可以先選擇既有案件更新，或直接新增新案件。</p>
+          <div class="form-row">
+            <div class="field">
+              <label for="recordSelect">選擇既有案件（更新用）</label>
+              <select id="recordSelect"></select>
+            </div>
+            <div class="field">
+              <label for="recordTitleEdit">案件編號</label>
+              <input id="recordTitleEdit" placeholder="例如：A-2026-0001">
+            </div>
+          </div>
+          <div class="field">
+            <label for="recordInfoEdit">案件說明</label>
+            <textarea id="recordInfoEdit" placeholder="輸入案件內容說明"></textarea>
+          </div>
+          <div class="inline-actions">
+            <button class="admin-btn" id="updateRecordBtn" type="button">更新所選案件</button>
+            <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>新增照片</h4>
+          <div class="form-row">
+            <div class="field">
+              <label for="photoRecordSelect">套用到哪筆案件</label>
+              <select id="photoRecordSelect"></select>
+            </div>
+            <div class="field">
+              <label for="photoCaptionInput">照片說明</label>
+              <input id="photoCaptionInput" placeholder="例如：現場正面照">
+            </div>
+          </div>
+          <div class="field">
+            <label for="photoUrlInput">照片網址</label>
+            <input id="photoUrlInput" placeholder="https://...">
+          </div>
+          <div class="inline-actions"><button class="admin-btn" id="addPhotoBtn" type="button">新增照片</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="site-footer-inner">本頁為管理員專用，請勿提供給一般案件查詢用戶。</div></footer>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+
+    const loginForm = document.querySelector('#loginForm');
+    const loginIdInput = document.querySelector('#loginId');
+    const passwordInput = document.querySelector('#password');
+    const messageBox = document.querySelector('#message');
+    const adminPanel = document.querySelector('#adminPanel');
+    const displayNameEdit = document.querySelector('#displayNameEdit');
+    const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
+    const recordSelect = document.querySelector('#recordSelect');
+    const recordTitleEdit = document.querySelector('#recordTitleEdit');
+    const recordInfoEdit = document.querySelector('#recordInfoEdit');
+    const photoRecordSelect = document.querySelector('#photoRecordSelect');
+    const photoCaptionInput = document.querySelector('#photoCaptionInput');
+    const photoUrlInput = document.querySelector('#photoUrlInput');
+    const saveProfileBtn = document.querySelector('#saveProfileBtn');
+    const updateRecordBtn = document.querySelector('#updateRecordBtn');
+    const createRecordBtn = document.querySelector('#createRecordBtn');
+    const addPhotoBtn = document.querySelector('#addPhotoBtn');
+
+    let currentAuthUser = null;
+    let recordsCache = [];
+
+    function showMessage(text, type = 'ok') {
+      messageBox.textContent = text;
+      messageBox.className = 'msg show ' + type;
+    }
+
+    function clearMessage() {
+      messageBox.textContent = '';
+      messageBox.className = 'msg';
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char] || char));
+    }
+
+    function emailFromLoginId(loginId) {
+      const trimmed = (loginId || '').trim();
+      if (!trimmed) return '';
+      if (trimmed.includes('@')) return trimmed;
+      return trimmed + '@case.local';
+    }
+
+    function renderRecordSelectOptions(records) {
+      const options = ['<option value="">請選擇案件</option>'].concat(records.map((record) => {
+        const title = record.title || '未命名案件';
+        return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
+      }));
+      recordSelect.innerHTML = options.join('');
+      photoRecordSelect.innerHTML = options.join('');
+    }
+
+    async function requireSignedInUser() {
+      if (currentAuthUser) return currentAuthUser;
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user) throw new Error('請先登入後再操作。');
+      currentAuthUser = authData.user;
+      return currentAuthUser;
+    }
+
+    async function loadAdminData() {
+      const user = await requireSignedInUser();
+      const [profileResult, recordsResult] = await Promise.all([
+        supabase.from('user_profiles').select('*').eq('auth_user_id', user.id).maybeSingle(),
+        supabase.from('user_records').select('*').eq('auth_user_id', user.id).order('created_at', { ascending: false })
+      ]);
+
+      if (profileResult.error) throw profileResult.error;
+      if (recordsResult.error) throw recordsResult.error;
+
+      const profile = profileResult.data || {};
+      recordsCache = recordsResult.data || [];
+      displayNameEdit.value = profile.display_name || '';
+      avatarUrlEdit.value = profile.avatar_url || '';
+      renderRecordSelectOptions(recordsCache);
+
+      if (recordsCache.length) {
+        recordSelect.value = recordsCache[0].id;
+        photoRecordSelect.value = recordsCache[0].id;
+        recordTitleEdit.value = recordsCache[0].title || '';
+        recordInfoEdit.value = recordsCache[0].info_text || '';
+      } else {
+        recordTitleEdit.value = '';
+        recordInfoEdit.value = '';
+      }
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearMessage();
+
+      const loginId = loginIdInput.value.trim();
+      const password = passwordInput.value;
+      const email = emailFromLoginId(loginId);
+
+      if (!loginId || !password) {
+        showMessage('請先輸入管理員帳號與密碼。', 'error');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        showMessage('登入失敗：' + error.message, 'error');
+        return;
+      }
+
+      if (data?.session) {
+        currentAuthUser = data.user || null;
+        try {
+          await loadAdminData();
+          adminPanel.classList.add('show');
+          showMessage('已登入後台，可開始維護資料。', 'ok');
+        } catch (loadError) {
+          showMessage('登入成功，但載入後台資料失敗：' + (loadError?.message || '未知錯誤'), 'error');
+        }
+      }
+    });
+
+    recordSelect.addEventListener('change', () => {
+      const selectedId = recordSelect.value;
+      const found = recordsCache.find((record) => record.id === selectedId);
+      if (!found) return;
+      recordTitleEdit.value = found.title || '';
+      recordInfoEdit.value = found.info_text || '';
+      photoRecordSelect.value = selectedId;
+    });
+
+    saveProfileBtn.addEventListener('click', async () => {
+      try {
+        const user = await requireSignedInUser();
+        const payload = {
+          auth_user_id: user.id,
+          display_name: displayNameEdit.value.trim() || null,
+          avatar_url: avatarUrlEdit.value.trim() || null
+        };
+        const { error } = await supabase.from('user_profiles').upsert(payload, { onConflict: 'auth_user_id' });
+        if (error) throw error;
+        await loadAdminData();
+        showMessage('基本資料已更新。', 'ok');
+      } catch (error) {
+        showMessage('更新基本資料失敗：' + (error?.message || '未知錯誤'), 'error');
+      }
+    });
+
+    updateRecordBtn.addEventListener('click', async () => {
+      try {
+        const user = await requireSignedInUser();
+        const selectedId = recordSelect.value;
+        if (!selectedId) {
+          showMessage('請先選擇要更新的案件。', 'error');
+          return;
+        }
+
+        const payload = {
+          title: recordTitleEdit.value.trim() || '未命名案件',
+          info_text: recordInfoEdit.value.trim() || ''
+        };
+        const { error } = await supabase.from('user_records').update(payload).eq('id', selectedId).eq('auth_user_id', user.id);
+        if (error) throw error;
+        await loadAdminData();
+        showMessage('案件資料已更新。', 'ok');
+      } catch (error) {
+        showMessage('更新案件失敗：' + (error?.message || '未知錯誤'), 'error');
+      }
+    });
+
+    createRecordBtn.addEventListener('click', async () => {
+      try {
+        const user = await requireSignedInUser();
+        const payload = {
+          auth_user_id: user.id,
+          title: recordTitleEdit.value.trim() || '未命名案件',
+          info_text: recordInfoEdit.value.trim() || ''
+        };
+        const { error } = await supabase.from('user_records').insert(payload);
+        if (error) throw error;
+        await loadAdminData();
+        showMessage('新案件已新增。', 'ok');
+      } catch (error) {
+        showMessage('新增案件失敗：' + (error?.message || '未知錯誤'), 'error');
+      }
+    });
+
+    addPhotoBtn.addEventListener('click', async () => {
+      try {
+        await requireSignedInUser();
+        const recordId = photoRecordSelect.value;
+        const photoUrl = photoUrlInput.value.trim();
+        if (!recordId) {
+          showMessage('請先選擇要加照片的案件。', 'error');
+          return;
+        }
+        if (!photoUrl) {
+          showMessage('請先輸入照片網址。', 'error');
+          return;
+        }
+
+        const payload = {
+          record_id: recordId,
+          photo_url: photoUrl,
+          caption: photoCaptionInput.value.trim() || null
+        };
+        const { error } = await supabase.from('record_photos').insert(payload);
+        if (error) throw error;
+        photoUrlInput.value = '';
+        photoCaptionInput.value = '';
+        await loadAdminData();
+        showMessage('照片已新增。', 'ok');
+      } catch (error) {
+        showMessage('新增照片失敗：' + (error?.message || '未知錯誤'), 'error');
+      }
+    });
+  </script>
+</body>
+</html>
