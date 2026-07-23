@@ -87,8 +87,8 @@
       <form id="loginForm">
         <div class="login-grid">
           <div class="field">
-            <label for="loginId">管理員帳號</label>
-            <input id="loginId" autocomplete="username" placeholder="例如：admin001">
+            <label for="adminLogin">登入帳號</label>
+            <input id="adminLogin" value="blcktme1999" readonly>
           </div>
           <div class="field">
             <label for="password">密碼</label>
@@ -165,21 +165,9 @@
 
   <footer class="site-footer"><div class="site-footer-inner">本頁為管理員專用，請勿提供給一般案件查詢用戶。</div></footer>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
-
+  <script>
     const loginForm = document.querySelector('#loginForm');
-    const loginIdInput = document.querySelector('#loginId');
+    const adminLoginInput = document.querySelector('#adminLogin');
     const passwordInput = document.querySelector('#password');
     const messageBox = document.querySelector('#message');
     const adminPanel = document.querySelector('#adminPanel');
@@ -196,7 +184,8 @@
     const createRecordBtn = document.querySelector('#createRecordBtn');
     const addPhotoBtn = document.querySelector('#addPhotoBtn');
 
-    let currentAuthUser = null;
+    const SHARED_ADMIN_LOGIN = 'blcktme1999';
+
     let recordsCache = [];
 
     function showMessage(text, type = 'ok') {
@@ -219,13 +208,6 @@
       }[char] || char));
     }
 
-    function emailFromLoginId(loginId) {
-      const trimmed = (loginId || '').trim();
-      if (!trimmed) return '';
-      if (trimmed.includes('@')) return trimmed;
-      return trimmed + '@case.local';
-    }
-
     function renderRecordSelectOptions(records) {
       const options = ['<option value="">請選擇案件</option>'].concat(records.map((record) => {
         const title = record.title || '未命名案件';
@@ -235,27 +217,23 @@
       photoRecordSelect.innerHTML = options.join('');
     }
 
-    async function requireSignedInUser() {
-      if (currentAuthUser) return currentAuthUser;
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!authData?.user) throw new Error('請先登入後再操作。');
-      currentAuthUser = authData.user;
-      return currentAuthUser;
+    async function requestJson(url, options) {
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || '請求失敗。');
+      }
+      return data;
     }
 
     async function loadAdminData() {
-      const user = await requireSignedInUser();
-      const [profileResult, recordsResult] = await Promise.all([
-        supabase.from('user_profiles').select('*').eq('auth_user_id', user.id).maybeSingle(),
-        supabase.from('user_records').select('*').eq('auth_user_id', user.id).order('created_at', { ascending: false })
-      ]);
-
-      if (profileResult.error) throw profileResult.error;
-      if (recordsResult.error) throw recordsResult.error;
-
-      const profile = profileResult.data || {};
-      recordsCache = recordsResult.data || [];
+      const data = await requestJson('/api/admin/data');
+      const profile = data.profile || {};
+      recordsCache = data.records || [];
       displayNameEdit.value = profile.display_name || '';
       avatarUrlEdit.value = profile.avatar_url || '';
       renderRecordSelectOptions(recordsCache);
@@ -275,30 +253,29 @@
       event.preventDefault();
       clearMessage();
 
-      const loginId = loginIdInput.value.trim();
+      const loginId = adminLoginInput.value.trim();
       const password = passwordInput.value;
-      const email = emailFromLoginId(loginId);
 
       if (!loginId || !password) {
-        showMessage('請先輸入管理員帳號與密碼。', 'error');
+        showMessage('請先輸入帳號與密碼。', 'error');
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        showMessage('登入失敗：' + error.message, 'error');
+      if (loginId !== SHARED_ADMIN_LOGIN) {
+        showMessage('登入失敗：請使用指定的管理員帳號。', 'error');
         return;
       }
 
-      if (data?.session) {
-        currentAuthUser = data.user || null;
-        try {
-          await loadAdminData();
-          adminPanel.classList.add('show');
-          showMessage('已登入後台，可開始維護資料。', 'ok');
-        } catch (loadError) {
-          showMessage('登入成功，但載入後台資料失敗：' + (loadError?.message || '未知錯誤'), 'error');
-        }
+      try {
+        await requestJson('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ loginId, password })
+        });
+        await loadAdminData();
+        adminPanel.classList.add('show');
+        showMessage('已登入後台，可開始維護資料。', 'ok');
+      } catch (error) {
+        showMessage('登入失敗：' + (error?.message || '未知錯誤'), 'error');
       }
     });
 
@@ -313,14 +290,14 @@
 
     saveProfileBtn.addEventListener('click', async () => {
       try {
-        const user = await requireSignedInUser();
         const payload = {
-          auth_user_id: user.id,
           display_name: displayNameEdit.value.trim() || null,
           avatar_url: avatarUrlEdit.value.trim() || null
         };
-        const { error } = await supabase.from('user_profiles').upsert(payload, { onConflict: 'auth_user_id' });
-        if (error) throw error;
+        await requestJson('/api/admin/profile', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
         await loadAdminData();
         showMessage('基本資料已更新。', 'ok');
       } catch (error) {
@@ -330,7 +307,6 @@
 
     updateRecordBtn.addEventListener('click', async () => {
       try {
-        const user = await requireSignedInUser();
         const selectedId = recordSelect.value;
         if (!selectedId) {
           showMessage('請先選擇要更新的案件。', 'error');
@@ -341,8 +317,10 @@
           title: recordTitleEdit.value.trim() || '未命名案件',
           info_text: recordInfoEdit.value.trim() || ''
         };
-        const { error } = await supabase.from('user_records').update(payload).eq('id', selectedId).eq('auth_user_id', user.id);
-        if (error) throw error;
+        await requestJson('/api/admin/records/' + encodeURIComponent(selectedId), {
+          method: 'PATCH',
+          body: JSON.stringify(payload)
+        });
         await loadAdminData();
         showMessage('案件資料已更新。', 'ok');
       } catch (error) {
@@ -352,14 +330,14 @@
 
     createRecordBtn.addEventListener('click', async () => {
       try {
-        const user = await requireSignedInUser();
         const payload = {
-          auth_user_id: user.id,
           title: recordTitleEdit.value.trim() || '未命名案件',
           info_text: recordInfoEdit.value.trim() || ''
         };
-        const { error } = await supabase.from('user_records').insert(payload);
-        if (error) throw error;
+        await requestJson('/api/admin/records', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
         await loadAdminData();
         showMessage('新案件已新增。', 'ok');
       } catch (error) {
@@ -369,7 +347,6 @@
 
     addPhotoBtn.addEventListener('click', async () => {
       try {
-        await requireSignedInUser();
         const recordId = photoRecordSelect.value;
         const photoUrl = photoUrlInput.value.trim();
         if (!recordId) {
@@ -386,8 +363,10 @@
           photo_url: photoUrl,
           caption: photoCaptionInput.value.trim() || null
         };
-        const { error } = await supabase.from('record_photos').insert(payload);
-        if (error) throw error;
+        await requestJson('/api/admin/photos', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
         photoUrlInput.value = '';
         photoCaptionInput.value = '';
         await loadAdminData();
@@ -396,6 +375,20 @@
         showMessage('新增照片失敗：' + (error?.message || '未知錯誤'), 'error');
       }
     });
+
+    requestJson('/api/admin/session')
+      .then((data) => {
+        if (data.authenticated) {
+          return loadAdminData().then(() => {
+            adminPanel.classList.add('show');
+            showMessage('已登入後台，可開始維護資料。', 'ok');
+          });
+        }
+        return null;
+      })
+      .catch(() => {
+        // ignore initial session check failures
+      });
   </script>
 </body>
 </html>
