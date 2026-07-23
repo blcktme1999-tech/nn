@@ -223,9 +223,16 @@
         headers: { 'Content-Type': 'application/json' },
         ...options
       });
-      const data = await response.json().catch(() => ({}));
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
       if (!response.ok) {
-        throw new Error(data.error || '請求失敗。');
+        const errorText = data.error || ('請求失敗（HTTP ' + response.status + '）。');
+        throw new Error(errorText);
       }
       return data;
     }
@@ -317,7 +324,7 @@
           title: recordTitleEdit.value.trim() || '未命名案件',
           info_text: recordInfoEdit.value.trim() || ''
         };
-        await requestJson('/api/admin/records/' + encodeURIComponent(selectedId), {
+        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
           method: 'PATCH',
           body: JSON.stringify(payload)
         });
