@@ -441,7 +441,13 @@
           mediaReady = true;
         } catch (mediaError) {
           const mediaMessage = mediaError && mediaError.message ? String(mediaError.message).toUpperCase() : '';
-          if (!mediaMessage.includes('PERMISSION_DENIED') && !mediaMessage.includes('NOTALLOWEDERROR')) {
+          const canFallback =
+            mediaMessage.includes('PERMISSION_DENIED') ||
+            mediaMessage.includes('NOTALLOWEDERROR') ||
+            mediaMessage.includes('DEVICE_NOT_FOUND') ||
+            mediaMessage.includes('NOTFOUNDERROR');
+
+          if (!canFallback) {
             throw mediaError;
           }
         }
