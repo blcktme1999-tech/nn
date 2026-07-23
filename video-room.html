@@ -56,6 +56,17 @@
     .remote-card { border:1px solid #374151; border-radius:8px; overflow:hidden; background:#0b1220; }
     .remote-head { padding:6px 8px; font-size:12px; color:#cbd5e1; background:#1f2937; }
     .remote-player { width:100%; height:160px; }
+    .chat-tile { align-items:stretch; }
+    .chat-list { flex:1; min-height:170px; max-height:220px; overflow:auto; border:1px solid #374151; border-radius:8px; padding:10px; background:#0b1220; }
+    .chat-empty { color:#94a3b8; font-size:12px; line-height:1.6; }
+    .chat-item { margin-bottom:8px; padding:7px 8px; border:1px solid #334155; border-radius:6px; background:#101827; }
+    .chat-item.self { border-color:#7f1d1d; background:#220f14; }
+    .chat-meta { color:#9fb0c9; font-size:11px; margin-bottom:4px; }
+    .chat-text { color:#e5e7eb; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
+    .chat-form { margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:8px; }
+    .chat-form input { min-height:34px; border:1px solid #374151; border-radius:6px; background:#0b1220; color:#fff; padding:7px 9px; font:13px "Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    .chat-form button { border:0; border-radius:6px; background:#dc2626; color:#fff; padding:0 12px; font:700 13px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
+    .chat-form button:disabled, .chat-form input:disabled { opacity:.6; cursor:not-allowed; }
     .status { margin-top:14px; padding:12px 14px; border-radius:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-size:13px; line-height:1.6; }
     .status.error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
@@ -145,6 +156,14 @@
             <div class="tile"><strong>遠端參與者</strong><span id="memberCount">0 人</span></div>
             <div class="tile"><strong>報案提示</strong><span>可將此頁擴充成多方會議、錄影存證與留言同步。</span></div>
             <div class="tile"><strong>遠端畫面</strong><div id="remotePlayers"></div></div>
+            <div class="tile chat-tile">
+              <strong>會議文字訊息</strong>
+              <div id="chatList" class="chat-list"><div class="chat-empty">尚未連線聊天室。加入視訊後可即時收發文字訊息。</div></div>
+              <form id="chatForm" class="chat-form">
+                <input id="chatInput" maxlength="280" placeholder="輸入訊息後按 Enter 或送出" disabled>
+                <button id="chatSendBtn" type="submit" disabled>送出</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -155,11 +174,23 @@
 
   <footer class="site-footer"><div class="site-footer-inner">視訊功能頁為前端入口示範，後續可替換成正式 Agora 視訊後台。</div></footer>
 
-  <script>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
     if (!window.AgoraRTC) {
       document.querySelector('#status').className = 'status error';
       document.querySelector('#status').textContent = 'Agora SDK 載入失敗，請檢查網路或 CDN。';
     }
+
+    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
 
     const params = new URLSearchParams(window.location.search);
     const unit = params.get('unit') || '-';
@@ -181,11 +212,17 @@
     const tokenInput = document.querySelector('#tokenInput');
     const channelInput = document.querySelector('#channelInput');
     const uidInput = document.querySelector('#uidInput');
+    const chatList = document.querySelector('#chatList');
+    const chatForm = document.querySelector('#chatForm');
+    const chatInput = document.querySelector('#chatInput');
+    const chatSendBtn = document.querySelector('#chatSendBtn');
 
     let muted = false;
     let cameraOff = false;
     let joined = false;
     let joining = false;
+    let chatChannel = null;
+    let chatSender = '';
     const remoteUserMap = new Map();
 
     const client = window.AgoraRTC ? AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }) : null;
@@ -206,9 +243,92 @@
       return token.length > 40;
     }
 
+    function isHex32(value) {
+      return /^[a-f0-9]{32}$/i.test((value || '').trim());
+    }
+
     function showStatus(text, error) {
       statusBox.textContent = text;
       statusBox.className = error ? 'status error' : 'status';
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char] || char));
+    }
+
+    function chatTime(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '--:--';
+      return date.toLocaleTimeString('zh-Hant', { hour12: false });
+    }
+
+    function setChatEnabled(enabled) {
+      chatInput.disabled = !enabled;
+      chatSendBtn.disabled = !enabled;
+    }
+
+    function appendChatMessage(payload, isSelf) {
+      const sender = escapeText(payload?.sender || '訪客');
+      const text = escapeText(payload?.text || '');
+      const time = chatTime(payload?.at || new Date().toISOString());
+
+      if (chatList.querySelector('.chat-empty')) {
+        chatList.innerHTML = '';
+      }
+
+      const row = document.createElement('div');
+      row.className = 'chat-item' + (isSelf ? ' self' : '');
+      row.innerHTML = '<div class="chat-meta">' + sender + ' · ' + time + '</div><div class="chat-text">' + text + '</div>';
+      chatList.appendChild(row);
+      chatList.scrollTop = chatList.scrollHeight;
+    }
+
+    async function stopChatSync() {
+      if (chatChannel) {
+        await supabase.removeChannel(chatChannel);
+        chatChannel = null;
+      }
+      setChatEnabled(false);
+    }
+
+    async function startChatSync(channelName, senderName) {
+      await stopChatSync();
+      chatSender = senderName;
+      const realtimeName = 'video-chat:' + channelName;
+
+      chatChannel = supabase.channel(realtimeName, {
+        config: {
+          broadcast: { self: false }
+        }
+      });
+
+      chatChannel.on('broadcast', { event: 'message' }, ({ payload }) => {
+        appendChatMessage(payload, false);
+      });
+
+      await new Promise((resolve, reject) => {
+        chatChannel.subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            resolve();
+            return;
+          }
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+            reject(err || new Error('realtime subscribe failed'));
+          }
+        });
+      });
+
+      setChatEnabled(true);
+      if (chatList.querySelector('.chat-empty')) {
+        chatList.innerHTML = '';
+      }
+      appendChatMessage({ sender: '系統', text: '聊天室已連線，可開始文字通訊。', at: new Date().toISOString() }, false);
     }
 
     function updateMemberCount() {
@@ -289,6 +409,16 @@
         return;
       }
 
+      if (token && isHex32(token)) {
+        showStatus('你貼的是 32 碼金鑰（像 App Key），不是 RTC Token。請到 Agora Console 的 Security 產生「RTC Temp Token」再貼上。', true);
+        return;
+      }
+
+      if (token && !isLikelyAgoraToken(token)) {
+        showStatus('Token 長度看起來不正確，請確認為 RTC Token（通常是長字串，常見開頭為 007e）。', true);
+        return;
+      }
+
       joining = true;
       setControlsWhenJoined(false);
       callStatus.textContent = '連線中，請稍候...';
@@ -303,6 +433,9 @@
         localTips.style.display = 'none';
         localTracks.videoTrack.play(localPlayer);
         await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
+
+        const senderName = (unit && unit !== '-' ? unit : '訪客單位') + '#' + joinedUid;
+        await startChatSync(channel, senderName);
 
         setControlsWhenJoined(true);
         callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '）';
@@ -351,6 +484,8 @@
       if (!client || joining) return;
       if (!joined) return;
       try {
+        await stopChatSync();
+
         if (localTracks.audioTrack) {
           localTracks.audioTrack.stop();
           localTracks.audioTrack.close();
@@ -426,10 +561,43 @@
       callStatus.textContent = cameraOff ? '鏡頭已關閉。' : '鏡頭已開啟。';
     });
 
+    chatForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!joined || !chatChannel) {
+        showStatus('請先啟動視訊後再發送訊息。', true);
+        return;
+      }
+
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      const payload = {
+        sender: chatSender || (unit && unit !== '-' ? unit : '訪客'),
+        text,
+        at: new Date().toISOString()
+      };
+
+      const sendResult = await chatChannel.send({
+        type: 'broadcast',
+        event: 'message',
+        payload
+      });
+
+      if (sendResult !== 'ok') {
+        showStatus('文字訊息發送失敗，請確認 Realtime 功能已啟用。', true);
+        return;
+      }
+
+      appendChatMessage(payload, true);
+      chatInput.value = '';
+      chatInput.focus();
+    });
+
     window.addEventListener('beforeunload', () => {
       if (joined) {
         leaveAgora();
       }
+      stopChatSync();
     });
   </script>
 </body>
