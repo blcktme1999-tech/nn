@@ -426,20 +426,36 @@
       try {
         const uid = rawUid ? Number(rawUid) || rawUid : null;
         const joinedUid = await client.join(appId, channel, token, uid);
-        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-        localTracks.audioTrack = tracks[0];
-        localTracks.videoTrack = tracks[1];
-
-        localTips.style.display = 'none';
-        localTracks.videoTrack.play(localPlayer);
-        await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
-
         const senderName = (unit && unit !== '-' ? unit : '訪客單位') + '#' + joinedUid;
         await startChatSync(channel, senderName);
 
+        let mediaReady = false;
+        try {
+          const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+          localTracks.audioTrack = tracks[0];
+          localTracks.videoTrack = tracks[1];
+
+          localTips.style.display = 'none';
+          localTracks.videoTrack.play(localPlayer);
+          await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
+          mediaReady = true;
+        } catch (mediaError) {
+          const mediaMessage = mediaError && mediaError.message ? String(mediaError.message).toUpperCase() : '';
+          if (!mediaMessage.includes('PERMISSION_DENIED') && !mediaMessage.includes('NOTALLOWEDERROR')) {
+            throw mediaError;
+          }
+        }
+
         setControlsWhenJoined(true);
-        callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '）';
-        showStatus('視訊已啟動，正在進行多人會議。', false);
+        if (mediaReady) {
+          callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '）';
+          showStatus('視訊已啟動，正在進行多人會議。', false);
+        } else {
+          callStatus.textContent = '已加入頻道：' + channel + '（本機 UID：' + joinedUid + '），目前為純文字/收看模式。';
+          muteBtn.disabled = true;
+          cameraBtn.disabled = true;
+          showStatus('已成功進入會議，但相機/麥克風未授權。你仍可使用聊天室與接收遠端影音。', false);
+        }
       } catch (error) {
         const rawMessage = error && error.message ? error.message : '未知錯誤';
         const normalized = String(rawMessage).toUpperCase();
