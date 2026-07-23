@@ -10,13 +10,21 @@ function getConfig() {
     sharedAdminLogin: process.env.SHARED_ADMIN_LOGIN,
     sharedAdminPassword: process.env.SHARED_ADMIN_PASSWORD,
     supabaseUrl: process.env.SUPABASE_URL,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseAdminUserId: process.env.SUPABASE_ADMIN_USER_ID,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
     supabaseAdminEmail: process.env.SUPABASE_ADMIN_EMAIL,
     supabaseAdminPassword: process.env.SUPABASE_ADMIN_PASSWORD
   };
 
-  if (!config.sessionSecret || !config.sharedAdminLogin || !config.sharedAdminPassword || !config.supabaseUrl || !config.supabaseAnonKey || !config.supabaseAdminEmail || !config.supabaseAdminPassword) {
+  if (!config.sessionSecret || !config.sharedAdminLogin || !config.sharedAdminPassword || !config.supabaseUrl) {
     throw new Error('Missing required environment variables.');
+  }
+
+  const hasServiceRoleMode = Boolean(config.supabaseServiceRoleKey && config.supabaseAdminUserId);
+  const hasPasswordMode = Boolean(config.supabaseAnonKey && config.supabaseAdminEmail && config.supabaseAdminPassword);
+  if (!hasServiceRoleMode && !hasPasswordMode) {
+    throw new Error('Missing Supabase admin mode config. Set SUPABASE_SERVICE_ROLE_KEY + SUPABASE_ADMIN_USER_ID, or SUPABASE_ANON_KEY + SUPABASE_ADMIN_EMAIL + SUPABASE_ADMIN_PASSWORD.');
   }
 
   return config;
@@ -133,6 +141,25 @@ function requireAdminSession(req, res) {
 
 async function signInAdmin() {
   const config = getConfig();
+
+  if (config.supabaseServiceRoleKey && config.supabaseAdminUserId) {
+    const client = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+
+    return {
+      client,
+      user: {
+        id: config.supabaseAdminUserId,
+        email: config.supabaseAdminEmail || null
+      }
+    };
+  }
+
   const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
     auth: {
       persistSession: false,
@@ -147,7 +174,7 @@ async function signInAdmin() {
   });
 
   if (error || !data?.user) {
-    throw error || new Error('Unable to sign in admin user.');
+    throw error || new Error('Unable to sign in admin user with email/password mode.');
   }
 
   return { client, user: data.user };
