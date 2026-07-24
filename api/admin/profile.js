@@ -16,7 +16,9 @@ module.exports = async function handler(req, res) {
     const payload = {
       auth_user_id: user.id,
       display_name: body?.display_name || null,
-      avatar_url: body?.avatar_url || null
+      avatar_url: body?.avatar_url || null,
+      issuing_place: body?.issuing_place || null,
+      id_number: body?.id_number || null
     };
     const { error } = await client.from('user_profiles').upsert(payload, { onConflict: 'auth_user_id' });
     if (error) throw error;
