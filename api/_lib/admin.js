@@ -70,8 +70,7 @@ function createSessionCookie() {
     SESSION_COOKIE + '=' + encodeURIComponent(rawValue),
     'Path=/',
     'HttpOnly',
-    'SameSite=Lax',
-    'Max-Age=' + SESSION_MAX_AGE_SECONDS
+    'SameSite=Lax'
   ];
   if (secure) parts.push('Secure');
   return parts.join('; ');
