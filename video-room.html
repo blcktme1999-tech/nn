@@ -114,7 +114,7 @@
   <main>
     <section class="panel">
       <h1>視訊報案後台</h1>
-      <p class="sub">這裡已接入 Agora Web SDK。連線參數已由管理員預設，客戶僅需確認頻道後即可啟動視訊。</p>
+      <p class="sub">這裡已接入 Agora Web SDK。App ID 與 Token 已由管理員預設，使用者只需輸入頻道與 UID 即可進入視訊。</p>
 
       <div class="info">
         <div class="box">
@@ -198,6 +198,9 @@
     const params = new URLSearchParams(window.location.search);
     const unit = params.get('unit') || '-';
     const code = params.get('code') || '-';
+    const presetChannel = params.get('channel') || '';
+    const presetUid = params.get('uid') || '';
+    const shouldAutoJoin = params.get('autojoin') === '1';
     const cfg = window.AGORA_CONFIG || {};
     const unitName = document.querySelector('#unitName');
     const codeValue = document.querySelector('#codeValue');
@@ -574,8 +577,8 @@
 
     unitName.textContent = unit;
     codeValue.textContent = code;
-    channelInput.value = cfg.channel || channelFromUnit(unit);
-    uidInput.value = cfg.uid || '';
+    channelInput.value = presetChannel || cfg.channel || channelFromUnit(unit);
+    uidInput.value = presetUid || cfg.uid || '';
 
     setControlsWhenJoined(false);
     leaveBtn.disabled = true;
@@ -619,6 +622,14 @@
 
     startCallBtn.addEventListener('click', joinAgora);
     leaveBtn.addEventListener('click', leaveAgora);
+
+    if (shouldAutoJoin) {
+      window.addEventListener('load', () => {
+        if (!joined && !joining) {
+          joinAgora();
+        }
+      }, { once: true });
+    }
 
     muteBtn.addEventListener('click', async () => {
       if (!localTracks.audioTrack) return;
