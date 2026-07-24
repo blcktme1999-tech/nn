@@ -189,15 +189,12 @@
     function renderProfile(profile) {
       const name = profile?.display_name || '未命名使用者';
       const avatarUrl = profile?.avatar_url || '';
-      const counterpartName = profile?.counterpart_name || '-';
-      const counterpartContact = profile?.counterpart_contact || '-';
+      const issuingPlace = profile?.issuing_place || '-';
+      const idNumber = profile?.id_number || '-';
 
       displayName.textContent = name;
-      profileText.textContent = '對方資訊：' + counterpartName + ' / ' + counterpartContact;
-      profileTags.innerHTML = '' +
-        '<span class="tag">查詢姓名：' + escapeText(name) + '</span>' +
-        '<span class="tag">對方姓名：' + escapeText(counterpartName) + '</span>' +
-        '<span class="tag">對方聯絡：' + escapeText(counterpartContact) + '</span>';
+      profileText.innerHTML = '發證地：' + escapeText(issuingPlace) + '<br>證件號碼：' + escapeText(idNumber);
+      profileTags.innerHTML = '';
 
       if (avatarUrl) {
         avatarBox.innerHTML = '<img alt="avatar" src="' + escapeText(avatarUrl) + '">';
