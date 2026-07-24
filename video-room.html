@@ -39,6 +39,10 @@
     .video-stage button { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
     .video-stage .primary { background:#dc2626; color:#fff; }
     .video-stage .ghost { background:#374151; color:#fff; }
+    .device-test-box { display:grid; grid-template-columns:minmax(180px, 260px) 1fr; gap:12px; padding:12px; border-top:1px solid #374151; background:#0f172a; }
+    .device-preview { min-height:150px; border:1px solid #334155; border-radius:8px; overflow:hidden; background:#020617; }
+    .device-meta { color:#cbd5e1; font-size:13px; line-height:1.7; display:grid; align-content:center; gap:4px; }
+    .device-meta strong { color:#f1f5f9; font-size:14px; }
     .canvas { min-height:360px; display:grid; grid-template-columns:minmax(0, 1.7fr) minmax(300px, 1fr); gap:1px; background:#374151; }
     .window { min-height:360px; background:#0f172a; padding:16px; display:grid; gap:14px; }
     .window .inner { max-width:360px; }
@@ -79,6 +83,7 @@
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
     @media (max-width:800px) {
       .info, .canvas, .rtc-config { grid-template-columns:1fr; }
+      .device-test-box { grid-template-columns:1fr; }
       .window, .side { min-height:auto; }
       .participant-card.featured { grid-column:span 1; grid-row:span 1; }
       .participant-media, .participant-card.featured .participant-media { height:220px; }
@@ -138,10 +143,19 @@
 
       <div class="video-stage">
         <div class="toolbar">
-          <button class="primary" id="startCallBtn" type="button">啟動視訊</button>
+          <button class="primary" id="startCallBtn" type="button">開始線上筆錄</button>
+          <button class="ghost" id="testDeviceBtn" type="button">測試本機相機與麥克風</button>
           <button class="ghost" id="leaveBtn" type="button">離開會議</button>
           <button class="ghost" id="muteBtn" type="button">麥克風靜音</button>
           <button class="ghost" id="cameraBtn" type="button">鏡頭關閉</button>
+        </div>
+        <div id="deviceTestBox" class="device-test-box" hidden>
+          <div id="devicePreview" class="device-preview"></div>
+          <div class="device-meta">
+            <strong>本機裝置測試中</strong>
+            <span id="deviceTestHint">請確認已看到自己的畫面，並對著麥克風說話。</span>
+            <span id="micLevelText">麥克風音量：0%</span>
+          </div>
         </div>
         <div class="canvas">
           <div class="window">
@@ -154,7 +168,7 @@
             </div>
           </div>
           <div class="side">
-            <div class="tile"><strong>會議狀態</strong><span id="callStatus">尚未啟動，請點擊「啟動視訊」。</span></div>
+            <div class="tile"><strong>會議狀態</strong><span id="callStatus">尚未啟動，請點擊「開始線上筆錄」。</span></div>
             <div class="tile"><strong>會議人數</strong><span id="memberCount">0 人</span></div>
             <div class="tile"><strong>報案提示</strong><span>可將此頁擴充成多方會議、錄影存證與留言同步。</span></div>
             <div class="tile chat-tile">
@@ -206,12 +220,17 @@
     const memberCount = document.querySelector('#memberCount');
     const statusBox = document.querySelector('#status');
     const startCallBtn = document.querySelector('#startCallBtn');
+    const testDeviceBtn = document.querySelector('#testDeviceBtn');
     const leaveBtn = document.querySelector('#leaveBtn');
     const muteBtn = document.querySelector('#muteBtn');
     const cameraBtn = document.querySelector('#cameraBtn');
     const participantGrid = document.querySelector('#participantGrid');
     const channelInput = document.querySelector('#channelInput');
     const uidInput = document.querySelector('#uidInput');
+    const deviceTestBox = document.querySelector('#deviceTestBox');
+    const devicePreview = document.querySelector('#devicePreview');
+    const deviceTestHint = document.querySelector('#deviceTestHint');
+    const micLevelText = document.querySelector('#micLevelText');
     const chatList = document.querySelector('#chatList');
     const chatForm = document.querySelector('#chatForm');
     const chatInput = document.querySelector('#chatInput');
@@ -225,10 +244,13 @@
     let chatSender = '';
     let localParticipantId = null;
     let activeParticipantId = null;
+    let testingDevice = false;
+    let micLevelTimer = null;
     const remoteUserMap = new Map();
 
     const client = window.AgoraRTC ? AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }) : null;
     const localTracks = { audioTrack: null, videoTrack: null };
+    const testTracks = { audioTrack: null, videoTrack: null };
 
     function channelFromUnit(value) {
       const input = (value || '').trim();
@@ -249,7 +271,7 @@
       return /^[a-f0-9]{32}$/i.test((value || '').trim());
     }
 
-    async function requestToken(channel, uid, appId) {
+    async function requestToken(channel, uid) {
       const response = await fetch('/api/agora-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,11 +294,10 @@
         throw new Error('Token API 未回傳 token。');
       }
 
-      if (data.appId && String(data.appId).trim() !== appId) {
-        throw new Error('Token API 的 App ID 與前端設定不一致。');
-      }
-
-      return data.token;
+      return {
+        token: data.token,
+        appId: String(data.appId || '').trim()
+      };
     }
 
     function showStatus(text, error) {
@@ -372,12 +393,13 @@
     function setControlsWhenJoined(value) {
       joined = value;
       startCallBtn.disabled = value || joining;
+      testDeviceBtn.disabled = value || joining;
       leaveBtn.disabled = !value;
       muteBtn.disabled = !value;
       cameraBtn.disabled = !value;
       channelInput.disabled = value;
       uidInput.disabled = value;
-      startCallBtn.textContent = value ? '已連線' : (joining ? '連線中...' : '啟動視訊');
+      startCallBtn.textContent = value ? '已連線' : (joining ? '連線中...' : '開始線上筆錄');
     }
 
     function resetCallUi() {
@@ -386,11 +408,100 @@
       localParticipantId = null;
       activeParticipantId = null;
       updateMemberCount();
-      callStatus.textContent = '尚未啟動，請點擊「啟動視訊」。';
+      callStatus.textContent = '尚未啟動，請點擊「開始線上筆錄」。';
       muteBtn.textContent = '麥克風靜音';
       cameraBtn.textContent = '鏡頭關閉';
       muted = false;
       cameraOff = false;
+    }
+
+    async function stopDeviceTest(options = {}) {
+      const silent = Boolean(options.silent);
+
+      if (micLevelTimer) {
+        clearInterval(micLevelTimer);
+        micLevelTimer = null;
+      }
+
+      if (testTracks.audioTrack) {
+        testTracks.audioTrack.stop();
+        testTracks.audioTrack.close();
+        testTracks.audioTrack = null;
+      }
+      if (testTracks.videoTrack) {
+        testTracks.videoTrack.stop();
+        testTracks.videoTrack.close();
+        testTracks.videoTrack = null;
+      }
+
+      testingDevice = false;
+      deviceTestBox.hidden = true;
+      devicePreview.innerHTML = '';
+      micLevelText.textContent = '麥克風音量：0%';
+      deviceTestHint.textContent = '請確認已看到自己的畫面，並對著麥克風說話。';
+      testDeviceBtn.textContent = '測試本機相機與麥克風';
+
+      if (!silent) {
+        showStatus('已結束本機裝置測試。', false);
+      }
+    }
+
+    async function startDeviceTest() {
+      if (!window.AgoraRTC) {
+        showStatus('Agora SDK 尚未可用，暫時無法進行裝置測試。', true);
+        return;
+      }
+      if (joining) {
+        showStatus('連線處理中，請稍後再測試。', true);
+        return;
+      }
+      if (joined) {
+        showStatus('已在會議中，鏡頭與麥克風可直接於會議內測試。', true);
+        return;
+      }
+      if (testingDevice) {
+        await stopDeviceTest();
+        return;
+      }
+
+      try {
+        const cameras = await AgoraRTC.getCameras();
+        const microphones = await AgoraRTC.getMicrophones();
+        if (!cameras.length) {
+          throw new Error('找不到可用相機，請先連接或啟用相機裝置。');
+        }
+        if (!microphones.length) {
+          throw new Error('找不到可用麥克風，請先連接或啟用麥克風裝置。');
+        }
+
+        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+        testTracks.audioTrack = tracks[0];
+        testTracks.videoTrack = tracks[1];
+
+        testingDevice = true;
+        testDeviceBtn.textContent = '結束裝置測試';
+        deviceTestBox.hidden = false;
+        devicePreview.innerHTML = '';
+        testTracks.videoTrack.play(devicePreview);
+
+        const updateMicLevel = () => {
+          const level = Math.round((testTracks.audioTrack?.getVolumeLevel?.() || 0) * 100);
+          micLevelText.textContent = '麥克風音量：' + level + '%';
+        };
+
+        updateMicLevel();
+        micLevelTimer = setInterval(updateMicLevel, 500);
+        showStatus('本機測試已啟動，請確認畫面與麥克風音量是否有變化。', false);
+      } catch (error) {
+        await stopDeviceTest({ silent: true });
+        const rawMessage = error && error.message ? String(error.message) : '未知錯誤';
+        const normalized = rawMessage.toUpperCase();
+        if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
+          showStatus('裝置測試失敗：瀏覽器未授權相機或麥克風，請先允許後再重試。', true);
+          return;
+        }
+        showStatus('裝置測試失敗：' + rawMessage, true);
+      }
     }
 
     function setActiveParticipant(participantId) {
@@ -484,13 +595,34 @@
       callStatus.textContent = '連線中，請稍候...';
 
       try {
+        if (testingDevice) {
+          await stopDeviceTest({ silent: true });
+        }
+
         const uid = rawUid ? Number(rawUid) || rawUid : Math.floor(100000 + Math.random() * 900000);
         if (!rawUid) {
           uidInput.value = String(uid);
         }
 
-        const token = tokenRaw || await requestToken(channel, uid, appId);
-        const joinedUid = await client.join(appId, channel, token, uid);
+        let token = tokenRaw;
+        let joinAppId = appId;
+
+        if (!tokenRaw) {
+          const tokenData = await requestToken(channel, uid);
+          token = tokenData.token;
+          if (tokenData.appId) {
+            if (joinAppId && tokenData.appId !== joinAppId) {
+              showStatus('偵測到 Token API 與前端 App ID 不一致，已自動使用後端設定繼續連線。', false);
+            }
+            joinAppId = tokenData.appId;
+          }
+        }
+
+        if (!joinAppId) {
+          throw new Error('Token API 未提供 App ID，且前端未設定 App ID。');
+        }
+
+        const joinedUid = await client.join(joinAppId, channel, token, uid);
         localParticipantId = 'local:' + joinedUid;
         const senderName = (unit && unit !== '-' ? unit : '訪客單位') + '#' + joinedUid;
         const localMediaPlayer = ensureParticipantCard(localParticipantId, '自己 UID：' + joinedUid, true);
@@ -543,7 +675,7 @@
           }
           resetCallUi();
           callStatus.textContent = '尚未啟動，請允許相機與麥克風權限後重試。';
-          showStatus('啟動視訊失敗：瀏覽器拒絕相機或麥克風權限。請點網址列左側的網站設定，將 Camera/Microphone 改為 Allow，重新整理後再試。', true);
+          showStatus('開始線上筆錄失敗：瀏覽器拒絕相機或麥克風權限。請點網址列左側的網站設定，將 Camera/Microphone 改為 Allow，重新整理後再試。', true);
           return;
         }
 
@@ -554,7 +686,7 @@
             // ignore leave errors during recovery
           }
           resetCallUi();
-          showStatus('連線程序重疊，已嘗試重置連線。請再按一次「啟動視訊」。', true);
+          showStatus('連線程序重疊，已嘗試重置連線。請再按一次「開始線上筆錄」。', true);
           return;
         }
 
@@ -562,21 +694,21 @@
           const hint = tokenRaw
             ? '請確認系統預設 Token 與 App ID、頻道名稱一致，且 Token 尚未過期。'
             : '此 Agora 專案需要 Token。請確認後端 Token API 與環境變數已設定。';
-          showStatus('啟動視訊失敗：' + hint, true);
+          showStatus('開始線上筆錄失敗：' + hint, true);
           return;
         }
 
         if (normalized.includes('INVALID APP ID')) {
-          showStatus('啟動視訊失敗：App ID 無效，請確認貼上的是 Agora Console 的專案 App ID。', true);
+          showStatus('開始線上筆錄失敗：App ID 無效，請確認貼上的是 Agora Console 的專案 App ID。', true);
           return;
         }
 
         if (normalized.includes('TOKEN EXPIRED')) {
-          showStatus('啟動視訊失敗：Token 已過期，請重新簽發 Token。', true);
+          showStatus('開始線上筆錄失敗：Token 已過期，請重新簽發 Token。', true);
           return;
         }
 
-        showStatus('啟動視訊失敗：' + rawMessage, true);
+        showStatus('開始線上筆錄失敗：' + rawMessage, true);
       } finally {
         joining = false;
         setControlsWhenJoined(joined);
@@ -653,6 +785,7 @@
     }
 
     startCallBtn.addEventListener('click', joinAgora);
+    testDeviceBtn.addEventListener('click', startDeviceTest);
     leaveBtn.addEventListener('click', leaveAgora);
 
     if (shouldAutoJoin) {
@@ -682,7 +815,7 @@
     chatForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!joined || !chatChannel) {
-        showStatus('請先啟動視訊後再發送訊息。', true);
+        showStatus('請先開始線上筆錄後再發送訊息。', true);
         return;
       }
 
@@ -715,6 +848,7 @@
       if (joined) {
         leaveAgora();
       }
+      stopDeviceTest({ silent: true });
       stopChatSync();
     });
   </script>
