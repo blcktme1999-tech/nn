@@ -40,22 +40,29 @@
     .video-stage button { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
     .video-stage .primary { background:#dc2626; color:#fff; }
     .video-stage .ghost { background:#374151; color:#fff; }
-    .canvas { min-height:360px; display:grid; grid-template-columns:2fr 1fr; gap:1px; background:#374151; }
-    .window { min-height:360px; background:#0f172a; padding:16px; }
+    .canvas { min-height:360px; display:grid; grid-template-columns:minmax(0, 1.7fr) minmax(300px, 1fr); gap:1px; background:#374151; }
+    .window { min-height:360px; background:#0f172a; padding:16px; display:grid; gap:14px; }
     .window .inner { max-width:360px; }
     .window h2 { margin:0 0 10px; font-size:26px; }
     .window p { margin:0; color:#cbd5e1; line-height:1.7; font-size:14px; }
-    .local-wrap { width:100%; height:100%; min-height:328px; border:1px solid #334155; border-radius:8px; overflow:hidden; background:#0b1220; position:relative; }
-    .local-wrap .tips { height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:#94a3b8; padding:14px; }
-    #localPlayer { width:100%; height:100%; min-height:328px; }
+    .stage-wrap { border:1px solid #334155; border-radius:10px; background:#0b1220; padding:12px; }
+    .stage-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:10px; color:#e5e7eb; }
+    .stage-head strong { font-size:14px; }
+    .stage-head span { color:#94a3b8; font-size:12px; }
     .side { display:grid; gap:1px; }
     .tile { background:#111827; padding:16px; display:flex; flex-direction:column; justify-content:center; }
     .tile strong { display:block; margin-bottom:6px; font-size:14px; }
     .tile span { color:#cbd5e1; font-size:13px; line-height:1.6; }
-    #remotePlayers { display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
-    .remote-card { border:1px solid #374151; border-radius:8px; overflow:hidden; background:#0b1220; }
-    .remote-head { padding:6px 8px; font-size:12px; color:#cbd5e1; background:#1f2937; }
-    .remote-player { width:100%; height:160px; }
+    #participantGrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:stretch; }
+    #participantGrid.empty::before { content:'尚未加入會議，啟動後會在這裡顯示所有參與者。'; display:block; min-height:220px; padding:18px 10px; border:1px dashed #334155; border-radius:8px; color:#94a3b8; font-size:13px; text-align:center; display:flex; align-items:center; justify-content:center; }
+    .participant-card { border:1px solid #374151; border-radius:10px; overflow:hidden; background:#0b1220; display:flex; flex-direction:column; min-height:180px; cursor:pointer; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .participant-card:hover { transform:translateY(-1px); border-color:#64748b; }
+    .participant-card.featured { grid-column:span 2; grid-row:span 2; border-color:#dc2626; box-shadow:0 0 0 1px #dc2626 inset; }
+    .participant-card.local .participant-head::after { content:'自己'; margin-left:auto; padding:2px 8px; border-radius:999px; background:#7f1d1d; color:#fff; font-size:11px; }
+    .participant-head { padding:8px 10px; font-size:12px; color:#cbd5e1; background:#1f2937; display:flex; align-items:center; gap:8px; }
+    .participant-media { width:100%; height:180px; background:#020617; position:relative; }
+    .participant-card.featured .participant-media { height:380px; }
+    .participant-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:#94a3b8; font-size:13px; padding:14px; }
     .chat-tile { align-items:stretch; }
     .chat-list { flex:1; min-height:170px; max-height:220px; overflow:auto; border:1px solid #374151; border-radius:8px; padding:10px; background:#0b1220; }
     .chat-empty { color:#94a3b8; font-size:12px; line-height:1.6; }
@@ -74,6 +81,8 @@
     @media (max-width:800px) {
       .info, .canvas, .rtc-config { grid-template-columns:1fr; }
       .window, .side { min-height:auto; }
+      .participant-card.featured { grid-column:span 1; grid-row:span 1; }
+      .participant-media, .participant-card.featured .participant-media { height:220px; }
     }
     @media (max-width:640px) {
       .masthead { min-height:78px; }
@@ -105,7 +114,7 @@
   <main>
     <section class="panel">
       <h1>視訊報案後台</h1>
-      <p class="sub">這裡已接入 Agora Web SDK。先填 App ID 與 Token（若有），即可啟動多人視訊。</p>
+      <p class="sub">這裡已接入 Agora Web SDK。連線參數已由管理員預設，客戶僅需確認頻道後即可啟動視訊。</p>
 
       <div class="info">
         <div class="box">
@@ -119,14 +128,6 @@
       </div>
 
       <div class="rtc-config">
-        <div class="field">
-          <label for="appIdInput">Agora App ID</label>
-          <input id="appIdInput" placeholder="請輸入 App ID">
-        </div>
-        <div class="field">
-          <label for="tokenInput">Token（測試可留空）</label>
-          <input id="tokenInput" placeholder="有 Token 就貼上，否則可留空">
-        </div>
         <div class="field">
           <label for="channelInput">會議頻道</label>
           <input id="channelInput" placeholder="例如：police_room_01">
@@ -146,16 +147,18 @@
         </div>
         <div class="canvas">
           <div class="window">
-            <div class="local-wrap">
-              <div id="localTips" class="tips">尚未加入會議，請先點擊「啟動視訊」。</div>
-              <div id="localPlayer"></div>
+            <div class="stage-wrap">
+              <div class="stage-head">
+                <strong>會議畫面</strong>
+                <span>所有人包含自己都會顯示在同一個多宮格，點擊任一畫面可放大。</span>
+              </div>
+              <div id="participantGrid" class="empty"></div>
             </div>
           </div>
           <div class="side">
             <div class="tile"><strong>會議狀態</strong><span id="callStatus">尚未啟動，請點擊「啟動視訊」。</span></div>
-            <div class="tile"><strong>遠端參與者</strong><span id="memberCount">0 人</span></div>
+            <div class="tile"><strong>會議人數</strong><span id="memberCount">0 人</span></div>
             <div class="tile"><strong>報案提示</strong><span>可將此頁擴充成多方會議、錄影存證與留言同步。</span></div>
-            <div class="tile"><strong>遠端畫面</strong><div id="remotePlayers"></div></div>
             <div class="tile chat-tile">
               <strong>會議文字訊息</strong>
               <div id="chatList" class="chat-list"><div class="chat-empty">尚未連線聊天室。加入視訊後可即時收發文字訊息。</div></div>
@@ -205,11 +208,7 @@
     const leaveBtn = document.querySelector('#leaveBtn');
     const muteBtn = document.querySelector('#muteBtn');
     const cameraBtn = document.querySelector('#cameraBtn');
-    const localPlayer = document.querySelector('#localPlayer');
-    const localTips = document.querySelector('#localTips');
-    const remotePlayers = document.querySelector('#remotePlayers');
-    const appIdInput = document.querySelector('#appIdInput');
-    const tokenInput = document.querySelector('#tokenInput');
+    const participantGrid = document.querySelector('#participantGrid');
     const channelInput = document.querySelector('#channelInput');
     const uidInput = document.querySelector('#uidInput');
     const chatList = document.querySelector('#chatList');
@@ -223,6 +222,8 @@
     let joining = false;
     let chatChannel = null;
     let chatSender = '';
+    let localParticipantId = null;
+    let activeParticipantId = null;
     const remoteUserMap = new Map();
 
     const client = window.AgoraRTC ? AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }) : null;
@@ -332,7 +333,9 @@
     }
 
     function updateMemberCount() {
-      memberCount.textContent = remoteUserMap.size + ' 人';
+      const totalCount = remoteUserMap.size + (localParticipantId ? 1 : 0);
+      memberCount.textContent = totalCount + ' 人';
+      participantGrid.classList.toggle('empty', participantGrid.children.length === 0);
     }
 
     function setControlsWhenJoined(value) {
@@ -341,19 +344,17 @@
       leaveBtn.disabled = !value;
       muteBtn.disabled = !value;
       cameraBtn.disabled = !value;
-      appIdInput.disabled = value;
-      tokenInput.disabled = value;
       channelInput.disabled = value;
       uidInput.disabled = value;
       startCallBtn.textContent = value ? '已連線' : (joining ? '連線中...' : '啟動視訊');
     }
 
     function resetCallUi() {
-      remotePlayers.innerHTML = '';
+      participantGrid.innerHTML = '';
       remoteUserMap.clear();
+      localParticipantId = null;
+      activeParticipantId = null;
       updateMemberCount();
-      localPlayer.innerHTML = '';
-      localTips.style.display = 'flex';
       callStatus.textContent = '尚未啟動，請點擊「啟動視訊」。';
       muteBtn.textContent = '麥克風靜音';
       cameraBtn.textContent = '鏡頭關閉';
@@ -361,25 +362,53 @@
       cameraOff = false;
     }
 
-    function ensureRemoteCard(uid) {
-      const id = 'remote_' + uid;
+    function setActiveParticipant(participantId) {
+      activeParticipantId = participantId;
+      Array.from(participantGrid.querySelectorAll('.participant-card')).forEach((card) => {
+        card.classList.toggle('featured', card.dataset.participantId === participantId);
+      });
+    }
+
+    function ensureParticipantCard(participantId, label, isLocal) {
+      const id = 'participant_' + participantId.replace(/[^a-zA-Z0-9_-]/g, '_');
       let card = document.getElementById(id);
       if (!card) {
         card = document.createElement('div');
-        card.className = 'remote-card';
+        card.className = 'participant-card' + (isLocal ? ' local' : '');
         card.id = id;
-        card.innerHTML = '<div class="remote-head">參與者 UID：' + uid + '</div><div class="remote-player" id="player_' + uid + '"></div>';
-        remotePlayers.appendChild(card);
+        card.dataset.participantId = participantId;
+        card.innerHTML = '<div class="participant-head">' + escapeText(label) + '</div><div class="participant-media" id="media_' + id + '"><div class="participant-placeholder">等待視訊畫面...</div></div>';
+        card.addEventListener('click', () => setActiveParticipant(participantId));
+        participantGrid.appendChild(card);
       }
-      return document.getElementById('player_' + uid);
+
+      if (!activeParticipantId) {
+        setActiveParticipant(participantId);
+      }
+
+      updateMemberCount();
+      return document.getElementById('media_' + id);
     }
 
-    function removeRemoteCard(uid) {
-      const card = document.getElementById('remote_' + uid);
+    function showPlaceholder(container, text) {
+      container.innerHTML = '<div class="participant-placeholder">' + escapeText(text) + '</div>';
+    }
+
+    function removeParticipantCard(participantId) {
+      const domId = 'participant_' + participantId.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const card = document.getElementById(domId);
       if (card && card.parentNode) {
         card.parentNode.removeChild(card);
       }
-      remoteUserMap.delete(uid);
+
+      if (activeParticipantId === participantId) {
+        const nextCard = participantGrid.querySelector('.participant-card');
+        activeParticipantId = null;
+        if (nextCard) {
+          setActiveParticipant(nextCard.dataset.participantId);
+        }
+      }
+
       updateMemberCount();
     }
 
@@ -394,13 +423,14 @@
         return;
       }
 
-      const appId = appIdInput.value.trim();
-      const token = tokenInput.value.trim() || null;
+      const appId = String(cfg.appId || '').trim();
+      const tokenRaw = String(cfg.token || '').trim();
+      const token = tokenRaw || null;
       const channel = channelInput.value.trim();
       const rawUid = uidInput.value.trim();
 
       if (!appId) {
-        showStatus('請先輸入 Agora App ID。', true);
+        showStatus('系統尚未完成視訊設定（缺少 App ID），請聯絡管理員。', true);
         return;
       }
 
@@ -410,12 +440,12 @@
       }
 
       if (token && isHex32(token)) {
-        showStatus('你貼的是 32 碼金鑰（像 App Key），不是 RTC Token。請到 Agora Console 的 Security 產生「RTC Temp Token」再貼上。', true);
+        showStatus('系統 Token 設定格式不正確，請聯絡管理員更新 RTC Token。', true);
         return;
       }
 
       if (token && !isLikelyAgoraToken(token)) {
-        showStatus('Token 長度看起來不正確，請確認為 RTC Token（通常是長字串，常見開頭為 007e）。', true);
+        showStatus('系統 Token 長度不正確，請聯絡管理員更新 RTC Token。', true);
         return;
       }
 
@@ -426,7 +456,9 @@
       try {
         const uid = rawUid ? Number(rawUid) || rawUid : null;
         const joinedUid = await client.join(appId, channel, token, uid);
+        localParticipantId = 'local:' + joinedUid;
         const senderName = (unit && unit !== '-' ? unit : '訪客單位') + '#' + joinedUid;
+        const localMediaPlayer = ensureParticipantCard(localParticipantId, '自己 UID：' + joinedUid, true);
         await startChatSync(channel, senderName);
 
         let mediaReady = false;
@@ -435,8 +467,8 @@
           localTracks.audioTrack = tracks[0];
           localTracks.videoTrack = tracks[1];
 
-          localTips.style.display = 'none';
-          localTracks.videoTrack.play(localPlayer);
+          localMediaPlayer.innerHTML = '';
+          localTracks.videoTrack.play(localMediaPlayer);
           await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
           mediaReady = true;
         } catch (mediaError) {
@@ -450,6 +482,8 @@
           if (!canFallback) {
             throw mediaError;
           }
+
+          showPlaceholder(localMediaPlayer, '已加入會議，但未啟用本機鏡頭。');
         }
 
         setControlsWhenJoined(true);
@@ -490,9 +524,9 @@
         }
 
         if (normalized.includes('CAN_NOT_GET_GATEWAY_SERVER') || normalized.includes('DYNAMIC USE STATIC KEY')) {
-          const hint = isLikelyAgoraToken(tokenInput.value)
-            ? '請確認 Token 與 App ID、頻道名稱一致，且 Token 尚未過期。'
-            : '此 Agora 專案看起來需要 Token。請到 Agora Console 產生臨時 Token 後貼到 Token 欄位，或改用未啟用證書的測試專案。';
+          const hint = token
+            ? '請確認系統預設 Token 與 App ID、頻道名稱一致，且 Token 尚未過期。'
+            : '此 Agora 專案看起來需要 Token。請由管理員在設定檔補上 Token。';
           showStatus('啟動視訊失敗：' + hint, true);
           return;
         }
@@ -540,8 +574,6 @@
 
     unitName.textContent = unit;
     codeValue.textContent = code;
-    appIdInput.value = cfg.appId || '';
-    tokenInput.value = cfg.token || '';
     channelInput.value = cfg.channel || channelFromUnit(unit);
     uidInput.value = cfg.uid || '';
 
@@ -554,25 +586,34 @@
       client.on('user-published', async (user, mediaType) => {
         await client.subscribe(user, mediaType);
         remoteUserMap.set(user.uid, user);
-        updateMemberCount();
+        const participantId = 'remote:' + user.uid;
+        const player = ensureParticipantCard(participantId, '參與者 UID：' + user.uid, false);
 
         if (mediaType === 'video') {
-          const player = ensureRemoteCard(user.uid);
+          player.innerHTML = '';
           user.videoTrack.play(player);
         }
         if (mediaType === 'audio') {
           user.audioTrack.play();
+          if (mediaType !== 'video' && !user.videoTrack) {
+            showPlaceholder(player, '對方目前僅開啟語音。');
+          }
         }
+
+        updateMemberCount();
       });
 
       client.on('user-unpublished', (user, mediaType) => {
+        const participantId = 'remote:' + user.uid;
         if (mediaType === 'video') {
-          removeRemoteCard(user.uid);
+          const player = ensureParticipantCard(participantId, '參與者 UID：' + user.uid, false);
+          showPlaceholder(player, '對方已關閉鏡頭。');
         }
       });
 
       client.on('user-left', (user) => {
-        removeRemoteCard(user.uid);
+        remoteUserMap.delete(user.uid);
+        removeParticipantCard('remote:' + user.uid);
       });
     }
 
