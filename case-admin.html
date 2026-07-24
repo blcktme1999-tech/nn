@@ -249,6 +249,16 @@
       return data;
     }
 
+    function clearServerSessionSilently() {
+      return fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true
+      }).catch(() => {
+        // ignore logout failures for best-effort cleanup
+      });
+    }
+
     async function loadAdminData() {
       const data = await requestJson('/api/admin/data');
       const profile = data.profile || {};
@@ -424,19 +434,12 @@
       }
     });
 
-    requestJson('/api/admin/session')
-      .then((data) => {
-        if (data.authenticated) {
-          return loadAdminData().then(() => {
-            adminPanel.classList.add('show');
-            showMessage('已登入後台，可開始維護資料。', 'ok');
-          });
-        }
-        return null;
-      })
-      .catch(() => {
-        // ignore initial session check failures
-      });
+    // Force fresh login whenever this page is opened.
+    clearServerSessionSilently();
+
+    window.addEventListener('pagehide', () => {
+      clearServerSessionSilently();
+    });
   </script>
 </body>
 </html>
