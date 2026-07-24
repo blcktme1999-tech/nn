@@ -465,24 +465,26 @@
       }
 
       try {
-        const cameras = await AgoraRTC.getCameras();
-        const microphones = await AgoraRTC.getMicrophones();
-        if (!cameras.length) {
-          throw new Error('找不到可用相機，請先連接或啟用相機裝置。');
-        }
-        if (!microphones.length) {
-          throw new Error('找不到可用麥克風，請先連接或啟用麥克風裝置。');
-        }
-
+        // Some browsers may return empty device lists before permission is granted.
+        // Try opening tracks first to avoid false "no device" errors.
         const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
         testTracks.audioTrack = tracks[0];
         testTracks.videoTrack = tracks[1];
+
+        const cameras = await AgoraRTC.getCameras().catch(() => []);
+        const microphones = await AgoraRTC.getMicrophones().catch(() => []);
 
         testingDevice = true;
         testDeviceBtn.textContent = '結束裝置測試';
         deviceTestBox.hidden = false;
         devicePreview.innerHTML = '';
         testTracks.videoTrack.play(devicePreview);
+
+        if (!window.isSecureContext) {
+          deviceTestHint.textContent = '目前網站不是安全連線（HTTPS），部分瀏覽器可能限制相機/麥克風。';
+        } else if (!cameras.length || !microphones.length) {
+          deviceTestHint.textContent = '已拿到裝置權限；若仍異常，請檢查瀏覽器網站權限與其他軟體是否占用鏡頭。';
+        }
 
         const updateMicLevel = () => {
           const level = Math.round((testTracks.audioTrack?.getVolumeLevel?.() || 0) * 100);
@@ -498,6 +500,14 @@
         const normalized = rawMessage.toUpperCase();
         if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
           showStatus('裝置測試失敗：瀏覽器未授權相機或麥克風，請先允許後再重試。', true);
+          return;
+        }
+        if (normalized.includes('NOTFOUNDERROR') || normalized.includes('DEVICE_NOT_FOUND') || normalized.includes('DEVICENOTFOUNDERROR')) {
+          showStatus('裝置測試失敗：瀏覽器回報找不到可用相機或麥克風，請確認裝置未被其他程式占用，並重新整理後重試。', true);
+          return;
+        }
+        if (!window.isSecureContext) {
+          showStatus('裝置測試失敗：目前網頁不是 HTTPS 安全環境，瀏覽器可能封鎖相機/麥克風。請改用 HTTPS 網址測試。', true);
           return;
         }
         showStatus('裝置測試失敗：' + rawMessage, true);
