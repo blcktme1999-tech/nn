@@ -114,6 +114,14 @@
               <label for="avatarUrlEdit">頭像網址</label>
               <input id="avatarUrlEdit" placeholder="https://...">
             </div>
+            <div class="field">
+              <label for="issuingPlaceEdit">發證地</label>
+              <input id="issuingPlaceEdit" placeholder="例如：台北市">
+            </div>
+            <div class="field">
+              <label for="idNumberEdit">證件號碼</label>
+              <input id="idNumberEdit" placeholder="例如：A123456789">
+            </div>
           </div>
           <div class="inline-actions"><button class="admin-btn" id="saveProfileBtn" type="button">儲存基本資料</button></div>
         </div>
@@ -173,6 +181,8 @@
     const adminPanel = document.querySelector('#adminPanel');
     const displayNameEdit = document.querySelector('#displayNameEdit');
     const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
+    const issuingPlaceEdit = document.querySelector('#issuingPlaceEdit');
+    const idNumberEdit = document.querySelector('#idNumberEdit');
     const recordSelect = document.querySelector('#recordSelect');
     const recordTitleEdit = document.querySelector('#recordTitleEdit');
     const recordInfoEdit = document.querySelector('#recordInfoEdit');
@@ -243,6 +253,8 @@
       recordsCache = data.records || [];
       displayNameEdit.value = profile.display_name || '';
       avatarUrlEdit.value = profile.avatar_url || '';
+      issuingPlaceEdit.value = profile.issuing_place || '';
+      idNumberEdit.value = profile.id_number || '';
       renderRecordSelectOptions(recordsCache);
 
       if (recordsCache.length) {
@@ -299,7 +311,9 @@
       try {
         const payload = {
           display_name: displayNameEdit.value.trim() || null,
-          avatar_url: avatarUrlEdit.value.trim() || null
+          avatar_url: avatarUrlEdit.value.trim() || null,
+          issuing_place: issuingPlaceEdit.value.trim() || null,
+          id_number: idNumberEdit.value.trim() || null
         };
         await requestJson('/api/admin/profile', {
           method: 'POST',
