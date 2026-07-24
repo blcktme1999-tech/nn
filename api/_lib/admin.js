@@ -141,23 +141,37 @@ function requireAdminSession(req, res) {
 
 async function signInAdmin() {
   const config = getConfig();
+  const hasPasswordMode = Boolean(config.supabaseAnonKey && config.supabaseAdminEmail && config.supabaseAdminPassword);
 
   if (config.supabaseServiceRoleKey && config.supabaseAdminUserId) {
-    const client = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
+    const serviceKey = String(config.supabaseServiceRoleKey || '');
+    const looksLikePublishable = serviceKey.startsWith('sb_publishable_');
 
-    return {
-      client,
-      user: {
-        id: config.supabaseAdminUserId,
-        email: config.supabaseAdminEmail || null
-      }
-    };
+    if (!looksLikePublishable) {
+      const client = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
+
+      return {
+        client,
+        user: {
+          id: config.supabaseAdminUserId,
+          email: config.supabaseAdminEmail || null
+        }
+      };
+    }
+
+    if (!hasPasswordMode) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY looks like a publishable key. Please set a valid service role key.');
+    }
+  }
+
+  if (!hasPasswordMode) {
+    throw new Error('Supabase admin config is incomplete.');
   }
 
   const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
