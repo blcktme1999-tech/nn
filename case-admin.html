@@ -47,6 +47,8 @@
     .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
     .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
     .admin-btn.alt { background:#8d1726; }
+    .admin-btn.danger { background:#6b0f1a; }
+    .admin-btn.danger:hover { background:#520b14; }
     .admin-note { font-size:12px; color:#666; line-height:1.6; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
@@ -144,6 +146,7 @@
           <div class="inline-actions">
             <button class="admin-btn" id="updateRecordBtn" type="button">更新所選案件</button>
             <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
+            <button class="admin-btn danger" id="deleteRecordBtn" type="button">刪除所選案件</button>
           </div>
         </div>
 
@@ -190,6 +193,7 @@
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
     const updateRecordBtn = document.querySelector('#updateRecordBtn');
     const createRecordBtn = document.querySelector('#createRecordBtn');
+    const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
     const addPhotoBtn = document.querySelector('#addPhotoBtn');
 
     const SHARED_ADMIN_LOGIN = 'blcktme1999';
@@ -361,6 +365,31 @@
         showMessage('新案件已新增。', 'ok');
       } catch (error) {
         showMessage('新增案件失敗：' + (error?.message || '未知錯誤'), 'error');
+      }
+    });
+
+    deleteRecordBtn.addEventListener('click', async () => {
+      try {
+        const selectedId = recordSelect.value;
+        if (!selectedId) {
+          showMessage('請先選擇要刪除的案件。', 'error');
+          return;
+        }
+
+        const selected = recordsCache.find((record) => record.id === selectedId);
+        const selectedTitle = selected?.title || '未命名案件';
+        const confirmed = window.confirm('確定要刪除案件「' + selectedTitle + '」嗎？\n此操作無法復原。');
+        if (!confirmed) {
+          return;
+        }
+
+        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
+          method: 'DELETE'
+        });
+        await loadAdminData();
+        showMessage('案件已刪除。', 'ok');
+      } catch (error) {
+        showMessage('刪除案件失敗：' + (error?.message || '未知錯誤'), 'error');
       }
     });
 
