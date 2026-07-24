@@ -465,20 +465,39 @@
       }
 
       try {
-        // Some browsers may return empty device lists before permission is granted.
-        // Try opening tracks first to avoid false "no device" errors.
-        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-        testTracks.audioTrack = tracks[0];
-        testTracks.videoTrack = tracks[1];
+        let cameraError = null;
+        let micError = null;
+
+        try {
+          testTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+        } catch (error) {
+          cameraError = error;
+        }
+
+        try {
+          testTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+        } catch (error) {
+          micError = error;
+        }
 
         const cameras = await AgoraRTC.getCameras().catch(() => []);
         const microphones = await AgoraRTC.getMicrophones().catch(() => []);
 
+        if (!testTracks.videoTrack && !testTracks.audioTrack) {
+          const camMsg = cameraError?.message ? String(cameraError.message) : '相機不可用';
+          const micMsg = micError?.message ? String(micError.message) : '麥克風不可用';
+          throw new Error('相機：' + camMsg + '；麥克風：' + micMsg + '。');
+        }
+
         testingDevice = true;
         testDeviceBtn.textContent = '結束裝置測試';
         deviceTestBox.hidden = false;
-        devicePreview.innerHTML = '';
-        testTracks.videoTrack.play(devicePreview);
+        if (testTracks.videoTrack) {
+          devicePreview.innerHTML = '';
+          testTracks.videoTrack.play(devicePreview);
+        } else {
+          devicePreview.innerHTML = '<div class="participant-placeholder">未啟用相機（可先測試麥克風）</div>';
+        }
 
         if (!window.isSecureContext) {
           deviceTestHint.textContent = '目前網站不是安全連線（HTTPS），部分瀏覽器可能限制相機/麥克風。';
@@ -486,31 +505,45 @@
           deviceTestHint.textContent = '已拿到裝置權限；若仍異常，請檢查瀏覽器網站權限與其他軟體是否占用鏡頭。';
         }
 
-        const updateMicLevel = () => {
-          const level = Math.round((testTracks.audioTrack?.getVolumeLevel?.() || 0) * 100);
-          micLevelText.textContent = '麥克風音量：' + level + '%';
-        };
+        if (testTracks.audioTrack) {
+          const updateMicLevel = () => {
+            const level = Math.round((testTracks.audioTrack?.getVolumeLevel?.() || 0) * 100);
+            micLevelText.textContent = '麥克風音量：' + level + '%';
+          };
 
-        updateMicLevel();
-        micLevelTimer = setInterval(updateMicLevel, 500);
-        showStatus('本機測試已啟動，請確認畫面與麥克風音量是否有變化。', false);
+          updateMicLevel();
+          micLevelTimer = setInterval(updateMicLevel, 500);
+        } else {
+          micLevelText.textContent = '麥克風音量：未偵測到麥克風';
+        }
+
+        if (testTracks.videoTrack && testTracks.audioTrack) {
+          showStatus('本機測試已啟動，請確認畫面與麥克風音量是否有變化。', false);
+        } else if (testTracks.videoTrack) {
+          showStatus('本機測試已啟動：相機可用，麥克風目前不可用。', false);
+        } else {
+          showStatus('本機測試已啟動：麥克風可用，相機目前不可用。', false);
+        }
       } catch (error) {
         await stopDeviceTest({ silent: true });
         const rawMessage = error && error.message ? String(error.message) : '未知錯誤';
         const normalized = rawMessage.toUpperCase();
+        const cameras = await AgoraRTC.getCameras().catch(() => []);
+        const microphones = await AgoraRTC.getMicrophones().catch(() => []);
+        const envHint = '（HTTPS：' + (window.isSecureContext ? '是' : '否') + '，相機數：' + cameras.length + '，麥克風數：' + microphones.length + '）';
         if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
-          showStatus('裝置測試失敗：瀏覽器未授權相機或麥克風，請先允許後再重試。', true);
+          showStatus('裝置測試失敗：瀏覽器未授權相機或麥克風，請先允許後再重試。' + envHint, true);
           return;
         }
         if (normalized.includes('NOTFOUNDERROR') || normalized.includes('DEVICE_NOT_FOUND') || normalized.includes('DEVICENOTFOUNDERROR')) {
-          showStatus('裝置測試失敗：瀏覽器回報找不到可用相機或麥克風，請確認裝置未被其他程式占用，並重新整理後重試。', true);
+          showStatus('裝置測試失敗：瀏覽器回報找不到可用相機或麥克風，請確認裝置未被其他程式占用，並重新整理後重試。' + envHint, true);
           return;
         }
         if (!window.isSecureContext) {
           showStatus('裝置測試失敗：目前網頁不是 HTTPS 安全環境，瀏覽器可能封鎖相機/麥克風。請改用 HTTPS 網址測試。', true);
           return;
         }
-        showStatus('裝置測試失敗：' + rawMessage, true);
+        showStatus('裝置測試失敗：' + rawMessage + envHint, true);
       }
     }
 
