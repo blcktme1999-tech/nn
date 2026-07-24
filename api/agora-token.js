@@ -90,8 +90,12 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const expiresIn = resolveExpiresIn();
-    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+    const now = Math.floor(Date.now() / 1000);
+    // Some validators still expect 32-bit Unix time; cap expiry to avoid invalid future claims.
+    const maxUnixSeconds = 2147483647 - 60;
+    const desiredExpiresIn = resolveExpiresIn();
+    const expiresAt = Math.min(now + desiredExpiresIn, maxUnixSeconds);
+    const expiresIn = Math.max(60, expiresAt - now);
     const role = RtcRole.PUBLISHER;
 
     let token;
