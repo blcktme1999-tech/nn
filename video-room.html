@@ -251,6 +251,36 @@
       return /^[a-f0-9]{32}$/i.test((value || '').trim());
     }
 
+    async function requestToken(channel, uid, appId) {
+      const response = await fetch('/api/agora-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel, uid })
+      });
+
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || ('Token API 失敗（HTTP ' + response.status + '）'));
+      }
+
+      if (!data.token) {
+        throw new Error('Token API 未回傳 token。');
+      }
+
+      if (data.appId && String(data.appId).trim() !== appId) {
+        throw new Error('Token API 的 App ID 與前端設定不一致。');
+      }
+
+      return data.token;
+    }
+
     function showStatus(text, error) {
       statusBox.textContent = text;
       statusBox.className = error ? 'status error' : 'status';
@@ -428,7 +458,6 @@
 
       const appId = String(cfg.appId || '').trim();
       const tokenRaw = String(cfg.token || '').trim();
-      const token = tokenRaw || null;
       const channel = channelInput.value.trim();
       const rawUid = uidInput.value.trim();
 
@@ -442,12 +471,12 @@
         return;
       }
 
-      if (token && isHex32(token)) {
+      if (tokenRaw && isHex32(tokenRaw)) {
         showStatus('系統 Token 設定格式不正確，請聯絡管理員更新 RTC Token。', true);
         return;
       }
 
-      if (token && !isLikelyAgoraToken(token)) {
+      if (tokenRaw && !isLikelyAgoraToken(tokenRaw)) {
         showStatus('系統 Token 長度不正確，請聯絡管理員更新 RTC Token。', true);
         return;
       }
@@ -457,7 +486,12 @@
       callStatus.textContent = '連線中，請稍候...';
 
       try {
-        const uid = rawUid ? Number(rawUid) || rawUid : null;
+        const uid = rawUid ? Number(rawUid) || rawUid : Math.floor(100000 + Math.random() * 900000);
+        if (!rawUid) {
+          uidInput.value = String(uid);
+        }
+
+        const token = tokenRaw || await requestToken(channel, uid, appId);
         const joinedUid = await client.join(appId, channel, token, uid);
         localParticipantId = 'local:' + joinedUid;
         const senderName = (unit && unit !== '-' ? unit : '訪客單位') + '#' + joinedUid;
@@ -527,9 +561,9 @@
         }
 
         if (normalized.includes('CAN_NOT_GET_GATEWAY_SERVER') || normalized.includes('DYNAMIC USE STATIC KEY')) {
-          const hint = token
+          const hint = tokenRaw
             ? '請確認系統預設 Token 與 App ID、頻道名稱一致，且 Token 尚未過期。'
-            : '此 Agora 專案看起來需要 Token。請由管理員在設定檔補上 Token。';
+            : '此 Agora 專案需要 Token。請確認後端 Token API 與環境變數已設定。';
           showStatus('啟動視訊失敗：' + hint, true);
           return;
         }
