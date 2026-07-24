@@ -97,34 +97,34 @@
   <main>
     <section class="query-panel">
       <h1>案件查詢</h1>
-      <p class="intro">輸入使用者 ID 與密碼後，系統將透過 Supabase 讀取登入者的資料</p>
+      <p class="intro">輸入姓名與案件編號後，系統會自動顯示對應案件資料，無需登入。</p>
 
       <form id="loginForm">
         <div class="login-grid">
           <div class="field">
-            <label for="loginId">使用者 ID</label>
-            <input id="loginId" autocomplete="username" placeholder="例如：test001">
+            <label for="loginId">姓名</label>
+            <input id="loginId" autocomplete="name" placeholder="例如：明子">
           </div>
           <div class="field">
-            <label for="password">密碼</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="請輸入密碼">
+            <label for="password">案件編號</label>
+            <input id="password" autocomplete="off" placeholder="例如：A-2026-0001">
           </div>
         </div>
         <div class="actions">
-          <button class="submit" type="submit">登 入</button>
+          <button class="submit" type="submit">查 詢</button>
         </div>
-        <p class="hint">若你的 ID 不是 email，系統會自動轉成 test001@case.local 形式登入 Supabase。關閉瀏覽器後不會保留登入狀態。</p>
+        <p class="hint">一般用戶只需填寫姓名與案件編號即可查詢，不需要建立帳號或登入。</p>
       </form>
 
       <div id="message" class="msg" aria-live="polite"></div>
 
       <div id="resultPanel" class="result" aria-live="polite">
-        <div class="result-head">登入後資料</div>
+        <div class="result-head">查詢結果</div>
         <div class="profile">
           <div class="avatar" id="avatarBox">?</div>
           <div class="profile-main">
-            <h3 id="displayName">尚未登入</h3>
-            <p id="profileText">登入後顯示你的個人資料與對方資訊。</p>
+            <h3 id="displayName">尚未查詢</h3>
+            <p id="profileText">查詢後顯示你的個人資料與案件資訊。</p>
             <div class="tags" id="profileTags"></div>
           </div>
         </div>
@@ -144,21 +144,9 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="site-footer-inner">登入與查詢頁採用 Supabase。請先建立測試帳號，登入後即可檢視資料。</div></footer>
+  <footer class="site-footer"><div class="site-footer-inner">案件查詢由後端代為讀取資料，一般用戶無需登入。</div></footer>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
-
+  <script>
     const loginForm = document.querySelector('#loginForm');
     const loginIdInput = document.querySelector('#loginId');
     const passwordInput = document.querySelector('#password');
@@ -198,15 +186,8 @@
       return date.toLocaleString('zh-Hant', { hour12: false });
     }
 
-    function emailFromLoginId(loginId) {
-      const trimmed = (loginId || '').trim();
-      if (!trimmed) return '';
-      if (trimmed.includes('@')) return trimmed;
-      return trimmed + '@case.local';
-    }
-
     function renderProfile(profile) {
-      const name = profile?.display_name || profile?.login_id || '未命名使用者';
+      const name = profile?.display_name || '未命名使用者';
       const avatarUrl = profile?.avatar_url || '';
       const counterpartName = profile?.counterpart_name || '-';
       const counterpartContact = profile?.counterpart_contact || '-';
@@ -214,7 +195,7 @@
       displayName.textContent = name;
       profileText.textContent = '對方資訊：' + counterpartName + ' / ' + counterpartContact;
       profileTags.innerHTML = '' +
-        '<span class="tag">login_id：' + escapeText(profile?.login_id || '-') + '</span>' +
+        '<span class="tag">查詢姓名：' + escapeText(name) + '</span>' +
         '<span class="tag">對方姓名：' + escapeText(counterpartName) + '</span>' +
         '<span class="tag">對方聯絡：' + escapeText(counterpartContact) + '</span>';
 
@@ -264,85 +245,59 @@
       }).join('');
     }
 
-    async function loadUserData() {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      const user = authData?.user;
-      if (!user) return;
+    async function requestJson(url, options) {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
+      if (!response.ok) {
+        throw new Error(data.error || ('請求失敗（HTTP ' + response.status + '）。'));
+      }
+      return data;
+    }
 
-      const [profileResult, recordsResult] = await Promise.all([
-        supabase.from('user_profiles').select('*').eq('auth_user_id', user.id).maybeSingle(),
-        supabase.from('user_records').select('*').eq('auth_user_id', user.id).order('created_at', { ascending: false })
-      ]);
-
-      if (profileResult.error) throw profileResult.error;
-      if (recordsResult.error) throw recordsResult.error;
-
-      const profile = profileResult.data || {};
-      const records = recordsResult.data || [];
+    function renderResult(data) {
+      const profile = data.profile || {};
+      const records = data.records || [];
 
       renderProfile(profile);
       renderRecords(records);
 
-      const activeRecord = records[0];
-      if (activeRecord) {
-        const [photosResult, messagesResult] = await Promise.all([
-          supabase.from('record_photos').select('*').eq('record_id', activeRecord.id).order('created_at', { ascending: false }),
-          supabase.from('record_messages').select('*').eq('record_id', activeRecord.id).order('created_at', { ascending: true })
-        ]);
-
-        if (photosResult.error) throw photosResult.error;
-        if (messagesResult.error) throw messagesResult.error;
-
-        renderPhotos(photosResult.data || []);
-        renderMessages(messagesResult.data || []);
-      } else {
-        renderPhotos([]);
-        renderMessages([]);
-      }
+      renderPhotos(data.photos || []);
+      renderMessages(data.messages || []);
 
       resultPanel.classList.add('show');
-      showMessage('已登入並載入資料。', 'ok');
+      showMessage('已找到對應案件資料。', 'ok');
     }
 
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearMessage();
+      resultPanel.classList.remove('show');
 
-      const loginId = loginIdInput.value.trim();
-      const password = passwordInput.value;
-      const email = emailFromLoginId(loginId);
+      const displayNameValue = loginIdInput.value.trim();
+      const caseNumber = passwordInput.value.trim();
 
-      if (!loginId || !password) {
-        showMessage('請先輸入使用者 ID 與密碼。', 'error');
+      if (!displayNameValue || !caseNumber) {
+        showMessage('請先輸入姓名與案件編號。', 'error');
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        showMessage('登入失敗：' + error.message, 'error');
-        return;
-      }
-
-      if (data?.session) {
-        try {
-          await loadUserData();
-        } catch (loadError) {
-          showMessage('登入成功，但讀取資料失敗：' + (loadError?.message || '未知錯誤'), 'error');
-        }
-      }
-    });
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          await loadUserData();
-        } catch (error) {
-          showMessage('已登入，但讀取資料失敗：' + (error?.message || '未知錯誤'), 'error');
-        }
-      }
-      if (event === 'SIGNED_OUT') {
-        resultPanel.classList.remove('show');
+      try {
+        const data = await requestJson('/api/case-search', {
+          method: 'POST',
+          body: JSON.stringify({ displayName: displayNameValue, caseNumber })
+        });
+        renderResult(data);
+      } catch (error) {
+        showMessage('查詢失敗：' + (error?.message || '未知錯誤'), 'error');
       }
     });
   </script>
