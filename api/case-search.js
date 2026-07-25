@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
     const caseNumber = String(body?.caseNumber || '').trim();
 
     if (!displayName || !caseNumber) {
-      json(res, 400, { error: '請輸入姓名與案件編號。' });
+      json(res, 400, { error: '请输入姓名与案件编号。' });
       return;
     }
 
@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
 
     const records = recordsResult.data || [];
     if (!records.length) {
-      json(res, 404, { error: '查無符合的案件資料。' });
+      json(res, 404, { error: '查无符合的案件资料。' });
       return;
     }
 
@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
     const matchedProfile = profiles.find((profile) => String(profile.display_name || '').trim() === displayName);
 
     if (!matchedProfile) {
-      json(res, 404, { error: '姓名與案件編號不符。' });
+      json(res, 404, { error: '姓名与案件编号不符。' });
       return;
     }
 
@@ -73,6 +73,6 @@ module.exports = async function handler(req, res) {
       messages
     });
   } catch (error) {
-    json(res, 500, { error: error.message || '查詢失敗。' });
+    json(res, 500, { error: error.message || '查询失败。' });
   }
 };
