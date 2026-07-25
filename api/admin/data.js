@@ -25,6 +25,6 @@ module.exports = async function handler(req, res) {
       records: recordsResult.data || []
     });
   } catch (error) {
-    json(res, 500, { error: error.message || '讀取後台資料失敗。' });
+    json(res, 500, { error: error.message || '读取后台资料失败。' });
   }
 };
