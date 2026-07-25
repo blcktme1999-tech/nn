@@ -50,8 +50,15 @@
     .admin-btn.danger { background:#6b0f1a; }
     .admin-btn.danger:hover { background:#520b14; }
     .admin-note { font-size:12px; color:#666; line-height:1.6; }
+    .field.full { grid-column:1 / -1; }
     .photo-preview { margin-top:10px; max-width:220px; border:1px solid #ddd; border-radius:6px; background:#f7f7f7; overflow:hidden; }
     .photo-preview img { width:100%; display:block; }
+    .avatar-preview { margin-top:10px; width:112px; height:112px; border:1px solid #ddd; border-radius:50%; background:#f7f7f7; overflow:hidden; }
+    .avatar-preview img { width:100%; height:100%; object-fit:cover; display:block; }
+    .record-photo-gallery { margin-top:8px; display:grid; grid-template-columns:repeat(auto-fill, minmax(128px, 1fr)); gap:10px; }
+    .record-photo-item { border:1px solid #e6e6e6; border-radius:6px; background:#fff; overflow:hidden; }
+    .record-photo-item img { width:100%; aspect-ratio:1 / 1; object-fit:cover; display:block; background:#f7f7f7; }
+    .record-photo-item p { margin:0; padding:7px 8px 8px; font-size:12px; color:#555; line-height:1.5; }
     .photo-help { margin-top:8px; font-size:12px; color:#666; line-height:1.6; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
@@ -117,6 +124,12 @@
               <label for="avatarUrlEdit">头像网址</label>
               <input id="avatarUrlEdit" placeholder="https://...">
             </div>
+            <div class="field full">
+              <label for="avatarFileInput">上传头像（圆形预览）</label>
+              <input id="avatarFileInput" type="file" accept="image/*">
+              <div class="photo-help">可直接上传头像图片，系统会自动压缩、上传并套用到头像网址。</div>
+              <div id="avatarPreview" class="avatar-preview" hidden><img id="avatarPreviewImg" alt="头像预览"></div>
+            </div>
             <div class="field">
               <label for="issuingPlaceEdit">发证地</label>
               <input id="issuingPlaceEdit" placeholder="例如：北京市">
@@ -126,7 +139,10 @@
               <input id="idNumberEdit" placeholder="例如：A123456789">
             </div>
           </div>
-          <div class="inline-actions"><button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button></div>
+          <div class="inline-actions">
+            <button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button>
+            <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
+          </div>
         </div>
 
         <div class="section">
@@ -171,6 +187,12 @@
             <div class="photo-help">可直接选择手机或电脑照片，系统会自动压缩后上传。</div>
             <div id="photoPreview" class="photo-preview" hidden><img id="photoPreviewImg" alt="照片预览"></div>
           </div>
+          <div class="field">
+            <label>该案件已上传照片预览</label>
+            <div id="recordPhotoGallery" class="record-photo-gallery">
+              <p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>
+            </div>
+          </div>
           <div class="inline-actions"><button class="admin-btn" id="addPhotoBtn" type="button">新增照片</button></div>
         </div>
       </div>
@@ -187,6 +209,9 @@
     const adminPanel = document.querySelector('#adminPanel');
     const displayNameEdit = document.querySelector('#displayNameEdit');
     const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
+    const avatarFileInput = document.querySelector('#avatarFileInput');
+    const avatarPreview = document.querySelector('#avatarPreview');
+    const avatarPreviewImg = document.querySelector('#avatarPreviewImg');
     const issuingPlaceEdit = document.querySelector('#issuingPlaceEdit');
     const idNumberEdit = document.querySelector('#idNumberEdit');
     const recordSelect = document.querySelector('#recordSelect');
@@ -197,7 +222,9 @@
     const photoFileInput = document.querySelector('#photoFileInput');
     const photoPreview = document.querySelector('#photoPreview');
     const photoPreviewImg = document.querySelector('#photoPreviewImg');
+    const recordPhotoGallery = document.querySelector('#recordPhotoGallery');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
+    const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
     const updateRecordBtn = document.querySelector('#updateRecordBtn');
     const createRecordBtn = document.querySelector('#createRecordBtn');
     const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
@@ -206,6 +233,7 @@
     const SHARED_ADMIN_LOGIN = 'blcktme1999';
 
     let recordsCache = [];
+    let photosByRecordId = Object.create(null);
 
     function showMessage(text, type = 'ok') {
       messageBox.textContent = text;
@@ -290,6 +318,46 @@
       photoRecordSelect.innerHTML = options.join('');
     }
 
+    function setAvatarPreview(url) {
+      const cleanUrl = String(url || '').trim();
+      if (!cleanUrl) {
+        avatarPreview.hidden = true;
+        avatarPreviewImg.removeAttribute('src');
+        return;
+      }
+      avatarPreviewImg.src = cleanUrl;
+      avatarPreview.hidden = false;
+    }
+
+    function renderRecordPhotoGallery(recordId) {
+      const photos = photosByRecordId[recordId] || [];
+      if (!recordId) {
+        recordPhotoGallery.innerHTML = '<p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>';
+        return;
+      }
+
+      if (!photos.length) {
+        recordPhotoGallery.innerHTML = '<p class="admin-note">该案件目前还没有已上传照片。</p>';
+        return;
+      }
+
+      const html = photos.map((photo) => {
+        const url = escapeText(photo.photo_url || '');
+        const caption = escapeText(photo.caption || '未填写说明');
+        return '<article class="record-photo-item"><img src="' + url + '" alt="案件照片"><p>' + caption + '</p></article>';
+      });
+      recordPhotoGallery.innerHTML = html.join('');
+    }
+
+    function getProfilePayload() {
+      return {
+        display_name: displayNameEdit.value.trim() || null,
+        avatar_url: avatarUrlEdit.value.trim() || null,
+        issuing_place: issuingPlaceEdit.value.trim() || null,
+        id_number: idNumberEdit.value.trim() || null
+      };
+    }
+
     async function requestJson(url, options) {
       const response = await fetch(url, {
         credentials: 'same-origin',
@@ -323,8 +391,16 @@
       const data = await requestJson('/api/admin/data');
       const profile = data.profile || {};
       recordsCache = data.records || [];
+      photosByRecordId = Object.create(null);
+      (data.photos || []).forEach((photo) => {
+        const key = String(photo?.record_id || '');
+        if (!key) return;
+        if (!photosByRecordId[key]) photosByRecordId[key] = [];
+        photosByRecordId[key].push(photo);
+      });
       displayNameEdit.value = profile.display_name || '';
       avatarUrlEdit.value = profile.avatar_url || '';
+      setAvatarPreview(profile.avatar_url || '');
       issuingPlaceEdit.value = profile.issuing_place || '';
       idNumberEdit.value = profile.id_number || '';
       renderRecordSelectOptions(recordsCache);
@@ -334,9 +410,11 @@
         photoRecordSelect.value = recordsCache[0].id;
         recordTitleEdit.value = recordsCache[0].title || '';
         recordInfoEdit.value = recordsCache[0].info_text || '';
+        renderRecordPhotoGallery(recordsCache[0].id);
       } else {
         recordTitleEdit.value = '';
         recordInfoEdit.value = '';
+        renderRecordPhotoGallery('');
       }
     }
 
@@ -377,16 +455,20 @@
       recordTitleEdit.value = found.title || '';
       recordInfoEdit.value = found.info_text || '';
       photoRecordSelect.value = selectedId;
+      renderRecordPhotoGallery(selectedId);
+    });
+
+    photoRecordSelect.addEventListener('change', () => {
+      const selectedId = photoRecordSelect.value;
+      if (selectedId) {
+        recordSelect.value = selectedId;
+      }
+      renderRecordPhotoGallery(selectedId);
     });
 
     saveProfileBtn.addEventListener('click', async () => {
       try {
-        const payload = {
-          display_name: displayNameEdit.value.trim() || null,
-          avatar_url: avatarUrlEdit.value.trim() || null,
-          issuing_place: issuingPlaceEdit.value.trim() || null,
-          id_number: idNumberEdit.value.trim() || null
-        };
+        const payload = getProfilePayload();
         await requestJson('/api/admin/profile', {
           method: 'POST',
           body: JSON.stringify(payload)
@@ -395,6 +477,42 @@
         showMessage('基本资料已更新。', 'ok');
       } catch (error) {
         showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    uploadAvatarBtn.addEventListener('click', async () => {
+      try {
+        const selectedFile = avatarFileInput.files && avatarFileInput.files[0];
+        if (!selectedFile) {
+          showMessage('请先选择头像图片。', 'error');
+          return;
+        }
+
+        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
+          showMessage('只支持图片文件，请重新选择。', 'error');
+          return;
+        }
+
+        uploadAvatarBtn.disabled = true;
+        showMessage('头像处理中，请稍候...', 'ok');
+
+        const avatarDataUrl = await fileToCompressedDataUrl(selectedFile);
+        const hostedUrl = await uploadImageAndGetUrl(avatarDataUrl, selectedFile.name || 'avatar.jpg');
+        avatarUrlEdit.value = hostedUrl;
+        setAvatarPreview(hostedUrl);
+
+        await requestJson('/api/admin/profile', {
+          method: 'POST',
+          body: JSON.stringify(getProfilePayload())
+        });
+
+        avatarFileInput.value = '';
+        await loadAdminData();
+        showMessage('头像已上传并套用。', 'ok');
+      } catch (error) {
+        showMessage('上传头像失败：' + (error?.message || '未知错误'), 'error');
+      } finally {
+        uploadAvatarBtn.disabled = false;
       }
     });
 
@@ -528,6 +646,30 @@
       photoPreviewImg.src = objectUrl;
       photoPreview.hidden = false;
       photoPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
+    });
+
+    avatarFileInput.addEventListener('change', () => {
+      const file = avatarFileInput.files && avatarFileInput.files[0];
+      if (!file) {
+        setAvatarPreview(avatarUrlEdit.value);
+        return;
+      }
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        showMessage('只支持图片文件，请重新选择。', 'error');
+        avatarFileInput.value = '';
+        setAvatarPreview(avatarUrlEdit.value);
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      avatarPreviewImg.src = objectUrl;
+      avatarPreview.hidden = false;
+      avatarPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
+    });
+
+    avatarUrlEdit.addEventListener('input', () => {
+      setAvatarPreview(avatarUrlEdit.value);
     });
 
     clearServerSessionSilently();
