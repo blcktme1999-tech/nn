@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>案件後台管理 - 公安便民入口</title>
+  <title>案件后台管理 - 公安便民入口</title>
   <style>
     :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
     a { color:inherit; text-decoration:none; }
     .site-header { background:#fff; border-top:3px solid #1f1f1f; }
     .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
@@ -26,12 +26,12 @@
     .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
     .field { margin-bottom:14px; }
     .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
-    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans TC","Microsoft JhengHei",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
     textarea { min-height:96px; resize:vertical; }
     input:focus, select:focus, textarea:focus { outline:2px solid #d5223740; border-color:var(--red); }
     .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .actions { margin-top:16px; }
-    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
+    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
     .submit:hover { background:var(--deep-red); }
     .msg { margin-top:14px; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
     .msg.show { display:block; }
@@ -45,11 +45,14 @@
     .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
-    .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans TC","Microsoft JhengHei",sans-serif; cursor:pointer; }
+    .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
     .admin-btn.alt { background:#8d1726; }
     .admin-btn.danger { background:#6b0f1a; }
     .admin-btn.danger:hover { background:#520b14; }
     .admin-note { font-size:12px; color:#666; line-height:1.6; }
+    .photo-preview { margin-top:10px; max-width:220px; border:1px solid #ddd; border-radius:6px; background:#f7f7f7; overflow:hidden; }
+    .photo-preview img { width:100%; display:block; }
+    .photo-help { margin-top:8px; font-size:12px; color:#666; line-height:1.6; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
     @media (max-width:700px) {
@@ -68,85 +71,85 @@
 <body>
   <header class="site-header">
     <div class="masthead">
-      <a class="identity" href="index (2).html" aria-label="返回首頁">
-        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中華人民共和國公安部">
+      <a class="identity" href="index (2).html" aria-label="返回首页">
+        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
       </a>
       <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
-      <a class="return-home" href="index (2).html">← 返回首頁</a>
+      <a class="return-home" href="index (2).html">← 返回首页</a>
     </div>
     <nav class="nav-bar"><div class="nav-inner">
-      <a href="index (2).html">首頁</a><a href="mm1.html">便民服務</a><a href="case-search.html">案件查詢</a><a class="active" href="case-admin.html">後台管理</a>
+      <a href="index (2).html">首页</a><a href="mm1.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="case-admin.html">后台管理</a>
     </div></nav>
   </header>
 
   <main>
     <section class="panel">
-      <h1>案件後台管理</h1>
-      <p class="intro">此頁提供給管理員（你的客戶）維護資料庫：姓名、案件編號、內容與照片。前台查詢會用姓名加案件編號對應資料。</p>
+      <h1>案件后台管理</h1>
+      <p class="intro">此页提供给管理员（你的客户）维护数据库：姓名、案件编号、内容与照片。前台查询会用姓名加案件编号对应资料。</p>
 
       <form id="loginForm">
         <div class="login-grid">
           <div class="field">
-            <label for="adminLogin">登入帳號</label>
+            <label for="adminLogin">登录账号</label>
             <input id="adminLogin" value="blcktme1999" readonly>
           </div>
           <div class="field">
-            <label for="password">密碼</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="請輸入密碼">
+            <label for="password">密码</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
           </div>
         </div>
-        <div class="actions"><button class="submit" type="submit">登 入 後 台</button></div>
+        <div class="actions"><button class="submit" type="submit">登 入 后 台</button></div>
       </form>
 
       <div id="message" class="msg" aria-live="polite"></div>
 
       <div id="adminPanel" class="admin" aria-live="polite">
-        <div class="admin-head">資料維護操作</div>
+        <div class="admin-head">资料维护操作</div>
 
         <div class="section">
-          <h4>基本資料</h4>
+          <h4>基本资料</h4>
           <div class="form-row">
             <div class="field">
               <label for="displayNameEdit">姓名</label>
               <input id="displayNameEdit" placeholder="例如：王小明">
             </div>
             <div class="field">
-              <label for="avatarUrlEdit">頭像網址</label>
+              <label for="avatarUrlEdit">头像网址</label>
               <input id="avatarUrlEdit" placeholder="https://...">
             </div>
             <div class="field">
-              <label for="issuingPlaceEdit">發證地</label>
-              <input id="issuingPlaceEdit" placeholder="例如：台北市">
+              <label for="issuingPlaceEdit">发证地</label>
+              <input id="issuingPlaceEdit" placeholder="例如：北京市">
             </div>
             <div class="field">
-              <label for="idNumberEdit">證件號碼</label>
+              <label for="idNumberEdit">证件号码</label>
               <input id="idNumberEdit" placeholder="例如：A123456789">
             </div>
           </div>
-          <div class="inline-actions"><button class="admin-btn" id="saveProfileBtn" type="button">儲存基本資料</button></div>
+          <div class="inline-actions"><button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button></div>
         </div>
 
         <div class="section">
-          <h4>案件資料</h4>
-          <p class="admin-note">你可以先選擇既有案件更新，或直接新增新案件。</p>
+          <h4>案件资料</h4>
+          <p class="admin-note">你可以先选择已有案件更新，或直接新增新案件。</p>
           <div class="form-row">
             <div class="field">
-              <label for="recordSelect">選擇既有案件（更新用）</label>
+              <label for="recordSelect">选择已有案件（更新用）</label>
               <select id="recordSelect"></select>
             </div>
             <div class="field">
-              <label for="recordTitleEdit">案件編號</label>
+              <label for="recordTitleEdit">案件编号</label>
               <input id="recordTitleEdit" placeholder="例如：A-2026-0001">
             </div>
           </div>
           <div class="field">
-            <label for="recordInfoEdit">案件說明</label>
-            <textarea id="recordInfoEdit" placeholder="輸入案件內容說明"></textarea>
+            <label for="recordInfoEdit">案件说明</label>
+            <textarea id="recordInfoEdit" placeholder="输入案件内容说明"></textarea>
           </div>
           <div class="inline-actions">
-            <button class="admin-btn" id="updateRecordBtn" type="button">更新所選案件</button>
+            <button class="admin-btn" id="updateRecordBtn" type="button">更新所选案件</button>
             <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
-            <button class="admin-btn danger" id="deleteRecordBtn" type="button">刪除所選案件</button>
+            <button class="admin-btn danger" id="deleteRecordBtn" type="button">删除所选案件</button>
           </div>
         </div>
 
@@ -154,17 +157,19 @@
           <h4>新增照片</h4>
           <div class="form-row">
             <div class="field">
-              <label for="photoRecordSelect">套用到哪筆案件</label>
+              <label for="photoRecordSelect">应用到哪笔案件</label>
               <select id="photoRecordSelect"></select>
             </div>
             <div class="field">
-              <label for="photoCaptionInput">照片說明</label>
-              <input id="photoCaptionInput" placeholder="例如：現場正面照">
+              <label for="photoCaptionInput">照片说明</label>
+              <input id="photoCaptionInput" placeholder="例如：现场正面照">
             </div>
           </div>
           <div class="field">
-            <label for="photoUrlInput">照片網址</label>
-            <input id="photoUrlInput" placeholder="https://...">
+            <label for="photoFileInput">上传照片</label>
+            <input id="photoFileInput" type="file" accept="image/*">
+            <div class="photo-help">可直接选择手机或电脑照片，系统会自动压缩后上传。</div>
+            <div id="photoPreview" class="photo-preview" hidden><img id="photoPreviewImg" alt="照片预览"></div>
           </div>
           <div class="inline-actions"><button class="admin-btn" id="addPhotoBtn" type="button">新增照片</button></div>
         </div>
@@ -172,7 +177,7 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="site-footer-inner">本頁為管理員專用，請勿提供給一般案件查詢用戶。</div></footer>
+  <footer class="site-footer"><div class="site-footer-inner">本页为管理员专用，请勿提供给普通案件查询用户。</div></footer>
 
   <script>
     const loginForm = document.querySelector('#loginForm');
@@ -189,7 +194,9 @@
     const recordInfoEdit = document.querySelector('#recordInfoEdit');
     const photoRecordSelect = document.querySelector('#photoRecordSelect');
     const photoCaptionInput = document.querySelector('#photoCaptionInput');
-    const photoUrlInput = document.querySelector('#photoUrlInput');
+    const photoFileInput = document.querySelector('#photoFileInput');
+    const photoPreview = document.querySelector('#photoPreview');
+    const photoPreviewImg = document.querySelector('#photoPreviewImg');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
     const updateRecordBtn = document.querySelector('#updateRecordBtn');
     const createRecordBtn = document.querySelector('#createRecordBtn');
@@ -220,8 +227,62 @@
       }[char] || char));
     }
 
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('图片读取失败，请改用 JPG 或 PNG。'));
+          img.src = String(reader.result || '');
+        };
+        reader.onerror = () => reject(new Error('图片读取失败，请重新选择文件。'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function fileToCompressedDataUrl(file) {
+      const image = await fileToImage(file);
+      const maxWidth = 1600;
+      const maxHeight = 1600;
+      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * ratio));
+      const height = Math.max(1, Math.round(image.height * ratio));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('浏览器不支持图片处理，请改用较新版本浏览器。');
+      }
+      ctx.drawImage(image, 0, 0, width, height);
+
+      let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      if (dataUrl.length > 1900000) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      }
+      if (dataUrl.length > 1900000) {
+        throw new Error('照片文件仍过大，请选择较小照片后再上传。');
+      }
+      return dataUrl;
+    }
+
+    async function uploadImageAndGetUrl(dataUrl, fileName) {
+      const data = await requestJson('/api/admin/upload-image', {
+        method: 'POST',
+        body: JSON.stringify({ dataUrl, fileName })
+      });
+
+      const hostedUrl = String(data?.url || '').trim();
+      if (!hostedUrl) {
+        throw new Error('图床未返回网址，请稍后再试。');
+      }
+      return hostedUrl;
+    }
+
     function renderRecordSelectOptions(records) {
-      const options = ['<option value="">請選擇案件</option>'].concat(records.map((record) => {
+      const options = ['<option value="">请选择案件</option>'].concat(records.map((record) => {
         const title = record.title || '未命名案件';
         return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
       }));
@@ -243,7 +304,7 @@
         data = {};
       }
       if (!response.ok) {
-        const errorText = data.error || ('請求失敗（HTTP ' + response.status + '）。');
+        const errorText = data.error || ('请求失败（HTTP ' + response.status + '）。');
         throw new Error(errorText);
       }
       return data;
@@ -255,7 +316,6 @@
         credentials: 'same-origin',
         keepalive: true
       }).catch(() => {
-        // ignore logout failures for best-effort cleanup
       });
     }
 
@@ -288,12 +348,12 @@
       const password = passwordInput.value;
 
       if (!loginId || !password) {
-        showMessage('請先輸入帳號與密碼。', 'error');
+        showMessage('请先输入账号与密码。', 'error');
         return;
       }
 
       if (loginId !== SHARED_ADMIN_LOGIN) {
-        showMessage('登入失敗：請使用指定的管理員帳號。', 'error');
+        showMessage('登录失败：请使用指定的管理员账号。', 'error');
         return;
       }
 
@@ -304,9 +364,9 @@
         });
         await loadAdminData();
         adminPanel.classList.add('show');
-        showMessage('已登入後台，可開始維護資料。', 'ok');
+        showMessage('已登录后台，可开始维护资料。', 'ok');
       } catch (error) {
-        showMessage('登入失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('登录失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
@@ -332,9 +392,9 @@
           body: JSON.stringify(payload)
         });
         await loadAdminData();
-        showMessage('基本資料已更新。', 'ok');
+        showMessage('基本资料已更新。', 'ok');
       } catch (error) {
-        showMessage('更新基本資料失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
@@ -342,7 +402,7 @@
       try {
         const selectedId = recordSelect.value;
         if (!selectedId) {
-          showMessage('請先選擇要更新的案件。', 'error');
+          showMessage('请先选择要更新的案件。', 'error');
           return;
         }
 
@@ -355,9 +415,9 @@
           body: JSON.stringify(payload)
         });
         await loadAdminData();
-        showMessage('案件資料已更新。', 'ok');
+        showMessage('案件资料已更新。', 'ok');
       } catch (error) {
-        showMessage('更新案件失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('更新案件失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
@@ -374,7 +434,7 @@
         await loadAdminData();
         showMessage('新案件已新增。', 'ok');
       } catch (error) {
-        showMessage('新增案件失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('新增案件失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
@@ -382,13 +442,13 @@
       try {
         const selectedId = recordSelect.value;
         if (!selectedId) {
-          showMessage('請先選擇要刪除的案件。', 'error');
+          showMessage('请先选择要删除的案件。', 'error');
           return;
         }
 
         const selected = recordsCache.find((record) => record.id === selectedId);
         const selectedTitle = selected?.title || '未命名案件';
-        const confirmed = window.confirm('確定要刪除案件「' + selectedTitle + '」嗎？\n此操作無法復原。');
+        const confirmed = window.confirm('确定要删除案件「' + selectedTitle + '」吗？\n此操作无法恢复。');
         if (!confirmed) {
           return;
         }
@@ -397,44 +457,79 @@
           method: 'DELETE'
         });
         await loadAdminData();
-        showMessage('案件已刪除。', 'ok');
+        showMessage('案件已删除。', 'ok');
       } catch (error) {
-        showMessage('刪除案件失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('删除案件失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
     addPhotoBtn.addEventListener('click', async () => {
       try {
         const recordId = photoRecordSelect.value;
-        const photoUrl = photoUrlInput.value.trim();
+        const selectedFile = photoFileInput.files && photoFileInput.files[0];
         if (!recordId) {
-          showMessage('請先選擇要加照片的案件。', 'error');
+          showMessage('请先选择要加照片的案件。', 'error');
           return;
         }
-        if (!photoUrl) {
-          showMessage('請先輸入照片網址。', 'error');
+        if (!selectedFile) {
+          showMessage('请先选择照片文件。', 'error');
           return;
         }
 
+        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
+          showMessage('只支持图片文件，请重新选择。', 'error');
+          return;
+        }
+
+        addPhotoBtn.disabled = true;
+        showMessage('照片处理中，请稍候...', 'ok');
+        const photoDataUrl = await fileToCompressedDataUrl(selectedFile);
+        const hostedUrl = await uploadImageAndGetUrl(photoDataUrl, selectedFile.name || 'case-photo.jpg');
+
         const payload = {
           record_id: recordId,
-          photo_url: photoUrl,
+          photo_url: hostedUrl,
           caption: photoCaptionInput.value.trim() || null
         };
         await requestJson('/api/admin/photos', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        photoUrlInput.value = '';
+        photoFileInput.value = '';
         photoCaptionInput.value = '';
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
         await loadAdminData();
-        showMessage('照片已新增。', 'ok');
+        showMessage('照片已新增（已自动转成网址）。', 'ok');
       } catch (error) {
-        showMessage('新增照片失敗：' + (error?.message || '未知錯誤'), 'error');
+        showMessage('新增照片失败：' + (error?.message || '未知错误'), 'error');
+      } finally {
+        addPhotoBtn.disabled = false;
       }
     });
 
-    // Force fresh login whenever this page is opened.
+    photoFileInput.addEventListener('change', () => {
+      const file = photoFileInput.files && photoFileInput.files[0];
+      if (!file) {
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
+        return;
+      }
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        showMessage('只支持图片文件，请重新选择。', 'error');
+        photoFileInput.value = '';
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      photoPreviewImg.src = objectUrl;
+      photoPreview.hidden = false;
+      photoPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
+    });
+
     clearServerSessionSilently();
 
     window.addEventListener('pagehide', () => {
