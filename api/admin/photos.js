@@ -13,9 +13,23 @@ module.exports = async function handler(req, res) {
   try {
     const { client } = await signInAdmin();
     const body = await getJsonBody(req);
+    const photoUrl = String(body?.photo_url || '').trim();
+
+    if (!photoUrl) {
+      json(res, 400, { error: '缺少照片內容。' });
+      return;
+    }
+
+    const isHttpUrl = /^https?:\/\//i.test(photoUrl);
+    const isDataImage = /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(photoUrl);
+    if (!isHttpUrl && !isDataImage) {
+      json(res, 400, { error: '照片格式不支援，請使用圖片網址或直接上傳圖片。' });
+      return;
+    }
+
     const payload = {
       record_id: body?.record_id,
-      photo_url: body?.photo_url,
+      photo_url: photoUrl,
       caption: body?.caption || null
     };
     const { error } = await client.from('record_photos').insert(payload);
