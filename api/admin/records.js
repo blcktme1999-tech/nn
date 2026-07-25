@@ -47,6 +47,6 @@ module.exports = async function handler(req, res) {
     if (error) throw error;
     json(res, 200, { ok: true });
   } catch (error) {
-    json(res, 500, { error: error.message || '案件資料操作失敗。' });
+    json(res, 500, { error: error.message || '案件资料操作失败。' });
   }
 };
