@@ -13,13 +13,13 @@ module.exports = async function handler(req, res) {
     const password = String(body?.password || '');
 
     if (loginId !== sharedAdminLogin || password !== sharedAdminPassword) {
-      json(res, 401, { error: '帳號或密碼錯誤。' });
+      json(res, 401, { error: '账号或密码错误。' });
       return;
     }
 
     res.setHeader('Set-Cookie', createSessionCookie());
     json(res, 200, { ok: true });
   } catch (error) {
-    json(res, 500, { error: error.message || '登入失敗。' });
+    json(res, 500, { error: error.message || '登录失败。' });
   }
 };
