@@ -16,14 +16,14 @@ module.exports = async function handler(req, res) {
     const photoUrl = String(body?.photo_url || '').trim();
 
     if (!photoUrl) {
-      json(res, 400, { error: '缺少照片內容。' });
+      json(res, 400, { error: '缺少照片内容。' });
       return;
     }
 
     const isHttpUrl = /^https?:\/\//i.test(photoUrl);
     const isDataImage = /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(photoUrl);
     if (!isHttpUrl && !isDataImage) {
-      json(res, 400, { error: '照片格式不支援，請使用圖片網址或直接上傳圖片。' });
+      json(res, 400, { error: '照片格式不支持，请使用图片网址或直接上传图片。' });
       return;
     }
 
@@ -36,6 +36,6 @@ module.exports = async function handler(req, res) {
     if (error) throw error;
     json(res, 200, { ok: true });
   } catch (error) {
-    json(res, 500, { error: error.message || '新增照片失敗。' });
+    json(res, 500, { error: error.message || '新增照片失败。' });
   }
 };
