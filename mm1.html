@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>線上報案 - 公安便民入口</title>
+  <title>线上报案 - 公安便民入口</title>
   <style>
     :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
     a { color:inherit; text-decoration:none; }
     .site-header { background:#fff; border-top:3px solid #1f1f1f; }
     .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
@@ -25,10 +25,9 @@
     .service-panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
     .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
     label { display:block; margin:15px 0 6px; color:#666; font-size:14px; font-weight:700; }
-    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans TC","Microsoft JhengHei",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
     input:focus { outline:2px solid #d5223740; border-color:var(--red); }
-    .privacy { margin:17px 0 0; color:#8d8d8d; font-size:12px; line-height:1.7; }
-    .submit { width:100%; min-height:44px; margin-top:22px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans TC","Microsoft JhengHei",sans-serif; letter-spacing:8px; text-indent:8px; cursor:pointer; }
+    .submit { width:100%; min-height:44px; margin-top:22px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; letter-spacing:8px; text-indent:8px; cursor:pointer; }
     .submit:hover { background:var(--deep-red); }
     .result { display:none; margin-top:16px; padding:10px 12px; border-left:3px solid #18864a; background:#edf9f1; color:#23633e; font-size:13px; line-height:1.6; }
     .result.show { display:block; }
@@ -51,46 +50,45 @@
 <body>
   <header class="site-header">
     <div class="masthead">
-      <a class="identity" href="index (2).html" aria-label="返回首頁">
-        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中華人民共和國公安部">
+      <a class="identity" href="index (2).html" aria-label="返回首页">
+        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
       </a>
       <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
-      <a class="return-home" href="index (2).html">← 返回首頁</a>
+      <a class="return-home" href="index (2).html">← 返回首页</a>
     </div>
     <nav class="nav-bar"><div class="nav-inner">
-      <a href="index (2).html">首頁</a><a class="active" href="mm1.html">便民服務</a><a href="case-search.html">案件查詢</a><a href="index (2).html">返回主站</a>
+      <a href="index (2).html">首页</a><a class="active" href="mm1.html">便民服务</a><a href="case-search.html">案件查询</a><a href="index (2).html">返回主站</a>
     </div></nav>
   </header>
 
   <main>
     <form id="reportForm" class="service-panel">
-      <h1>線上報案</h1>
-      <p class="intro">填入單位名稱與中文預設代碼後，即可進入視訊報案功能</p>
-      <label for="unitName">單位名稱</label>
-      <input id="unitName" required maxlength="40" placeholder="例如：刑事警察大隊">
-      <label for="entryCode">後端預設代碼（中文）</label>
-      <input id="entryCode" required maxlength="20" placeholder="請輸入：警民視訊接入" value="警民視訊接入">
-      <div class="callout">預設代碼：<strong>警民視訊接入</strong>。輸入正確後，系統會自動跳轉到視訊後台頁。</div>
-      <button class="submit" type="submit">進 入 視 訊</button>
+      <h1>线上报案</h1>
+      <p class="intro">填入单位名称与中文预设代码后，即可进入视频报案功能</p>
+      <label for="unitName">单位名称</label>
+      <input id="unitName" required maxlength="40" placeholder="例如：刑事警察大队">
+      <label for="entryCode">后端预设代码（中文）</label>
+      <input id="entryCode" required maxlength="20" placeholder="请输入：警民视频接入" value="警民视频接入">
+      <div class="callout">预设代码：<strong>警民视频接入</strong>。输入正确后，系统会自动跳转到视频后台页。</div>
+      <button class="submit" type="submit">进 入 视 频</button>
       <div id="reportResult" class="result" aria-live="polite"></div>
     </form>
   </main>
 
-  <footer class="site-footer"><div class="site-footer-inner">線上報案採用中文代碼驗證，完成後會導向視訊功能頁。</div></footer>
+  <footer class="site-footer"><div class="site-footer-inner">线上报案采用中文代码验证，完成后会导向视频功能页。</div></footer>
 
   <script>
     const form = document.querySelector('#reportForm');
     const unitName = document.querySelector('#unitName');
     const entryCode = document.querySelector('#entryCode');
     const result = document.querySelector('#reportResult');
-    const presetCode = '警民視訊接入';
+    const presetCode = '警民视频接入';
 
     function show(text, error) {
       result.textContent = text;
       result.className = 'result show' + (error ? ' error' : '');
     }
 
-    // 忽略空白與常見標點，降低中文輸入法造成的比對失敗。
     function normalizeCode(value) {
       return value.replace(/\s+/g, '').replace(/[，。、「」『』,.]/g, '');
     }
@@ -103,17 +101,17 @@
       const code = entryCode.value.trim();
 
       if (!unit || !code) {
-        show('請先填寫單位名稱與中文代碼。', true);
+        show('请先填写单位名称与中文代码。', true);
         return;
       }
 
       if (normalizeCode(code) !== normalizeCode(presetCode)) {
-        show('代碼錯誤，請輸入「警民視訊接入」。', true);
+        show('代码错误，请输入「警民视频接入」。', true);
         return;
       }
 
       const target = 'video-room.html?unit=' + encodeURIComponent(unit) + '&code=' + encodeURIComponent(code);
-      show('驗證成功，正在進入視訊功能...', false);
+      show('验证成功，正在进入视频功能...', false);
       setTimeout(() => { window.location.href = target; }, 500);
     });
   </script>
