@@ -45,6 +45,21 @@
     .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .overview-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; }
+    .summary-card { border:1px solid #e3e3e3; border-radius:6px; background:#fff; padding:13px 14px; }
+    .summary-card strong { display:block; margin-bottom:8px; color:#123c77; font-size:14px; }
+    .summary-list { display:grid; gap:7px; margin:0; }
+    .summary-row { display:grid; grid-template-columns:78px 1fr; gap:8px; font-size:13px; line-height:1.55; }
+    .summary-row dt { color:#777; font-weight:700; }
+    .summary-row dd { margin:0; color:#333; word-break:break-word; }
+    .record-quick-list { display:grid; gap:8px; max-height:250px; overflow:auto; padding-right:2px; }
+    .record-quick-item { width:100%; border:1px solid #e2e2e2; border-radius:6px; background:#fbfbfb; padding:10px 11px; text-align:left; cursor:pointer; }
+    .record-quick-item:hover, .record-quick-item.active { border-color:#c90822; background:#fff7f8; }
+    .record-quick-item b { display:block; color:#333; font-size:13px; margin-bottom:5px; }
+    .record-quick-item span { display:block; color:#777; font-size:12px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .record-preview { margin-top:10px; border:1px dashed #d6d6d6; border-radius:6px; background:#fcfcfc; padding:11px 12px; }
+    .record-preview-title { margin:0 0 7px; color:#333; font-size:13px; font-weight:700; }
+    .record-preview-text { margin:0; color:#555; font-size:13px; line-height:1.65; white-space:pre-wrap; word-break:break-word; max-height:130px; overflow:auto; }
     .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
     .admin-btn.alt { background:#8d1726; }
     .admin-btn.danger { background:#6b0f1a; }
@@ -72,6 +87,7 @@
       .panel { padding:23px 22px 27px; }
       .login-grid { grid-template-columns:1fr; }
       .form-row { grid-template-columns:1fr; }
+      .overview-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -98,7 +114,7 @@
         <div class="login-grid">
           <div class="field">
             <label for="adminLogin">登录账号</label>
-            <input id="adminLogin" value="blcktme1999" readonly>
+            <input id="adminLogin" autocomplete="username" placeholder="请输入管理员账号">
           </div>
           <div class="field">
             <label for="password">密码</label>
@@ -112,6 +128,30 @@
 
       <div id="adminPanel" class="admin" aria-live="polite">
         <div class="admin-head">资料维护操作</div>
+
+        <div class="section">
+          <h4>目前资料总览</h4>
+          <div class="overview-grid">
+            <div class="summary-card">
+              <strong>基本资料现况</strong>
+              <dl class="summary-list">
+                <div class="summary-row"><dt>姓名</dt><dd id="summaryName">未填写</dd></div>
+                <div class="summary-row"><dt>证件号码</dt><dd id="summaryIdNumber">未填写</dd></div>
+                <div class="summary-row"><dt>发证地</dt><dd id="summaryIssuingPlace">未填写</dd></div>
+                <div class="summary-row"><dt>头像</dt><dd id="summaryAvatar">未设置</dd></div>
+                <div class="summary-row"><dt>案件数量</dt><dd id="summaryRecordCount">0 笔</dd></div>
+              </dl>
+            </div>
+            <div class="summary-card">
+              <strong>已有案件快捷选择</strong>
+              <div id="recordQuickList" class="record-quick-list"><p class="admin-note">暂无案件。</p></div>
+            </div>
+          </div>
+          <div class="record-preview">
+            <p id="recordPreviewTitle" class="record-preview-title">尚未选择案件</p>
+            <p id="recordPreviewText" class="record-preview-text">选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。</p>
+          </div>
+        </div>
 
         <div class="section">
           <h4>基本资料</h4>
@@ -223,14 +263,20 @@
     const photoPreview = document.querySelector('#photoPreview');
     const photoPreviewImg = document.querySelector('#photoPreviewImg');
     const recordPhotoGallery = document.querySelector('#recordPhotoGallery');
+    const summaryName = document.querySelector('#summaryName');
+    const summaryIdNumber = document.querySelector('#summaryIdNumber');
+    const summaryIssuingPlace = document.querySelector('#summaryIssuingPlace');
+    const summaryAvatar = document.querySelector('#summaryAvatar');
+    const summaryRecordCount = document.querySelector('#summaryRecordCount');
+    const recordQuickList = document.querySelector('#recordQuickList');
+    const recordPreviewTitle = document.querySelector('#recordPreviewTitle');
+    const recordPreviewText = document.querySelector('#recordPreviewText');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
     const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
     const updateRecordBtn = document.querySelector('#updateRecordBtn');
     const createRecordBtn = document.querySelector('#createRecordBtn');
     const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
     const addPhotoBtn = document.querySelector('#addPhotoBtn');
-
-    const SHARED_ADMIN_LOGIN = 'blcktme1999';
 
     let recordsCache = [];
     let photosByRecordId = Object.create(null);
@@ -316,6 +362,58 @@
       }));
       recordSelect.innerHTML = options.join('');
       photoRecordSelect.innerHTML = options.join('');
+    }
+
+    function summarizeText(value) {
+      const text = String(value || '').trim().replace(/\s+/g, ' ');
+      if (!text) return '尚未填写内容';
+      return text.length > 58 ? text.slice(0, 58) + '...' : text;
+    }
+
+    function renderOverview(profile, records) {
+      summaryName.textContent = profile.display_name || '未填写';
+      summaryIdNumber.textContent = profile.id_number || '未填写';
+      summaryIssuingPlace.textContent = profile.issuing_place || '未填写';
+      summaryAvatar.textContent = profile.avatar_url ? '已设置' : '未设置';
+      summaryRecordCount.textContent = String(records.length) + ' 笔';
+
+      if (!records.length) {
+        recordQuickList.innerHTML = '<p class="admin-note">暂无案件，填写案件编号和内容后点击「新增案件」。</p>';
+        return;
+      }
+
+      recordQuickList.innerHTML = records.map((record) => {
+        const title = escapeText(record.title || '未命名案件');
+        const summary = escapeText(summarizeText(record.info_text));
+        return '<button class="record-quick-item" type="button" data-record-id="' + escapeText(record.id) + '"><b>' + title + '</b><span>' + summary + '</span></button>';
+      }).join('');
+    }
+
+    function setSelectedRecord(recordId) {
+      const selectedId = String(recordId || '');
+      const found = recordsCache.find((record) => String(record.id) === selectedId);
+
+      recordSelect.value = selectedId;
+      photoRecordSelect.value = selectedId;
+
+      Array.from(recordQuickList.querySelectorAll('.record-quick-item')).forEach((button) => {
+        button.classList.toggle('active', button.dataset.recordId === selectedId);
+      });
+
+      if (!found) {
+        recordTitleEdit.value = '';
+        recordInfoEdit.value = '';
+        recordPreviewTitle.textContent = '尚未选择案件';
+        recordPreviewText.textContent = '选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。';
+        renderRecordPhotoGallery('');
+        return;
+      }
+
+      recordTitleEdit.value = found.title || '';
+      recordInfoEdit.value = found.info_text || '';
+      recordPreviewTitle.textContent = '正在编辑：' + (found.title || '未命名案件');
+      recordPreviewText.textContent = found.info_text || '该案件目前尚未填写内容。';
+      renderRecordPhotoGallery(selectedId);
     }
 
     function setAvatarPreview(url) {
@@ -404,17 +502,12 @@
       issuingPlaceEdit.value = profile.issuing_place || '';
       idNumberEdit.value = profile.id_number || '';
       renderRecordSelectOptions(recordsCache);
+      renderOverview(profile, recordsCache);
 
       if (recordsCache.length) {
-        recordSelect.value = recordsCache[0].id;
-        photoRecordSelect.value = recordsCache[0].id;
-        recordTitleEdit.value = recordsCache[0].title || '';
-        recordInfoEdit.value = recordsCache[0].info_text || '';
-        renderRecordPhotoGallery(recordsCache[0].id);
+        setSelectedRecord(recordsCache[0].id);
       } else {
-        recordTitleEdit.value = '';
-        recordInfoEdit.value = '';
-        renderRecordPhotoGallery('');
+        setSelectedRecord('');
       }
     }
 
@@ -427,11 +520,6 @@
 
       if (!loginId || !password) {
         showMessage('请先输入账号与密码。', 'error');
-        return;
-      }
-
-      if (loginId !== SHARED_ADMIN_LOGIN) {
-        showMessage('登录失败：请使用指定的管理员账号。', 'error');
         return;
       }
 
@@ -449,21 +537,18 @@
     });
 
     recordSelect.addEventListener('change', () => {
-      const selectedId = recordSelect.value;
-      const found = recordsCache.find((record) => record.id === selectedId);
-      if (!found) return;
-      recordTitleEdit.value = found.title || '';
-      recordInfoEdit.value = found.info_text || '';
-      photoRecordSelect.value = selectedId;
-      renderRecordPhotoGallery(selectedId);
+      setSelectedRecord(recordSelect.value);
     });
 
     photoRecordSelect.addEventListener('change', () => {
       const selectedId = photoRecordSelect.value;
-      if (selectedId) {
-        recordSelect.value = selectedId;
-      }
-      renderRecordPhotoGallery(selectedId);
+      setSelectedRecord(selectedId);
+    });
+
+    recordQuickList.addEventListener('click', (event) => {
+      const button = event.target.closest('.record-quick-item');
+      if (!button) return;
+      setSelectedRecord(button.dataset.recordId || '');
     });
 
     saveProfileBtn.addEventListener('click', async () => {
