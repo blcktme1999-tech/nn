@@ -132,23 +132,27 @@
         <div class="admin-head">资料维护操作</div>
 
         <div class="section">
-          <h4>人员资料</h4>
-          <p class="admin-note">先选择要维护的人，下面的基本资料、案件和照片都会跟着切换。要新增另一个人，点击「新增人员」后填写并保存。</p>
-          <div class="person-actions">
-            <div class="field">
-              <label for="profileSelect">选择已有人员</label>
-              <select id="profileSelect"></select>
-            </div>
-            <button class="admin-btn alt" id="newProfileBtn" type="button">新增人员</button>
-            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
+          <h4>新增人员</h4>
+          <p class="admin-note">新增资料请先点这里，下面的编辑区会清空。填写姓名、证件号码、发证地和头像后，点击「保存基本资料」。</p>
+          <div class="inline-actions">
+            <button class="admin-btn alt" id="newProfileBtn" type="button">新增一位人员</button>
           </div>
         </div>
 
         <div class="section">
-          <h4>目前资料总览</h4>
+          <h4>选取资料</h4>
+          <p class="admin-note">选择既有人员后，下方会立即显示该人员资料，并可直接编辑、删除、维护案件。</p>
+          <div class="field">
+            <label for="profileSelect">选择已有人员</label>
+            <select id="profileSelect"></select>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>前台显示预览</h4>
           <div class="overview-grid">
             <div class="summary-card">
-              <strong>基本资料现况</strong>
+              <strong>用户查询页会看到的基本资料</strong>
               <dl class="summary-list">
                 <div class="summary-row"><dt>姓名</dt><dd id="summaryName">未填写</dd></div>
                 <div class="summary-row"><dt>证件号码</dt><dd id="summaryIdNumber">未填写</dd></div>
@@ -169,7 +173,7 @@
         </div>
 
         <div class="section">
-          <h4>基本资料</h4>
+          <h4 id="profileEditorTitle">编辑当前人员资料</h4>
           <div class="form-row">
             <div class="field">
               <label for="displayNameEdit">姓名</label>
@@ -197,6 +201,7 @@
           <div class="inline-actions">
             <button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button>
             <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
+            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
           </div>
         </div>
 
@@ -287,6 +292,7 @@
     const recordQuickList = document.querySelector('#recordQuickList');
     const recordPreviewTitle = document.querySelector('#recordPreviewTitle');
     const recordPreviewText = document.querySelector('#recordPreviewText');
+    const profileEditorTitle = document.querySelector('#profileEditorTitle');
     const newProfileBtn = document.querySelector('#newProfileBtn');
     const deleteProfileBtn = document.querySelector('#deleteProfileBtn');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
@@ -457,6 +463,7 @@
       const profileRecords = getRecordsForProfile(selectedProfileId);
 
       profileSelect.value = selectedProfileId;
+      profileEditorTitle.textContent = selectedProfileId ? '编辑当前人员资料' : '新增人员资料';
       displayNameEdit.value = profile.display_name || '';
       avatarUrlEdit.value = profile.avatar_url || '';
       issuingPlaceEdit.value = profile.issuing_place || '';
@@ -635,12 +642,15 @@
     saveProfileBtn.addEventListener('click', async () => {
       try {
         const payload = getProfilePayload();
-        await requestJson('/api/admin/profile', {
+        const result = await requestJson('/api/admin/profile', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
+        if (result?.profile?.id) {
+          selectedProfileId = String(result.profile.id);
+        }
         await loadAdminData();
-        showMessage('基本资料已更新。', 'ok');
+        showMessage(payload.id ? '基本资料已更新。' : '新人员已新增，并已自动选中。', 'ok');
       } catch (error) {
         showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
       }
@@ -667,10 +677,13 @@
         avatarUrlEdit.value = hostedUrl;
         setAvatarPreview(hostedUrl);
 
-        await requestJson('/api/admin/profile', {
+        const result = await requestJson('/api/admin/profile', {
           method: 'POST',
           body: JSON.stringify(getProfilePayload())
         });
+        if (result?.profile?.id) {
+          selectedProfileId = String(result.profile.id);
+        }
 
         avatarFileInput.value = '';
         await loadAdminData();
