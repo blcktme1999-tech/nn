@@ -207,14 +207,14 @@ app.get('/api/admin/data', requireAdminSession, async (req, res) => {
 app.post('/api/admin/profile', requireAdminSession, async (req, res) => {
   try {
     if (useLocalDb) {
-      localDb.upsertProfile({
+      const profile = localDb.upsertProfile({
         id: req.body?.id || null,
         display_name: req.body?.display_name || null,
         avatar_url: req.body?.avatar_url || null,
         issuing_place: req.body?.issuing_place || null,
         id_number: req.body?.id_number || null
       });
-      res.json({ ok: true });
+      res.json({ ok: true, profile });
       return;
     }
 
