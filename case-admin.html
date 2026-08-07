@@ -405,6 +405,28 @@
       return recordsCache.filter((record) => String(record.profile_id || '') === id);
     }
 
+    function normalizeProfiles(data) {
+      const profiles = Array.isArray(data.profiles) ? data.profiles.filter(Boolean) : [];
+      const profile = data.profile && typeof data.profile === 'object' ? data.profile : null;
+      if (!profiles.length && profile && (profile.display_name || profile.id_number || profile.issuing_place || profile.avatar_url)) {
+        return [{
+          ...profile,
+          id: profile.id || 'default-profile'
+        }];
+      }
+      return profiles.map((item, index) => ({
+        ...item,
+        id: item.id || ('profile-' + index)
+      }));
+    }
+
+    function updateProfileActionState() {
+      const isEditing = Boolean(selectedProfileId);
+      saveProfileBtn.textContent = isEditing ? '更新资料' : '上传新案件';
+      uploadAvatarBtn.textContent = isEditing ? '上传头像并套用' : '上传头像并套用到新人员';
+      deleteProfileBtn.disabled = !isEditing;
+    }
+
     function summarizeText(value) {
       const text = String(value || '').trim().replace(/\s+/g, ' ');
       if (!text) return '尚未填写内容';
@@ -464,6 +486,7 @@
 
       profileSelect.value = selectedProfileId;
       profileEditorTitle.textContent = selectedProfileId ? '编辑当前人员资料' : '新增人员资料';
+      updateProfileActionState();
       displayNameEdit.value = profile.display_name || '';
       avatarUrlEdit.value = profile.avatar_url || '';
       issuingPlaceEdit.value = profile.issuing_place || '';
@@ -552,8 +575,7 @@
 
     async function loadAdminData() {
       const data = await requestJson('/api/admin/data');
-      const profile = data.profile || {};
-      profilesCache = Array.isArray(data.profiles) ? data.profiles : (profile.id ? [profile] : []);
+      profilesCache = normalizeProfiles(data);
       recordsCache = data.records || [];
       photosByRecordId = Object.create(null);
       (data.photos || []).forEach((photo) => {
@@ -642,6 +664,7 @@
     saveProfileBtn.addEventListener('click', async () => {
       try {
         const payload = getProfilePayload();
+        const wasCreating = !payload.id;
         const result = await requestJson('/api/admin/profile', {
           method: 'POST',
           body: JSON.stringify(payload)
@@ -650,7 +673,10 @@
           selectedProfileId = String(result.profile.id);
         }
         await loadAdminData();
-        showMessage(payload.id ? '基本资料已更新。' : '新人员已新增，并已自动选中。', 'ok');
+        if (wasCreating && !selectedProfileId && profilesCache.length) {
+          setSelectedProfile(profilesCache[0].id);
+        }
+        showMessage(wasCreating ? '新人员已新增，并已自动选中。' : '资料已更新。', 'ok');
       } catch (error) {
         showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
       }
