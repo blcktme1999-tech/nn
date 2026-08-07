@@ -12,8 +12,8 @@ function ensureState(raw) {
   const source = raw && typeof raw === 'object' ? raw : {};
   const legacyProfile = source.profile && typeof source.profile === 'object' ? source.profile : null;
   const profiles = Array.isArray(source.profiles) ? source.profiles : (legacyProfile ? [{
-    id: legacyProfile.id || 'default-profile',
-    ...legacyProfile
+    ...legacyProfile,
+    id: legacyProfile.id || 'default-profile'
   }] : []);
   const defaultProfileId = profiles[0]?.id || null;
   return {
