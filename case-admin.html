@@ -48,6 +48,7 @@
     .overview-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; }
     .summary-card { border:1px solid #e3e3e3; border-radius:6px; background:#fff; padding:13px 14px; }
     .summary-card strong { display:block; margin-bottom:8px; color:#123c77; font-size:14px; }
+    .person-actions { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:end; }
     .summary-list { display:grid; gap:7px; margin:0; }
     .summary-row { display:grid; grid-template-columns:78px 1fr; gap:8px; font-size:13px; line-height:1.55; }
     .summary-row dt { color:#777; font-weight:700; }
@@ -88,6 +89,7 @@
       .login-grid { grid-template-columns:1fr; }
       .form-row { grid-template-columns:1fr; }
       .overview-grid { grid-template-columns:1fr; }
+      .person-actions { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -128,6 +130,19 @@
 
       <div id="adminPanel" class="admin" aria-live="polite">
         <div class="admin-head">资料维护操作</div>
+
+        <div class="section">
+          <h4>人员资料</h4>
+          <p class="admin-note">先选择要维护的人，下面的基本资料、案件和照片都会跟着切换。要新增另一个人，点击「新增人员」后填写并保存。</p>
+          <div class="person-actions">
+            <div class="field">
+              <label for="profileSelect">选择已有人员</label>
+              <select id="profileSelect"></select>
+            </div>
+            <button class="admin-btn alt" id="newProfileBtn" type="button">新增人员</button>
+            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
+          </div>
+        </div>
 
         <div class="section">
           <h4>目前资料总览</h4>
@@ -187,7 +202,7 @@
 
         <div class="section">
           <h4>案件资料</h4>
-          <p class="admin-note">你可以先选择已有案件更新，或直接新增新案件。</p>
+          <p class="admin-note">这里维护当前选中人员底下的案件。新增人员时，请先保存基本资料，再新增案件。</p>
           <div class="form-row">
             <div class="field">
               <label for="recordSelect">选择已有案件（更新用）</label>
@@ -247,6 +262,7 @@
     const passwordInput = document.querySelector('#password');
     const messageBox = document.querySelector('#message');
     const adminPanel = document.querySelector('#adminPanel');
+    const profileSelect = document.querySelector('#profileSelect');
     const displayNameEdit = document.querySelector('#displayNameEdit');
     const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
     const avatarFileInput = document.querySelector('#avatarFileInput');
@@ -271,6 +287,8 @@
     const recordQuickList = document.querySelector('#recordQuickList');
     const recordPreviewTitle = document.querySelector('#recordPreviewTitle');
     const recordPreviewText = document.querySelector('#recordPreviewText');
+    const newProfileBtn = document.querySelector('#newProfileBtn');
+    const deleteProfileBtn = document.querySelector('#deleteProfileBtn');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
     const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
     const updateRecordBtn = document.querySelector('#updateRecordBtn');
@@ -278,8 +296,10 @@
     const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
     const addPhotoBtn = document.querySelector('#addPhotoBtn');
 
+    let profilesCache = [];
     let recordsCache = [];
     let photosByRecordId = Object.create(null);
+    let selectedProfileId = '';
 
     function showMessage(text, type = 'ok') {
       messageBox.textContent = text;
@@ -364,6 +384,21 @@
       photoRecordSelect.innerHTML = options.join('');
     }
 
+    function renderProfileSelectOptions(profiles) {
+      const options = ['<option value="">新增人员 / 未选择</option>'].concat(profiles.map((profile) => {
+        const name = profile.display_name || '未填写姓名';
+        const idNumber = profile.id_number ? '（' + profile.id_number + '）' : '';
+        return '<option value="' + escapeText(profile.id) + '">' + escapeText(name + idNumber) + '</option>';
+      }));
+      profileSelect.innerHTML = options.join('');
+    }
+
+    function getRecordsForProfile(profileId) {
+      const id = String(profileId || '');
+      if (!id) return [];
+      return recordsCache.filter((record) => String(record.profile_id || '') === id);
+    }
+
     function summarizeText(value) {
       const text = String(value || '').trim().replace(/\s+/g, ' ');
       if (!text) return '尚未填写内容';
@@ -416,6 +451,27 @@
       renderRecordPhotoGallery(selectedId);
     }
 
+    function setSelectedProfile(profileId) {
+      selectedProfileId = String(profileId || '');
+      const profile = profilesCache.find((item) => String(item.id) === selectedProfileId) || {};
+      const profileRecords = getRecordsForProfile(selectedProfileId);
+
+      profileSelect.value = selectedProfileId;
+      displayNameEdit.value = profile.display_name || '';
+      avatarUrlEdit.value = profile.avatar_url || '';
+      issuingPlaceEdit.value = profile.issuing_place || '';
+      idNumberEdit.value = profile.id_number || '';
+      setAvatarPreview(profile.avatar_url || '');
+      renderOverview(profile, profileRecords);
+      renderRecordSelectOptions(profileRecords);
+
+      if (profileRecords.length) {
+        setSelectedRecord(profileRecords[0].id);
+      } else {
+        setSelectedRecord('');
+      }
+    }
+
     function setAvatarPreview(url) {
       const cleanUrl = String(url || '').trim();
       if (!cleanUrl) {
@@ -448,12 +504,14 @@
     }
 
     function getProfilePayload() {
-      return {
+      const payload = {
         display_name: displayNameEdit.value.trim() || null,
         avatar_url: avatarUrlEdit.value.trim() || null,
         issuing_place: issuingPlaceEdit.value.trim() || null,
         id_number: idNumberEdit.value.trim() || null
       };
+      if (selectedProfileId) payload.id = selectedProfileId;
+      return payload;
     }
 
     async function requestJson(url, options) {
@@ -488,6 +546,7 @@
     async function loadAdminData() {
       const data = await requestJson('/api/admin/data');
       const profile = data.profile || {};
+      profilesCache = Array.isArray(data.profiles) ? data.profiles : (profile.id ? [profile] : []);
       recordsCache = data.records || [];
       photosByRecordId = Object.create(null);
       (data.photos || []).forEach((photo) => {
@@ -496,19 +555,9 @@
         if (!photosByRecordId[key]) photosByRecordId[key] = [];
         photosByRecordId[key].push(photo);
       });
-      displayNameEdit.value = profile.display_name || '';
-      avatarUrlEdit.value = profile.avatar_url || '';
-      setAvatarPreview(profile.avatar_url || '');
-      issuingPlaceEdit.value = profile.issuing_place || '';
-      idNumberEdit.value = profile.id_number || '';
-      renderRecordSelectOptions(recordsCache);
-      renderOverview(profile, recordsCache);
-
-      if (recordsCache.length) {
-        setSelectedRecord(recordsCache[0].id);
-      } else {
-        setSelectedRecord('');
-      }
+      renderProfileSelectOptions(profilesCache);
+      const stillExists = profilesCache.some((item) => String(item.id) === selectedProfileId);
+      setSelectedProfile(stillExists ? selectedProfileId : (profilesCache[0]?.id || ''));
     }
 
     loginForm.addEventListener('submit', async (event) => {
@@ -538,6 +587,38 @@
 
     recordSelect.addEventListener('change', () => {
       setSelectedRecord(recordSelect.value);
+    });
+
+    profileSelect.addEventListener('change', () => {
+      setSelectedProfile(profileSelect.value);
+    });
+
+    newProfileBtn.addEventListener('click', () => {
+      setSelectedProfile('');
+      showMessage('已切换到新增人员。填写基本资料后点击「保存基本资料」。', 'ok');
+    });
+
+    deleteProfileBtn.addEventListener('click', async () => {
+      try {
+        if (!selectedProfileId) {
+          showMessage('请先选择要删除的人员。', 'error');
+          return;
+        }
+
+        const selected = profilesCache.find((profile) => String(profile.id) === selectedProfileId);
+        const name = selected?.display_name || '未填写姓名';
+        const confirmed = window.confirm('确定要删除人员「' + name + '」吗？\n此人员底下的案件和照片也会一起删除，无法恢复。');
+        if (!confirmed) return;
+
+        await requestJson('/api/admin/profile?id=' + encodeURIComponent(selectedProfileId), {
+          method: 'DELETE'
+        });
+        selectedProfileId = '';
+        await loadAdminData();
+        showMessage('人员资料已删除。', 'ok');
+      } catch (error) {
+        showMessage('删除人员失败：' + (error?.message || '未知错误'), 'error');
+      }
     });
 
     photoRecordSelect.addEventListener('change', () => {
@@ -610,6 +691,7 @@
         }
 
         const payload = {
+          profile_id: selectedProfileId || null,
           title: recordTitleEdit.value.trim() || '未命名案件',
           info_text: recordInfoEdit.value.trim() || ''
         };
@@ -626,7 +708,13 @@
 
     createRecordBtn.addEventListener('click', async () => {
       try {
+        if (!selectedProfileId) {
+          showMessage('请先选择人员，或先保存新增人员的基本资料。', 'error');
+          return;
+        }
+
         const payload = {
+          profile_id: selectedProfileId || null,
           title: recordTitleEdit.value.trim() || '未命名案件',
           info_text: recordInfoEdit.value.trim() || ''
         };
