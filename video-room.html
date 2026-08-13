@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -799,6 +799,13 @@
       leaveBtn.disabled = !value;
       muteBtn.disabled = !value;
       cameraBtn.disabled = !value;
+      if (value && rtcSdkMode === 'agora') {
+        muteBtn.disabled = !agoraMicTrack;
+        cameraBtn.disabled = !agoraCameraTrack;
+      } else if (value && rtcSdkMode === 'dingrtc') {
+        muteBtn.disabled = !dingMicTrack;
+        cameraBtn.disabled = !dingCameraTrack;
+      }
       channelInput.disabled = value;
       uidInput.disabled = value;
       startCallBtn.textContent = value ? '已连线' : (joining ? '连接中...' : '开始线上笔录');
@@ -1192,6 +1199,27 @@
       }
     }
 
+    async function createAgoraLocalTracks() {
+      const errors = [];
+
+      try {
+        agoraMicTrack = await AgoraRTC.createMicrophoneAudioTrack();
+      } catch (micError) {
+        console.warn('Agora 麦克风轨道创建失败：', micError);
+        errors.push('麦克风不可用：' + prettyMediaError(micError));
+      }
+
+      try {
+        agoraCameraTrack = await AgoraRTC.createCameraVideoTrack();
+      } catch (cameraError) {
+        console.warn('Agora 摄像头轨道创建失败：', cameraError);
+        errors.push('相机不可用：' + prettyMediaError(cameraError));
+      }
+
+      const tracks = [agoraMicTrack, agoraCameraTrack].filter(Boolean);
+      return { tracks, errors };
+    }
+
     async function joinRtcCall() {
       if (!AgoraRTC) {
         showStatus('RTC SDK 尚不可用，请检查 SDK 是否加载。', true);
@@ -1227,6 +1255,7 @@
       setControlsWhenJoined(false);
       callStatus.textContent = '连接中，请稍候...';
       let joinDebug = null;
+      let joinDeviceWarning = '';
 
       try {
         if (testingDevice) {
@@ -1319,12 +1348,22 @@
           tokenUid = String(assignedUid);
           localParticipantId = 'local:' + tokenUid;
           const localContainer = ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
-          [agoraMicTrack, agoraCameraTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-          if (localContainer) {
+          const localMedia = await createAgoraLocalTracks();
+          if (!localMedia.tracks.length) {
+            await destroyAgoraClient();
+            resetCallUi();
+            throw new Error('浏览器找不到可用相机或麦克风，请检查本机设备、浏览器权限，或改用有设备的电脑后重试。');
+          }
+          if (localContainer && agoraCameraTrack) {
             localContainer.innerHTML = '';
             agoraCameraTrack.play(localContainer);
+          } else if (localContainer) {
+            showPlaceholder(localContainer, '本地摄像头不可用，已仅以麦克风加入。');
           }
-          await client.publish([agoraMicTrack, agoraCameraTrack]);
+          await client.publish(localMedia.tracks);
+          if (localMedia.errors.length) {
+            joinDeviceWarning = '已加入会议，但部分设备不可用：' + localMedia.errors.join('；');
+          }
         } else if (rtcSdkMode === 'dingrtc') {
           const client = ensureDingClient();
           await client.join({
@@ -1392,7 +1431,7 @@
         }
         setControlsWhenJoined(true);
         callStatus.textContent = '已加入频道 ' + tokenChannel + '，UID：' + joinedUid + '。';
-        showStatus('Agora RTC 已连接。', false);
+        showStatus(joinDeviceWarning || 'Agora RTC 已连接。', Boolean(joinDeviceWarning));
       } catch (error) {
         const rawMessage = error && error.message ? error.message : '未知错误';
         const normalized = String(rawMessage).toUpperCase();
