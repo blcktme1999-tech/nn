@@ -244,6 +244,7 @@
     const supabaseScriptCandidates = [
       ...toArray(runtimeCfg.supabaseSdkUrls),
       './vendor/supabase/supabase.js',
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
       'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
     ];
 
@@ -303,6 +304,7 @@
     let joining = false;
     let chatChannel = null;
     let chatSender = '';
+    let chatReady = false;
     let localParticipantId = null;
     let activeParticipantId = null;
     let testingDevice = false;
@@ -735,6 +737,7 @@
     }
 
     async function stopChatSync() {
+      chatReady = false;
       if (!realtimeEnabled) {
         setChatEnabled(false);
         return;
@@ -756,6 +759,7 @@
       await stopChatSync();
       chatSender = senderName;
       const realtimeName = 'video-chat:' + channelName;
+      setChatEnabled(true);
 
       chatChannel = supabase.channel(realtimeName, {
         config: {
@@ -768,18 +772,24 @@
       });
 
       await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('聊天室连接超时'));
+        }, 8000);
+
         chatChannel.subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
+            clearTimeout(timer);
+            chatReady = true;
             resolve();
             return;
           }
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+            clearTimeout(timer);
             reject(err || new Error('realtime subscribe failed'));
           }
         });
       });
 
-      setChatEnabled(true);
       if (chatList.querySelector('.chat-empty')) {
         chatList.innerHTML = '';
       }
@@ -1428,6 +1438,9 @@
           await startChatSync(tokenChannel, senderName);
         } catch (chatError) {
           console.warn('chat init failed:', chatError);
+          chatReady = false;
+          setChatEnabled(true);
+          chatList.innerHTML = '<div class="chat-empty">聊天室连接失败，请稍后重新加入会议后重试。仍可先在输入框中编辑消息。</div>';
         }
         setControlsWhenJoined(true);
         callStatus.textContent = '已加入频道 ' + tokenChannel + '，UID：' + joinedUid + '。';
@@ -1601,8 +1614,12 @@
         showStatus('当前环境未启用聊天室 SDK。', true);
         return;
       }
-      if (!joined || !chatChannel) {
+      if (!joined) {
         showStatus('请先加入会议后再发送消息。', true);
+        return;
+      }
+      if (!chatChannel || !chatReady) {
+        showStatus('聊天室尚未连接成功，请稍后重试或重新加入会议。', true);
         return;
       }
 
