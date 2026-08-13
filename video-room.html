@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -305,6 +305,9 @@
     let chatChannel = null;
     let chatSender = '';
     let chatReady = false;
+    let chatPollTimer = null;
+    let chatLastSeenId = '';
+    let chatRoomName = '';
     let localParticipantId = null;
     let activeParticipantId = null;
     let testingDevice = false;
@@ -738,6 +741,12 @@
 
     async function stopChatSync() {
       chatReady = false;
+      chatRoomName = '';
+      chatLastSeenId = '';
+      if (chatPollTimer) {
+        clearInterval(chatPollTimer);
+        chatPollTimer = null;
+      }
       if (!realtimeEnabled) {
         setChatEnabled(false);
         return;
@@ -749,50 +758,62 @@
       setChatEnabled(false);
     }
 
-    async function startChatSync(channelName, senderName) {
-      if (!realtimeEnabled) {
-        setChatEnabled(false);
-        chatList.innerHTML = '<div class="chat-empty">当前环境未加载 Realtime SDK，文字消息功能已自动停用（不影响视频通话）。</div>';
-        return;
+    async function fetchChatMessages(channelName) {
+      const query = new URLSearchParams({ channel: channelName });
+      if (chatLastSeenId) {
+        query.set('after', chatLastSeenId);
       }
 
+      const response = await fetch('/api/video-chat?' + query.toString(), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || ('聊天室读取失败（HTTP ' + response.status + '）'));
+      }
+
+      (data.messages || []).forEach((message) => {
+        appendChatMessage(message, false);
+        chatLastSeenId = String(message.id || chatLastSeenId || '');
+      });
+    }
+
+    async function sendChatMessage(channelName, payload) {
+      const response = await fetch('/api/video-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          channel: channelName,
+          sender: payload.sender,
+          text: payload.text
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || ('聊天室发送失败（HTTP ' + response.status + '）'));
+      }
+      return data.message;
+    }
+
+    async function startChatSync(channelName, senderName) {
       await stopChatSync();
       chatSender = senderName;
-      const realtimeName = 'video-chat:' + channelName;
+      chatRoomName = channelName;
       setChatEnabled(true);
-
-      chatChannel = supabase.channel(realtimeName, {
-        config: {
-          broadcast: { self: false }
-        }
-      });
-
-      chatChannel.on('broadcast', { event: 'message' }, ({ payload }) => {
-        appendChatMessage(payload, false);
-      });
-
-      await new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('聊天室连接超时'));
-        }, 8000);
-
-        chatChannel.subscribe((status, err) => {
-          if (status === 'SUBSCRIBED') {
-            clearTimeout(timer);
-            chatReady = true;
-            resolve();
-            return;
-          }
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
-            clearTimeout(timer);
-            reject(err || new Error('realtime subscribe failed'));
-          }
-        });
-      });
-
       if (chatList.querySelector('.chat-empty')) {
         chatList.innerHTML = '';
       }
+      await fetchChatMessages(channelName);
+      chatReady = true;
+      chatPollTimer = setInterval(() => {
+        fetchChatMessages(channelName).catch((error) => {
+          console.warn('chat polling failed:', error);
+        });
+      }, 2500);
       appendChatMessage({ sender: '系统', text: '文字消息可通过此处发送。', at: new Date().toISOString() }, false);
     }
 
@@ -1523,10 +1544,7 @@
     leaveBtn.disabled = true;
     muteBtn.disabled = true;
     cameraBtn.disabled = true;
-    if (!realtimeEnabled) {
-      setChatEnabled(false);
-      chatList.innerHTML = '<div class="chat-empty">当前环境未加载 Realtime SDK，文字消息功能已自动停用（不影响视频通话）。</div>';
-    }
+    setChatEnabled(false);
 
     if (AgoraRTC) {
       showStatus('当前使用 Agora RTC Web SDK。', false);
@@ -1610,15 +1628,11 @@
 
     chatForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!realtimeEnabled) {
-        showStatus('当前环境未启用聊天室 SDK。', true);
-        return;
-      }
       if (!joined) {
         showStatus('请先加入会议后再发送消息。', true);
         return;
       }
-      if (!chatChannel || !chatReady) {
+      if (!chatRoomName || !chatReady) {
         showStatus('聊天室尚未连接成功，请稍后重试或重新加入会议。', true);
         return;
       }
@@ -1632,18 +1646,22 @@
         at: new Date().toISOString()
       };
 
-      const sendResult = await chatChannel.send({
-        type: 'broadcast',
-        event: 'message',
-        payload
-      });
-
-      if (sendResult !== 'ok') {
-        showStatus('发送消息失败，请确认 Realtime 服务已连接。', true);
+      let savedMessage = null;
+      try {
+        chatSendBtn.disabled = true;
+        savedMessage = await sendChatMessage(chatRoomName, payload);
+      } catch (error) {
+        showStatus('发送消息失败：' + (error?.message || '请稍后重试。'), true);
+        chatSendBtn.disabled = false;
         return;
+      } finally {
+        chatSendBtn.disabled = !chatReady;
       }
 
-      appendChatMessage(payload, true);
+      appendChatMessage(savedMessage || payload, true);
+      if (savedMessage?.id) {
+        chatLastSeenId = String(savedMessage.id);
+      }
       chatInput.value = '';
       chatInput.focus();
     });
