@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案件后台管理 - 公安便民入口</title>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .identity { display:block; min-width:0; flex:1; }
+    .brand-left { width:100%; max-width:840px; height:auto; display:block; }
+    .brand-right { width:min(240px, 28vw); min-width:130px; height:auto; display:block; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .panel { width:min(920px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
+    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    textarea { min-height:96px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .actions { margin-top:16px; }
+    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
+    .submit:hover { background:var(--deep-red); }
+    .msg { margin-top:14px; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
+    .msg.show { display:block; }
+    .msg.error { border:1px solid #f2d7a5; background:#fff8e7; color:#835812; }
+    .msg.ok { border:1px solid #cfe7d5; background:#f2fbf4; color:#246f43; }
+    .admin { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
+    .admin.show { display:block; }
+    .admin-head { background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
+    .section { padding:14px 12px 16px; border-bottom:1px solid #efefef; }
+    .section:last-child { border-bottom:0; }
+    .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .overview-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; }
+    .summary-card { border:1px solid #e3e3e3; border-radius:6px; background:#fff; padding:13px 14px; }
+    .summary-card strong { display:block; margin-bottom:8px; color:#123c77; font-size:14px; }
+    .person-actions { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:end; }
+    .summary-list { display:grid; gap:7px; margin:0; }
+    .summary-row { display:grid; grid-template-columns:78px 1fr; gap:8px; font-size:13px; line-height:1.55; }
+    .summary-row dt { color:#777; font-weight:700; }
+    .summary-row dd { margin:0; color:#333; word-break:break-word; }
+    .record-quick-list { display:grid; gap:8px; max-height:250px; overflow:auto; padding-right:2px; }
+    .record-quick-item { width:100%; border:1px solid #e2e2e2; border-radius:6px; background:#fbfbfb; padding:10px 11px; text-align:left; cursor:pointer; }
+    .record-quick-item:hover, .record-quick-item.active { border-color:#c90822; background:#fff7f8; }
+    .record-quick-item b { display:block; color:#333; font-size:13px; margin-bottom:5px; }
+    .record-quick-item span { display:block; color:#777; font-size:12px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .record-preview { margin-top:10px; border:1px dashed #d6d6d6; border-radius:6px; background:#fcfcfc; padding:11px 12px; }
+    .record-preview-title { margin:0 0 7px; color:#333; font-size:13px; font-weight:700; }
+    .record-preview-text { margin:0; color:#555; font-size:13px; line-height:1.65; white-space:pre-wrap; word-break:break-word; max-height:130px; overflow:auto; }
+    .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
+    .admin-btn.alt { background:#8d1726; }
+    .admin-btn.danger { background:#6b0f1a; }
+    .admin-btn.danger:hover { background:#520b14; }
+    .admin-note { font-size:12px; color:#666; line-height:1.6; }
+    .field.full { grid-column:1 / -1; }
+    .photo-preview { margin-top:10px; max-width:220px; border:1px solid #ddd; border-radius:6px; background:#f7f7f7; overflow:hidden; }
+    .photo-preview img { width:100%; display:block; }
+    .avatar-preview { margin-top:10px; width:112px; height:112px; border:1px solid #ddd; border-radius:50%; background:#f7f7f7; overflow:hidden; }
+    .avatar-preview img { width:100%; height:100%; object-fit:cover; display:block; }
+    .record-photo-gallery { margin-top:8px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+    .record-photo-item { border:1px solid #e6e6e6; border-radius:6px; background:#fff; overflow:hidden; }
+    .record-photo-item img { width:100%; aspect-ratio:1 / 1; object-fit:cover; display:block; background:#f7f7f7; }
+    .record-photo-item p { margin:0; padding:7px 8px 8px; font-size:12px; color:#555; line-height:1.5; }
+    .record-photo-placeholder { min-height:156px; display:grid; place-items:center; border:1px dashed #bcc5cc; background:#f3f5f6; color:#89939a; font-size:12px; text-align:center; }
+    .photo-help { margin-top:8px; font-size:12px; color:#666; line-height:1.6; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:700px) {
+      .masthead { min-height:78px; }
+      .brand-right { display:none; }
+      .brand-left { max-width:100%; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      .panel { padding:23px 22px 27px; }
+      .login-grid { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:1fr; }
+      .overview-grid { grid-template-columns:1fr; }
+      .person-actions { grid-template-columns:1fr; }
+      .record-photo-gallery { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index (2).html" aria-label="返回首页">
+        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
+      </a>
+      <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
+      <a class="return-home" href="index (2).html">← 返回首页</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index (2).html">首页</a><a href="mm1.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="case-admin.html">后台管理</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h1>案件后台管理</h1>
+      <p class="intro">此页提供给管理员维护通缉人员、案件内容与照片；前台用户输入姓名与案件编号后即可查询对应资料。</p>
+
+      <form id="loginForm">
+        <div class="login-grid">
+          <div class="field">
+            <label for="adminLogin">登录账号</label>
+            <input id="adminLogin" autocomplete="username" placeholder="请输入管理员账号">
+          </div>
+          <div class="field">
+            <label for="password">密码</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
+          </div>
+        </div>
+        <div class="actions"><button class="submit" type="submit">登 入 后 台</button></div>
+      </form>
+
+      <div id="message" class="msg" aria-live="polite"></div>
+
+      <div id="adminPanel" class="admin" aria-live="polite">
+        <div class="admin-head">资料维护操作</div>
+
+        <div class="section">
+          <h4>新增人员</h4>
+          <p class="admin-note">新增资料请先点这里，下面的编辑区会清空。填写姓名、身份资料、户籍地和头像后，点击「保存基本资料」。</p>
+          <div class="inline-actions">
+            <button class="admin-btn alt" id="newProfileBtn" type="button">新增一位人员</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>选取资料</h4>
+          <p class="admin-note">选择既有人员后，下方会立即显示该人员资料，并可直接编辑、删除、维护案件。</p>
+          <div class="field">
+            <label for="profileSelect">选择已有人员</label>
+            <select id="profileSelect"></select>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>前台显示预览</h4>
+          <div class="overview-grid">
+            <div class="summary-card">
+              <strong>用户查询页会看到的基本资料</strong>
+              <dl class="summary-list">
+                <div class="summary-row"><dt>姓名</dt><dd id="summaryName">未填写</dd></div>
+                <div class="summary-row"><dt>证件号码</dt><dd id="summaryIdNumber">未填写</dd></div>
+                <div class="summary-row"><dt>户籍地</dt><dd id="summaryIssuingPlace">未填写</dd></div>
+                <div class="summary-row"><dt>头像</dt><dd id="summaryAvatar">未设置</dd></div>
+                <div class="summary-row"><dt>案件数量</dt><dd id="summaryRecordCount">0 笔</dd></div>
+              </dl>
+            </div>
+            <div class="summary-card">
+              <strong>已有案件快捷选择</strong>
+              <div id="recordQuickList" class="record-quick-list"><p class="admin-note">暂无案件。</p></div>
+            </div>
+          </div>
+          <div class="record-preview">
+            <p id="recordPreviewTitle" class="record-preview-title">尚未选择案件</p>
+            <p id="recordPreviewText" class="record-preview-text">选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4 id="profileEditorTitle">编辑当前人员资料</h4>
+          <div class="form-row">
+            <div class="field">
+              <label for="displayNameEdit">姓名</label>
+              <input id="displayNameEdit" placeholder="例如：王小明">
+            </div>
+            <div class="field">
+              <label for="avatarUrlEdit">头像网址</label>
+              <input id="avatarUrlEdit" placeholder="https://...">
+            </div>
+            <div class="field full">
+              <label for="avatarFileInput">上传头像（圆形预览）</label>
+              <input id="avatarFileInput" type="file" accept="image/*">
+              <div class="photo-help">可直接上传头像图片，系统会自动压缩、上传并套用到头像网址。</div>
+              <div id="avatarPreview" class="avatar-preview" hidden><img id="avatarPreviewImg" alt="头像预览"></div>
+            </div>
+            <div class="field">
+              <label for="idNumberEdit">证件号码</label>
+              <input id="idNumberEdit" placeholder="例如：A123456789">
+            </div>
+            <div class="field">
+              <label for="genderEdit">性别</label>
+              <input id="genderEdit" placeholder="例如：男 / 女">
+            </div>
+            <div class="field">
+              <label for="birthDateEdit">出生日期</label>
+              <input id="birthDateEdit" placeholder="例如：1980-01-01">
+            </div>
+            <div class="field">
+              <label for="currentIdentityEdit">现在身份</label>
+              <input id="currentIdentityEdit" placeholder="例如：无业人员">
+            </div>
+            <div class="field">
+              <label for="householdRegistrationEdit">户籍地</label>
+              <input id="householdRegistrationEdit" placeholder="例如：上海市静安区">
+            </div>
+          </div>
+          <div class="inline-actions">
+            <button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button>
+            <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
+            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>案件资料</h4>
+          <p class="admin-note">这里维护当前选中人员底下的案件。新增人员时，请先保存基本资料，再新增案件。</p>
+          <div class="form-row">
+            <div class="field">
+              <label for="recordSelect">选择已有案件（更新用）</label>
+              <select id="recordSelect"></select>
+            </div>
+            <div class="field">
+              <label for="recordTitleEdit">案件编号</label>
+              <input id="recordTitleEdit" placeholder="例如：A-2026-0001">
+            </div>
+            <div class="field">
+              <label for="wantedDateEdit">通缉日期</label>
+              <input id="wantedDateEdit" placeholder="例如：2026-08-12">
+            </div>
+            <div class="field">
+              <label for="caseCategoryEdit">涉案类别</label>
+              <input id="caseCategoryEdit" placeholder="请输入涉案类别">
+            </div>
+            <div class="field">
+              <label for="currentAddressEdit">现在住址</label>
+              <input id="currentAddressEdit" placeholder="请输入现在住址">
+            </div>
+            <div class="field">
+              <label for="filingUnitEdit">立案单位</label>
+              <input id="filingUnitEdit" placeholder="请输入立案单位">
+            </div>
+          </div>
+          <div class="field">
+            <label for="caseSummaryEdit">简要案情</label>
+            <textarea id="caseSummaryEdit" placeholder="请输入简要案情"></textarea>
+          </div>
+          <div class="field">
+            <label for="notesEdit">备注</label>
+            <textarea id="notesEdit" placeholder="请输入备注"></textarea>
+          </div>
+          <div class="field">
+            <label for="applicationRequestEdit">申请事项</label>
+            <textarea id="applicationRequestEdit" placeholder="请输入申请事项"></textarea>
+          </div>
+          <div class="inline-actions">
+            <button class="admin-btn" id="updateRecordBtn" type="button">更新所选案件</button>
+            <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
+            <button class="admin-btn danger" id="deleteRecordBtn" type="button">删除所选案件</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h4>案件附件照片（最多三张）</h4>
+          <div class="form-row">
+            <div class="field">
+              <label for="photoRecordSelect">应用到哪笔案件</label>
+              <select id="photoRecordSelect"></select>
+            </div>
+            <div class="field">
+              <label for="photoCaptionInput">照片说明</label>
+              <input id="photoCaptionInput" placeholder="例如：现场正面照">
+            </div>
+          </div>
+          <div class="field">
+            <label for="photoFileInput">上传照片</label>
+            <input id="photoFileInput" type="file" accept="image/*">
+            <div class="photo-help">可直接选择手机或电脑照片，系统会自动压缩后上传；每笔案件固定保留三格。</div>
+            <div id="photoPreview" class="photo-preview" hidden><img id="photoPreviewImg" alt="照片预览"></div>
+          </div>
+          <div class="field">
+            <label>该案件已上传照片预览</label>
+            <div id="recordPhotoGallery" class="record-photo-gallery">
+              <p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>
+            </div>
+          </div>
+          <div class="inline-actions"><button class="admin-btn" id="addPhotoBtn" type="button">新增照片</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="site-footer-inner">本页为管理员专用，请勿提供给普通案件查询用户。</div></footer>
+
+  <script>
+    const loginForm = document.querySelector('#loginForm');
+    const adminLoginInput = document.querySelector('#adminLogin');
+    const passwordInput = document.querySelector('#password');
+    const messageBox = document.querySelector('#message');
+    const adminPanel = document.querySelector('#adminPanel');
+    const profileSelect = document.querySelector('#profileSelect');
+    const displayNameEdit = document.querySelector('#displayNameEdit');
+    const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
+    const avatarFileInput = document.querySelector('#avatarFileInput');
+    const avatarPreview = document.querySelector('#avatarPreview');
+    const avatarPreviewImg = document.querySelector('#avatarPreviewImg');
+    const idNumberEdit = document.querySelector('#idNumberEdit');
+    const genderEdit = document.querySelector('#genderEdit');
+    const birthDateEdit = document.querySelector('#birthDateEdit');
+    const currentIdentityEdit = document.querySelector('#currentIdentityEdit');
+    const householdRegistrationEdit = document.querySelector('#householdRegistrationEdit');
+    const recordSelect = document.querySelector('#recordSelect');
+    const recordTitleEdit = document.querySelector('#recordTitleEdit');
+    const wantedDateEdit = document.querySelector('#wantedDateEdit');
+    const caseCategoryEdit = document.querySelector('#caseCategoryEdit');
+    const currentAddressEdit = document.querySelector('#currentAddressEdit');
+    const filingUnitEdit = document.querySelector('#filingUnitEdit');
+    const caseSummaryEdit = document.querySelector('#caseSummaryEdit');
+    const notesEdit = document.querySelector('#notesEdit');
+    const applicationRequestEdit = document.querySelector('#applicationRequestEdit');
+    const photoRecordSelect = document.querySelector('#photoRecordSelect');
+    const photoCaptionInput = document.querySelector('#photoCaptionInput');
+    const photoFileInput = document.querySelector('#photoFileInput');
+    const photoPreview = document.querySelector('#photoPreview');
+    const photoPreviewImg = document.querySelector('#photoPreviewImg');
+    const recordPhotoGallery = document.querySelector('#recordPhotoGallery');
+    const summaryName = document.querySelector('#summaryName');
+    const summaryIdNumber = document.querySelector('#summaryIdNumber');
+    const summaryIssuingPlace = document.querySelector('#summaryIssuingPlace');
+    const summaryAvatar = document.querySelector('#summaryAvatar');
+    const summaryRecordCount = document.querySelector('#summaryRecordCount');
+    const recordQuickList = document.querySelector('#recordQuickList');
+    const recordPreviewTitle = document.querySelector('#recordPreviewTitle');
+    const recordPreviewText = document.querySelector('#recordPreviewText');
+    const profileEditorTitle = document.querySelector('#profileEditorTitle');
+    const newProfileBtn = document.querySelector('#newProfileBtn');
+    const deleteProfileBtn = document.querySelector('#deleteProfileBtn');
+    const saveProfileBtn = document.querySelector('#saveProfileBtn');
+    const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
+    const updateRecordBtn = document.querySelector('#updateRecordBtn');
+    const createRecordBtn = document.querySelector('#createRecordBtn');
+    const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
+    const addPhotoBtn = document.querySelector('#addPhotoBtn');
+
+    let profilesCache = [];
+    let recordsCache = [];
+    let photosByRecordId = Object.create(null);
+    let selectedProfileId = '';
+
+    function showMessage(text, type = 'ok') {
+      messageBox.textContent = text;
+      messageBox.className = 'msg show ' + type;
+    }
+
+    function clearMessage() {
+      messageBox.textContent = '';
+      messageBox.className = 'msg';
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char] || char));
+    }
+
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('图片读取失败，请改用 JPG 或 PNG。'));
+          img.src = String(reader.result || '');
+        };
+        reader.onerror = () => reject(new Error('图片读取失败，请重新选择文件。'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function fileToCompressedDataUrl(file) {
+      const image = await fileToImage(file);
+      const maxWidth = 1600;
+      const maxHeight = 1600;
+      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * ratio));
+      const height = Math.max(1, Math.round(image.height * ratio));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('浏览器不支持图片处理，请改用较新版本浏览器。');
+      }
+      ctx.drawImage(image, 0, 0, width, height);
+
+      let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      if (dataUrl.length > 1900000) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      }
+      if (dataUrl.length > 1900000) {
+        throw new Error('照片文件仍过大，请选择较小照片后再上传。');
+      }
+      return dataUrl;
+    }
+
+    async function uploadImageAndGetUrl(dataUrl, fileName) {
+      const data = await requestJson('/api/admin/upload-image', {
+        method: 'POST',
+        body: JSON.stringify({ dataUrl, fileName })
+      });
+
+      const hostedUrl = String(data?.url || '').trim();
+      if (!hostedUrl) {
+        throw new Error('图床未返回网址，请稍后再试。');
+      }
+      return hostedUrl;
+    }
+
+    function renderRecordSelectOptions(records) {
+      const options = ['<option value="">请选择案件</option>'].concat(records.map((record) => {
+        const title = record.title || '未命名案件';
+        return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
+      }));
+      recordSelect.innerHTML = options.join('');
+      photoRecordSelect.innerHTML = options.join('');
+    }
+
+    function renderProfileSelectOptions(profiles) {
+      const options = ['<option value="">新增人员 / 未选择</option>'].concat(profiles.map((profile) => {
+        const name = profile.display_name || '未填写姓名';
+        const idNumber = profile.id_number ? '（' + profile.id_number + '）' : '';
+        return '<option value="' + escapeText(profile.id) + '">' + escapeText(name + idNumber) + '</option>';
+      }));
+      profileSelect.innerHTML = options.join('');
+    }
+
+    function getRecordsForProfile(profileId) {
+      const id = String(profileId || '');
+      if (!id) return [];
+      return recordsCache.filter((record) => String(record.profile_id || '') === id);
+    }
+
+    function normalizeProfiles(data) {
+      const profiles = Array.isArray(data.profiles) ? data.profiles.filter(Boolean) : [];
+      const profile = data.profile && typeof data.profile === 'object' ? data.profile : null;
+      if (!profiles.length && profile && (profile.display_name || profile.id_number || profile.household_registration || profile.issuing_place || profile.avatar_url)) {
+        return [{
+          ...profile,
+          id: profile.id || 'default-profile'
+        }];
+      }
+      return profiles.map((item, index) => ({
+        ...item,
+        id: item.id || ('profile-' + index)
+      }));
+    }
+
+    function updateProfileActionState() {
+      const isEditing = Boolean(selectedProfileId);
+      saveProfileBtn.textContent = isEditing ? '更新资料' : '新增人员';
+      uploadAvatarBtn.textContent = isEditing ? '上传头像并套用' : '上传头像并套用到新人员';
+      deleteProfileBtn.disabled = !isEditing;
+    }
+
+    function summarizeText(value) {
+      const text = String(value || '').trim().replace(/\s+/g, ' ');
+      if (!text) return '尚未填写内容';
+      return text.length > 58 ? text.slice(0, 58) + '...' : text;
+    }
+
+    function renderOverview(profile, records) {
+      summaryName.textContent = profile.display_name || '未填写';
+      summaryIdNumber.textContent = profile.id_number || '未填写';
+      summaryIssuingPlace.textContent = profile.household_registration || profile.issuing_place || '未填写';
+      summaryAvatar.textContent = profile.avatar_url ? '已设置' : '未设置';
+      summaryRecordCount.textContent = String(records.length) + ' 笔';
+
+      if (!records.length) {
+        recordQuickList.innerHTML = '<p class="admin-note">暂无案件，填写案件编号和内容后点击「新增案件」。</p>';
+        return;
+      }
+
+      recordQuickList.innerHTML = records.map((record) => {
+        const title = escapeText(record.title || '未命名案件');
+        const summary = escapeText(summarizeText(record.case_summary || record.info_text));
+        return '<button class="record-quick-item" type="button" data-record-id="' + escapeText(record.id) + '"><b>' + title + '</b><span>' + summary + '</span></button>';
+      }).join('');
+    }
+
+    function setSelectedRecord(recordId) {
+      const selectedId = String(recordId || '');
+      const found = recordsCache.find((record) => String(record.id) === selectedId);
+
+      recordSelect.value = selectedId;
+      photoRecordSelect.value = selectedId;
+
+      Array.from(recordQuickList.querySelectorAll('.record-quick-item')).forEach((button) => {
+        button.classList.toggle('active', button.dataset.recordId === selectedId);
+      });
+
+      if (!found) {
+        recordTitleEdit.value = '';
+        wantedDateEdit.value = '';
+        caseCategoryEdit.value = '';
+        currentAddressEdit.value = '';
+        filingUnitEdit.value = '';
+        caseSummaryEdit.value = '';
+        notesEdit.value = '';
+        applicationRequestEdit.value = '';
+        recordPreviewTitle.textContent = '尚未选择案件';
+        recordPreviewText.textContent = '选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。';
+        renderRecordPhotoGallery('');
+        return;
+      }
+
+      recordTitleEdit.value = found.title || '';
+      wantedDateEdit.value = found.wanted_date || '';
+      caseCategoryEdit.value = found.case_category || '';
+      currentAddressEdit.value = found.current_address || '';
+      filingUnitEdit.value = found.filing_unit || '';
+      caseSummaryEdit.value = found.case_summary || found.info_text || '';
+      notesEdit.value = found.notes || '';
+      applicationRequestEdit.value = found.application_request || '';
+      recordPreviewTitle.textContent = '正在编辑：' + (found.title || '未命名案件');
+      recordPreviewText.textContent = found.case_summary || found.info_text || '该案件目前尚未填写内容。';
+      renderRecordPhotoGallery(selectedId);
+    }
+
+    function setSelectedProfile(profileId) {
+      selectedProfileId = String(profileId || '');
+      const profile = profilesCache.find((item) => String(item.id) === selectedProfileId) || {};
+      const profileRecords = getRecordsForProfile(selectedProfileId);
+
+      profileSelect.value = selectedProfileId;
+      profileEditorTitle.textContent = selectedProfileId ? '编辑当前人员资料' : '新增人员资料';
+      updateProfileActionState();
+      displayNameEdit.value = profile.display_name || '';
+      avatarUrlEdit.value = profile.avatar_url || '';
+      idNumberEdit.value = profile.id_number || '';
+      genderEdit.value = profile.gender || '';
+      birthDateEdit.value = profile.birth_date || '';
+      currentIdentityEdit.value = profile.current_identity || '';
+      householdRegistrationEdit.value = profile.household_registration || profile.issuing_place || '';
+      setAvatarPreview(profile.avatar_url || '');
+      renderOverview(profile, profileRecords);
+      renderRecordSelectOptions(profileRecords);
+
+      if (profileRecords.length) {
+        setSelectedRecord(profileRecords[0].id);
+      } else {
+        setSelectedRecord('');
+      }
+    }
+
+    function setAvatarPreview(url) {
+      const cleanUrl = String(url || '').trim();
+      if (!cleanUrl) {
+        avatarPreview.hidden = true;
+        avatarPreviewImg.removeAttribute('src');
+        return;
+      }
+      avatarPreviewImg.src = cleanUrl;
+      avatarPreview.hidden = false;
+    }
+
+    function renderRecordPhotoGallery(recordId) {
+      const photos = photosByRecordId[recordId] || [];
+      addPhotoBtn.disabled = photos.length >= 3;
+      if (!recordId) {
+        recordPhotoGallery.innerHTML = '<p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>';
+        return;
+      }
+
+      const html = Array.from({ length: 3 }, (_, index) => {
+        const photo = photos[index];
+        if (!photo) {
+          return '<div class="record-photo-placeholder">附件照片 ' + (index + 1) + '<br>待上传</div>';
+        }
+        const url = escapeText(photo.photo_url || '');
+        const caption = escapeText(photo.caption || ('附件照片 ' + (index + 1)));
+        return '<article class="record-photo-item"><img src="' + url + '" alt="案件照片"><p>' + caption + '</p></article>';
+      });
+      recordPhotoGallery.innerHTML = html.join('');
+    }
+
+    function getProfilePayload() {
+      const payload = {
+        display_name: displayNameEdit.value.trim() || null,
+        avatar_url: avatarUrlEdit.value.trim() || null,
+        issuing_place: householdRegistrationEdit.value.trim() || null,
+        id_number: idNumberEdit.value.trim() || null,
+        gender: genderEdit.value.trim() || null,
+        birth_date: birthDateEdit.value.trim() || null,
+        current_identity: currentIdentityEdit.value.trim() || null,
+        household_registration: householdRegistrationEdit.value.trim() || null
+      };
+      if (selectedProfileId) payload.id = selectedProfileId;
+      return payload;
+    }
+
+    function getRecordPayload() {
+      const caseSummary = caseSummaryEdit.value.trim();
+      return {
+        profile_id: selectedProfileId || null,
+        title: recordTitleEdit.value.trim() || '未命名案件',
+        info_text: caseSummary,
+        wanted_date: wantedDateEdit.value.trim() || null,
+        case_category: caseCategoryEdit.value.trim() || null,
+        current_address: currentAddressEdit.value.trim() || null,
+        filing_unit: filingUnitEdit.value.trim() || null,
+        case_summary: caseSummary || null,
+        notes: notesEdit.value.trim() || null,
+        application_request: applicationRequestEdit.value.trim() || null
+      };
+    }
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
+      if (!response.ok) {
+        const errorText = data.error || ('请求失败（HTTP ' + response.status + '）。');
+        throw new Error(errorText);
+      }
+      return data;
+    }
+
+    function clearServerSessionSilently() {
+      return fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true
+      }).catch(() => {
+      });
+    }
+
+    async function loadAdminData() {
+      const data = await requestJson('/api/admin/data');
+      profilesCache = normalizeProfiles(data);
+      recordsCache = data.records || [];
+      photosByRecordId = Object.create(null);
+      (data.photos || []).forEach((photo) => {
+        const key = String(photo?.record_id || '');
+        if (!key) return;
+        if (!photosByRecordId[key]) photosByRecordId[key] = [];
+        photosByRecordId[key].push(photo);
+      });
+      renderProfileSelectOptions(profilesCache);
+      const stillExists = profilesCache.some((item) => String(item.id) === selectedProfileId);
+      setSelectedProfile(stillExists ? selectedProfileId : (profilesCache[0]?.id || ''));
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearMessage();
+
+      const loginId = adminLoginInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!loginId || !password) {
+        showMessage('请先输入账号与密码。', 'error');
+        return;
+      }
+
+      try {
+        await requestJson('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ loginId, password })
+        });
+        await loadAdminData();
+        adminPanel.classList.add('show');
+        showMessage('已登录后台，可开始维护资料。', 'ok');
+      } catch (error) {
+        showMessage('登录失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    recordSelect.addEventListener('change', () => {
+      setSelectedRecord(recordSelect.value);
+    });
+
+    profileSelect.addEventListener('change', () => {
+      setSelectedProfile(profileSelect.value);
+    });
+
+    newProfileBtn.addEventListener('click', () => {
+      setSelectedProfile('');
+      showMessage('已切换到新增人员。填写基本资料后点击「保存基本资料」。', 'ok');
+    });
+
+    deleteProfileBtn.addEventListener('click', async () => {
+      try {
+        if (!selectedProfileId) {
+          showMessage('请先选择要删除的人员。', 'error');
+          return;
+        }
+
+        const selected = profilesCache.find((profile) => String(profile.id) === selectedProfileId);
+        const name = selected?.display_name || '未填写姓名';
+        const confirmed = window.confirm('确定要删除人员「' + name + '」吗？\n此人员底下的案件和照片也会一起删除，无法恢复。');
+        if (!confirmed) return;
+
+        await requestJson('/api/admin/profile?id=' + encodeURIComponent(selectedProfileId), {
+          method: 'DELETE'
+        });
+        selectedProfileId = '';
+        await loadAdminData();
+        showMessage('人员资料已删除。', 'ok');
+      } catch (error) {
+        showMessage('删除人员失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    photoRecordSelect.addEventListener('change', () => {
+      const selectedId = photoRecordSelect.value;
+      setSelectedRecord(selectedId);
+    });
+
+    recordQuickList.addEventListener('click', (event) => {
+      const button = event.target.closest('.record-quick-item');
+      if (!button) return;
+      setSelectedRecord(button.dataset.recordId || '');
+    });
+
+    saveProfileBtn.addEventListener('click', async () => {
+      try {
+        const payload = getProfilePayload();
+        const wasCreating = !payload.id;
+        const result = await requestJson('/api/admin/profile', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        if (result?.profile?.id) {
+          selectedProfileId = String(result.profile.id);
+        }
+        await loadAdminData();
+        if (wasCreating && !selectedProfileId && profilesCache.length) {
+          setSelectedProfile(profilesCache[0].id);
+        }
+        showMessage(wasCreating ? '新人员已新增，并已自动选中。' : '资料已更新。', 'ok');
+      } catch (error) {
+        showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    uploadAvatarBtn.addEventListener('click', async () => {
+      try {
+        const selectedFile = avatarFileInput.files && avatarFileInput.files[0];
+        if (!selectedFile) {
+          showMessage('请先选择头像图片。', 'error');
+          return;
+        }
+
+        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
+          showMessage('只支持图片文件，请重新选择。', 'error');
+          return;
+        }
+
+        uploadAvatarBtn.disabled = true;
+        showMessage('头像处理中，请稍候...', 'ok');
+
+        const avatarDataUrl = await fileToCompressedDataUrl(selectedFile);
+        const hostedUrl = await uploadImageAndGetUrl(avatarDataUrl, selectedFile.name || 'avatar.jpg');
+        avatarUrlEdit.value = hostedUrl;
+        setAvatarPreview(hostedUrl);
+
+        const result = await requestJson('/api/admin/profile', {
+          method: 'POST',
+          body: JSON.stringify(getProfilePayload())
+        });
+        if (result?.profile?.id) {
+          selectedProfileId = String(result.profile.id);
+        }
+
+        avatarFileInput.value = '';
+        await loadAdminData();
+        showMessage('头像已上传并套用。', 'ok');
+      } catch (error) {
+        showMessage('上传头像失败：' + (error?.message || '未知错误'), 'error');
+      } finally {
+        uploadAvatarBtn.disabled = false;
+      }
+    });
+
+    updateRecordBtn.addEventListener('click', async () => {
+      try {
+        const selectedId = recordSelect.value;
+        if (!selectedId) {
+          showMessage('请先选择要更新的案件。', 'error');
+          return;
+        }
+
+        const payload = getRecordPayload();
+        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
+          method: 'PATCH',
+          body: JSON.stringify(payload)
+        });
+        await loadAdminData();
+        showMessage('案件资料已更新。', 'ok');
+      } catch (error) {
+        showMessage('更新案件失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    createRecordBtn.addEventListener('click', async () => {
+      try {
+        if (!selectedProfileId) {
+          showMessage('请先选择人员，或先保存新增人员的基本资料。', 'error');
+          return;
+        }
+
+        const payload = getRecordPayload();
+        await requestJson('/api/admin/records', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        await loadAdminData();
+        showMessage('新案件已新增。', 'ok');
+      } catch (error) {
+        showMessage('新增案件失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    deleteRecordBtn.addEventListener('click', async () => {
+      try {
+        const selectedId = recordSelect.value;
+        if (!selectedId) {
+          showMessage('请先选择要删除的案件。', 'error');
+          return;
+        }
+
+        const selected = recordsCache.find((record) => record.id === selectedId);
+        const selectedTitle = selected?.title || '未命名案件';
+        const confirmed = window.confirm('确定要删除案件「' + selectedTitle + '」吗？\n此操作无法恢复。');
+        if (!confirmed) {
+          return;
+        }
+
+        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
+          method: 'DELETE'
+        });
+        await loadAdminData();
+        showMessage('案件已删除。', 'ok');
+      } catch (error) {
+        showMessage('删除案件失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+
+    addPhotoBtn.addEventListener('click', async () => {
+      try {
+        const recordId = photoRecordSelect.value;
+        const selectedFile = photoFileInput.files && photoFileInput.files[0];
+        if (!recordId) {
+          showMessage('请先选择要加照片的案件。', 'error');
+          return;
+        }
+        if ((photosByRecordId[recordId] || []).length >= 3) {
+          showMessage('每笔案件最多上传三张附件照片。', 'error');
+          return;
+        }
+        if (!selectedFile) {
+          showMessage('请先选择照片文件。', 'error');
+          return;
+        }
+
+        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
+          showMessage('只支持图片文件，请重新选择。', 'error');
+          return;
+        }
+
+        addPhotoBtn.disabled = true;
+        showMessage('照片处理中，请稍候...', 'ok');
+        const photoDataUrl = await fileToCompressedDataUrl(selectedFile);
+        const hostedUrl = await uploadImageAndGetUrl(photoDataUrl, selectedFile.name || 'case-photo.jpg');
+
+        const payload = {
+          record_id: recordId,
+          photo_url: hostedUrl,
+          caption: photoCaptionInput.value.trim() || null
+        };
+        await requestJson('/api/admin/photos', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        photoFileInput.value = '';
+        photoCaptionInput.value = '';
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
+        await loadAdminData();
+        showMessage('照片已新增（已自动转成网址）。', 'ok');
+      } catch (error) {
+        showMessage('新增照片失败：' + (error?.message || '未知错误'), 'error');
+      } finally {
+        addPhotoBtn.disabled = false;
+      }
+    });
+
+    photoFileInput.addEventListener('change', () => {
+      const file = photoFileInput.files && photoFileInput.files[0];
+      if (!file) {
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
+        return;
+      }
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        showMessage('只支持图片文件，请重新选择。', 'error');
+        photoFileInput.value = '';
+        photoPreview.hidden = true;
+        photoPreviewImg.removeAttribute('src');
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      photoPreviewImg.src = objectUrl;
+      photoPreview.hidden = false;
+      photoPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
+    });
+
+    avatarFileInput.addEventListener('change', () => {
+      const file = avatarFileInput.files && avatarFileInput.files[0];
+      if (!file) {
+        setAvatarPreview(avatarUrlEdit.value);
+        return;
+      }
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        showMessage('只支持图片文件，请重新选择。', 'error');
+        avatarFileInput.value = '';
+        setAvatarPreview(avatarUrlEdit.value);
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      avatarPreviewImg.src = objectUrl;
+      avatarPreview.hidden = false;
+      avatarPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
+    });
+
+    avatarUrlEdit.addEventListener('input', () => {
+      setAvatarPreview(avatarUrlEdit.value);
+    });
+
+    clearServerSessionSilently();
+
+    window.addEventListener('pagehide', () => {
+      clearServerSessionSilently();
+    });
+  </script>
+</body>
+</html>

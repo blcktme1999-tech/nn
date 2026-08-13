@@ -1,0 +1,1604 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频功能 - 公安便民入口</title>
+  <script src="agora-config.js"></script>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .identity { display:block; min-width:0; flex:1; }
+    .brand-left { width:100%; max-width:840px; height:auto; display:block; }
+    .brand-right { width:min(240px, 28vw); min-width:130px; height:auto; display:block; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .panel { width:min(860px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .sub { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; line-height:1.6; }
+    .info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+    .rtc-config { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:13px; font-weight:700; }
+    .field input { width:100%; min-height:38px; padding:8px 10px; border:1px solid #cfcfcf; border-radius:4px; color:#333; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    .field input:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .box { border:1px solid #ececec; border-radius:6px; background:#fafafa; padding:14px; }
+    .box h3 { margin:0 0 8px; color:#123c77; font-size:16px; }
+    .box p { margin:0; color:#555; font-size:13px; line-height:1.7; }
+    .video-stage { margin-top:14px; border:1px solid #ddd; border-radius:8px; overflow:hidden; background:#111827; color:#fff; }
+    .video-stage .toolbar { display:flex; flex-wrap:wrap; gap:10px; padding:12px; background:#1f2937; }
+    .video-stage button { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
+    .video-stage .primary { background:#dc2626; color:#fff; }
+    .video-stage .ghost { background:#374151; color:#fff; }
+    .device-test-box { display:grid; grid-template-columns:minmax(180px, 260px) 1fr; gap:12px; padding:12px; border-top:1px solid #374151; background:#0f172a; }
+    .device-preview { min-height:150px; border:1px solid #334155; border-radius:8px; overflow:hidden; background:#020617; }
+    .device-meta { color:#cbd5e1; font-size:13px; line-height:1.7; display:grid; align-content:center; gap:4px; }
+    .device-meta strong { color:#f1f5f9; font-size:14px; }
+    .device-meta label { color:#cbd5e1; font-size:12px; font-weight:700; margin-top:2px; }
+    .device-meta select { min-height:32px; border:1px solid #334155; border-radius:6px; background:#111827; color:#e5e7eb; padding:4px 8px; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    .device-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+    .device-actions button { appearance:none; border:0; border-radius:6px; padding:7px 11px; font:700 12px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; background:#334155; color:#fff; }
+    .device-actions button[hidden] { display:none; }
+    .canvas { min-height:360px; display:grid; grid-template-columns:minmax(0, 1.7fr) minmax(300px, 1fr); gap:1px; background:#374151; }
+    .window { min-height:360px; background:#0f172a; padding:16px; display:grid; gap:14px; }
+    .window .inner { max-width:360px; }
+    .window h2 { margin:0 0 10px; font-size:26px; }
+    .window p { margin:0; color:#cbd5e1; line-height:1.7; font-size:14px; }
+    .stage-wrap { border:1px solid #334155; border-radius:10px; background:#0b1220; padding:12px; }
+    .stage-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:10px; color:#e5e7eb; }
+    .stage-head strong { font-size:14px; }
+    .stage-head span { color:#94a3b8; font-size:12px; }
+    .side { display:grid; gap:1px; }
+    .tile { background:#111827; padding:16px; display:flex; flex-direction:column; justify-content:center; }
+    .tile strong { display:block; margin-bottom:6px; font-size:14px; }
+    .tile span { color:#cbd5e1; font-size:13px; line-height:1.6; }
+    #participantGrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:stretch; }
+    #participantGrid.empty::before { content:'尚未加入会议，启动后会在这里显示所有参与者。'; display:block; min-height:220px; padding:18px 10px; border:1px dashed #334155; border-radius:8px; color:#94a3b8; font-size:13px; text-align:center; display:flex; align-items:center; justify-content:center; }
+    .participant-card { border:1px solid #374151; border-radius:10px; overflow:hidden; background:#0b1220; display:flex; flex-direction:column; min-height:180px; cursor:pointer; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .participant-card:hover { transform:translateY(-1px); border-color:#64748b; }
+    .participant-card.featured { grid-column:span 2; grid-row:span 2; border-color:#dc2626; box-shadow:0 0 0 1px #dc2626 inset; }
+    .participant-card.local .participant-head::after { content:'自己'; margin-left:auto; padding:2px 8px; border-radius:999px; background:#7f1d1d; color:#fff; font-size:11px; }
+    .participant-head { padding:8px 10px; font-size:12px; color:#cbd5e1; background:#1f2937; display:flex; align-items:center; gap:8px; }
+    .participant-media { width:100%; height:180px; background:#020617; position:relative; }
+    .participant-card.featured .participant-media { height:380px; }
+    .participant-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:#94a3b8; font-size:13px; padding:14px; }
+    .chat-tile { align-items:stretch; }
+    .chat-list { flex:1; min-height:170px; max-height:220px; overflow:auto; border:1px solid #374151; border-radius:8px; padding:10px; background:#0b1220; }
+    .chat-empty { color:#94a3b8; font-size:12px; line-height:1.6; }
+    .chat-item { margin-bottom:8px; padding:7px 8px; border:1px solid #334155; border-radius:6px; background:#101827; }
+    .chat-item.self { border-color:#7f1d1d; background:#220f14; }
+    .chat-meta { color:#9fb0c9; font-size:11px; margin-bottom:4px; }
+    .chat-text { color:#e5e7eb; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
+    .chat-form { margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:8px; }
+    .chat-form input { min-height:34px; border:1px solid #374151; border-radius:6px; background:#0b1220; color:#fff; padding:7px 9px; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    .chat-form button { border:0; border-radius:6px; background:#dc2626; color:#fff; padding:0 12px; font:700 13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
+    .chat-form button:disabled, .chat-form input:disabled { opacity:.6; cursor:not-allowed; }
+    .status { margin-top:14px; padding:12px 14px; border-radius:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-size:13px; line-height:1.6; }
+    .status.error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:800px) {
+      .info, .canvas, .rtc-config { grid-template-columns:1fr; }
+      .device-test-box { grid-template-columns:1fr; }
+      .window, .side { min-height:auto; }
+      .participant-card.featured { grid-column:span 1; grid-row:span 1; }
+      .participant-media, .participant-card.featured .participant-media { height:220px; }
+    }
+    @media (max-width:640px) {
+      .masthead { min-height:78px; }
+      .brand-right { display:none; }
+      .brand-left { max-width:100%; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      main { padding-top:28px; }
+      .panel { padding:23px 22px 27px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index (2).html" aria-label="返回首页">
+        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
+      </a>
+      <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
+      <a class="return-home" href="index (2).html">← 返回首页</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index (2).html">首页</a><a href="mm1.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="video-room.html">视频功能</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h1>视频报案后台</h1>
+      <p class="sub">输入同一个会议频道即可直接进入同一房间。App ID 与 Token 由后端签发端点统一提供，无需手动填写 Token。</p>
+
+      <div class="rtc-config">
+        <div class="field">
+          <label for="channelInput">会议频道</label>
+          <input id="channelInput" placeholder="例如：police_room_01，多人输入同一频道即可进同一房间">
+        </div>
+        <div class="field">
+          <label for="uidInput">姓名</label>
+          <input id="uidInput" placeholder="请输入姓名">
+        </div>
+      </div>
+
+      <div class="video-stage">
+        <div class="toolbar">
+          <button class="primary" id="startCallBtn" type="button">开始线上笔录</button>
+          <button class="ghost" id="testDeviceBtn" type="button">测试本机相机与麦克风</button>
+          <button class="ghost" id="leaveBtn" type="button">结束笔录</button>
+          <button class="ghost" id="muteBtn" type="button">麦克风静音</button>
+          <button class="ghost" id="cameraBtn" type="button">镜头关闭</button>
+        </div>
+        <div id="deviceTestBox" class="device-test-box" hidden>
+          <div id="devicePreview" class="device-preview"></div>
+          <div class="device-meta">
+            <strong>本机设备测试中</strong>
+            <span id="deviceTestHint">请确认已看到自己的画面，并对着麦克风说话。</span>
+            <label for="cameraSelect">相机来源</label>
+            <select id="cameraSelect"><option value="">系统默认相机</option></select>
+            <span id="cameraStatusText">相机状态：未测试</span>
+            <span id="micLevelText">麦克风音量：0%</span>
+            <div class="device-actions">
+              <button id="refreshDeviceBtn" type="button">重新扫描设备</button>
+              <button id="retryCameraBtn" type="button" hidden>重试相机</button>
+            </div>
+          </div>
+        </div>
+        <div class="canvas">
+          <div class="window">
+            <div class="stage-wrap">
+              <div class="stage-head">
+                <strong>视频笔录画面</strong>
+                <span>所有人包含自己都会显示在同一个宫格，点击任一画面可放大。</span>
+              </div>
+              <div id="participantGrid" class="empty"></div>
+            </div>
+          </div>
+          <div class="side">
+            <div class="tile"><strong>笔录状态</strong><span id="callStatus">进行中</span></div>
+            <div class="tile"><strong>参与人数</strong><span id="memberCount">0 人</span></div>
+            <div class="tile"><strong>报案事由</strong><span>可扩展为多方会议、录影存证与留言同步。</span></div>
+            <div class="tile chat-tile">
+              <strong>文字消息</strong>
+              <div id="chatList" class="chat-list"><div class="chat-empty">尚未连接聊天室。加入视频后可实时收发文字消息。</div></div>
+              <form id="chatForm" class="chat-form">
+                <input id="chatInput" maxlength="280" placeholder="输入消息后按 Enter 或发送" disabled>
+                <button id="chatSendBtn" type="submit" disabled>发送</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="status" class="status">请输入会议频道后开始连接，系统会自动向后端申请 Agora RTC Token。</div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="site-footer-inner">视频功能由 Agora RTC 提供。</div></footer>
+
+  <script type="module">
+    const runtimeCfg = window.AGORA_CONFIG || {};
+
+    function toArray(value) {
+      if (!value) return [];
+      return Array.isArray(value) ? value.filter(Boolean) : [value];
+    }
+
+    async function loadScriptFromCandidates(name, candidates) {
+      const errors = [];
+      for (const src of candidates) {
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            script.crossOrigin = 'anonymous';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('load failed: ' + src));
+            document.head.appendChild(script);
+          });
+          return src;
+        } catch (error) {
+          errors.push(String(error?.message || error));
+        }
+      }
+      throw new Error(name + ' 加载失败：' + errors.join(' | '));
+    }
+
+    const agoraScriptCandidates = [
+      ...toArray(runtimeCfg.sdkUrls),
+      'https://download.agora.io/sdk/release/AgoraRTC_N.js',
+      'https://cdn.jsdelivr.net/npm/agora-rtc-sdk-ng/AgoraRTC_N-production.js'
+    ];
+    let AgoraRTC = null;
+    try {
+      await loadScriptFromCandidates('Agora RTC SDK', agoraScriptCandidates);
+      AgoraRTC = window.AgoraRTC;
+    } catch (sdkLoadError) {
+      console.error('Agora RTC SDK load failed:', sdkLoadError);
+    }
+
+    const rtcSdkMode = 'agora';
+    let dingRtcFactory = null;
+    let AliRtcEngineClass = null;
+    if (!AgoraRTC || typeof AgoraRTC.createClient !== 'function') {
+      document.querySelector('#status').className = 'status error';
+      document.querySelector('#status').textContent = 'Agora RTC SDK 加载失败，请检查网络或 SDK 地址。';
+    }
+
+    const SUPABASE_URL = 'https://nbsbbpzaubllexbxomep.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Up5IGr7G8tE0eVEdHfqRXA_xBDFbUP-';
+    const supabaseScriptCandidates = [
+      ...toArray(runtimeCfg.supabaseSdkUrls),
+      './vendor/supabase/supabase.js',
+      'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
+    ];
+
+    let supabase = null;
+    try {
+      await loadScriptFromCandidates('Supabase SDK', supabaseScriptCandidates);
+      const createClient = window.supabase?.createClient;
+      if (typeof createClient === 'function') {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        });
+      }
+    } catch (supabaseLoadError) {
+      console.warn('Supabase SDK load skipped:', supabaseLoadError);
+    }
+
+    const realtimeEnabled = Boolean(supabase);
+
+    const params = new URLSearchParams(window.location.search);
+    const presetChannel = params.get('channel') || '';
+    const presetUid = params.get('uid') || '';
+    const shouldAutoJoin = params.get('autojoin') === '1';
+    const cfg = window.AGORA_CONFIG || {};
+    const unitName = document.querySelector('#unitName');
+    const codeValue = document.querySelector('#codeValue');
+    const callStatus = document.querySelector('#callStatus');
+    const memberCount = document.querySelector('#memberCount');
+    const statusBox = document.querySelector('#status');
+    const startCallBtn = document.querySelector('#startCallBtn');
+    const testDeviceBtn = document.querySelector('#testDeviceBtn');
+    const leaveBtn = document.querySelector('#leaveBtn');
+    const muteBtn = document.querySelector('#muteBtn');
+    const cameraBtn = document.querySelector('#cameraBtn');
+    const participantGrid = document.querySelector('#participantGrid');
+    const channelInput = document.querySelector('#channelInput');
+    const uidInput = document.querySelector('#uidInput');
+    const deviceTestBox = document.querySelector('#deviceTestBox');
+    const devicePreview = document.querySelector('#devicePreview');
+    const deviceTestHint = document.querySelector('#deviceTestHint');
+    const cameraSelect = document.querySelector('#cameraSelect');
+    const cameraStatusText = document.querySelector('#cameraStatusText');
+    const micLevelText = document.querySelector('#micLevelText');
+    const refreshDeviceBtn = document.querySelector('#refreshDeviceBtn');
+    const retryCameraBtn = document.querySelector('#retryCameraBtn');
+    const chatList = document.querySelector('#chatList');
+    const chatForm = document.querySelector('#chatForm');
+    const chatInput = document.querySelector('#chatInput');
+    const chatSendBtn = document.querySelector('#chatSendBtn');
+
+    let muted = false;
+    let cameraOff = false;
+    let joined = false;
+    let joining = false;
+    let chatChannel = null;
+    let chatSender = '';
+    let localParticipantId = null;
+    let activeParticipantId = null;
+    let testingDevice = false;
+    let micLevelTimer = null;
+    let cameraTestError = null;
+    let cameraListCache = [];
+    const remoteUserMap = new Map();
+    let engine = null;
+    let dingClient = null;
+    let dingClientHandlersBound = false;
+    let dingCameraTrack = null;
+    let dingMicTrack = null;
+    let dingMcuAudioSubscribed = false;
+    let engineHandlersBound = false;
+    let agoraClient = null;
+    let agoraMicTrack = null;
+    let agoraCameraTrack = null;
+    let joinedUid = '';
+    const testTracks = {
+      videoTrack: null,
+      audioTrack: null,
+      videoStream: null,
+      audioStream: null,
+      analyser: null,
+      audioContext: null
+    };
+
+    function isLikelyRtcToken(value) {
+      const token = (value || '').trim();
+      return token.length > 40;
+    }
+
+    function isHex32(value) {
+      return /^[a-f0-9]{32}$/i.test((value || '').trim());
+    }
+
+    function decodeBase64Url(value) {
+      const input = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+      const pad = input.length % 4 === 0 ? '' : '='.repeat(4 - (input.length % 4));
+      const decoded = atob(input + pad);
+      return decodeURIComponent(Array.from(decoded).map((char) => '%'+ char.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
+    }
+
+    function parseAliyunTokenMeta(token) {
+      const text = String(token || '').trim();
+      const parts = text.split('.');
+      if (parts.length < 2) return null;
+      try {
+        return JSON.parse(decodeBase64Url(parts[1]));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function randomNonce() {
+      return Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
+    }
+
+    async function requestRtcToken(channel, uid) {
+      const response = await fetch('/api/rtc-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel, uid })
+      });
+
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || ('Token API 失败（HTTP ' + response.status + '）'));
+      }
+
+      if (!data.token) {
+        throw new Error('Token API 未返回 token。');
+      }
+
+      return {
+        provider: String(data.provider || '').trim().toLowerCase(),
+        token: data.token,
+        appId: String(data.appId || '').trim(),
+        uid: data.uid,
+        channel: String(data.channel || '').trim(),
+        expiresAt: Number(data.expiresAt || 0) || 0,
+        timestamp: Number(data.timestamp || 0) || 0,
+        nonce: String(data.nonce || '').trim(),
+        tokenSource: String(data.tokenSource || '').trim()
+      };
+    }
+
+    function ensureEngine() {
+      if (!AliRtcEngineClass) {
+        throw new Error('Aliyun RTC SDK 不可用。');
+      }
+      if (!engine) {
+        const seen = new Set();
+        const candidateQueue = [
+          AliRtcEngineClass,
+          window.AliRtcEngine,
+          window.AliRtcEngine?.AliRtcEngine,
+          window.AliRtcEngine?.default
+        ].filter(Boolean);
+
+        const candidates = [];
+        while (candidateQueue.length > 0) {
+          const current = candidateQueue.shift();
+          if (!current) continue;
+          if (seen.has(current)) continue;
+          seen.add(current);
+          candidates.push(current);
+
+          if (typeof current === 'object' || typeof current === 'function') {
+            const keys = Object.getOwnPropertyNames(current);
+            keys.forEach((key) => {
+              if (key === 'prototype') return;
+              let value = null;
+              try {
+                value = current[key];
+              } catch (_) {
+                value = null;
+              }
+              if (value && (typeof value === 'object' || typeof value === 'function') && !seen.has(value)) {
+                candidateQueue.push(value);
+              }
+            });
+          }
+        }
+
+        const factoryNames = ['getInstance', 'createInstance', 'createClient', 'getClient'];
+
+        for (const candidate of candidates) {
+          if (engine) break;
+
+          if (candidate && typeof candidate.joinChannel === 'function') {
+            engine = candidate;
+            break;
+          }
+
+          for (const factoryName of factoryNames) {
+            if (engine) break;
+            if (typeof candidate[factoryName] !== 'function') continue;
+            try {
+              engine = candidate[factoryName]();
+            } catch (_) {
+              engine = null;
+            }
+          }
+
+          if (!engine && typeof candidate === 'function' && typeof candidate.prototype?.joinChannel === 'function') {
+            try {
+              engine = new candidate();
+            } catch (_) {
+              // Ignore constructor-only failures and continue searching other exports.
+            }
+          }
+        }
+
+        if (!engine) {
+          const sdkKeys = window.AliRtcEngine ? Object.getOwnPropertyNames(window.AliRtcEngine).slice(0, 20).join(', ') : '';
+          throw new Error('Aliyun RTC SDK 已加载，但未找到可用引擎导出（getInstance/createInstance/createClient/getClient/constructor）。' + (sdkKeys ? ' SDK keys: ' + sdkKeys : ''));
+        }
+
+        if (
+          typeof engine.joinChannel !== 'function' ||
+          typeof engine.leaveChannel !== 'function' ||
+          typeof engine.on !== 'function'
+        ) {
+          throw new Error('Aliyun RTC SDK 引擎实例不完整，缺少 joinChannel/leaveChannel/on 方法。');
+        }
+      }
+      if (!engineHandlersBound) {
+        bindEngineEvents(engine);
+        engineHandlersBound = true;
+      }
+      return engine;
+    }
+
+    function ensureDingClient() {
+      if (!dingRtcFactory || typeof dingRtcFactory.createClient !== 'function') {
+        throw new Error('DingRTC SDK 不可用。');
+      }
+      if (!dingClient) {
+        dingClient = dingRtcFactory.createClient();
+      }
+      bindDingClientEvents(dingClient);
+      return dingClient;
+    }
+
+    function bindDingClientEvents(client) {
+      if (dingClientHandlersBound || !client || typeof client.on !== 'function') return;
+      dingClientHandlersBound = true;
+
+      client.on('connection-state-change', (curState, prevState, reason) => {
+        console.warn('DingRTC connection-state-change:', prevState, '->', curState, 'reason:', reason);
+      });
+
+      client.on('user-published', async (user, mediaType, auxiliary) => {
+        try {
+          if (mediaType === 'video') {
+            const track = await client.subscribe(user.userId, mediaType, auxiliary);
+            const participantId = 'remote:' + user.userId;
+            const container = ensureParticipantCard(participantId, '远端 UID：' + user.userId, false);
+            if (container) {
+              container.innerHTML = '';
+              track.play(container);
+            }
+          } else if (mediaType === 'audio' && !dingMcuAudioSubscribed) {
+            dingMcuAudioSubscribed = true;
+            const track = await client.subscribe('mcu', 'audio');
+            track.play();
+          }
+        } catch (error) {
+          showStatus('订阅远端流失败：' + (error?.message || '未知错误'), true);
+        }
+        updateMemberCount();
+      });
+
+      client.on('user-unpublished', (user, mediaType) => {
+        if (mediaType === 'video') {
+          removeParticipantCard('remote:' + user.userId);
+        }
+        updateMemberCount();
+      });
+    }
+
+    async function destroyEngineInstance() {
+      if (!engine) return;
+
+      try {
+        if (typeof engine.stopPreview === 'function') {
+          await engine.stopPreview();
+        }
+      } catch (_) {
+        // ignore
+      }
+
+      try {
+        if (typeof engine.leaveChannel === 'function') {
+          await engine.leaveChannel();
+        }
+      } catch (_) {
+        // ignore
+      }
+
+      try {
+        if (typeof engine.destroy === 'function') {
+          await engine.destroy();
+        } else if (typeof engine.release === 'function') {
+          await engine.release();
+        }
+      } catch (_) {
+        // ignore
+      }
+
+      engine = null;
+      engineHandlersBound = false;
+    }
+
+    async function destroyDingClient() {
+      if (dingCameraTrack) {
+        try {
+          dingCameraTrack.stop();
+          dingCameraTrack.close();
+        } catch (_) {
+          // ignore
+        }
+        dingCameraTrack = null;
+      }
+      if (dingMicTrack) {
+        try {
+          dingMicTrack.stop();
+          dingMicTrack.close();
+        } catch (_) {
+          // ignore
+        }
+        dingMicTrack = null;
+      }
+      dingMcuAudioSubscribed = false;
+
+      if (!dingClient) return;
+      try {
+        if (typeof dingClient.leave === 'function') {
+          await dingClient.leave();
+        }
+      } catch (_) {
+        // ignore
+      }
+      dingClient = null;
+      dingClientHandlersBound = false;
+    }
+
+    function isValidRtcIdentifier(value) {
+      return /^[A-Za-z0-9_-]{1,64}$/.test(String(value || '').trim());
+    }
+
+    function ensureParticipantMediaElement(participantId) {
+      const domId = 'participant_' + participantId.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const mediaContainer = document.getElementById('media_' + domId);
+      if (!mediaContainer) return null;
+      let video = mediaContainer.querySelector('video');
+      if (!video) {
+        video = document.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = participantId === localParticipantId;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        mediaContainer.innerHTML = '';
+        mediaContainer.appendChild(video);
+      }
+      return video;
+    }
+
+    function bindEngineEvents(rtcEngine) {
+      rtcEngine.on('remoteUserOnLineNotify', (uid) => {
+        const participantId = 'remote:' + uid;
+        remoteUserMap.set(uid, { uid, videoTrack: 0, audioTrack: 0 });
+        ensureParticipantCard(participantId, '远端 UID：' + uid, false);
+      });
+
+      rtcEngine.on('remoteUserOffLineNotify', (uid) => {
+        remoteUserMap.delete(uid);
+        removeParticipantCard('remote:' + uid);
+      });
+
+      rtcEngine.on('remoteTrackAvailableNotify', async (uid, audioTrackType, videoTrackType) => {
+        const participantId = 'remote:' + uid;
+        const info = remoteUserMap.get(uid) || { uid };
+        info.audioTrack = audioTrackType;
+        info.videoTrack = videoTrackType;
+        remoteUserMap.set(uid, info);
+
+        const hasCamera =
+          videoTrackType === AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackCamera ||
+          videoTrackType === AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackBoth;
+        const hasScreen =
+          videoTrackType === AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackScreen ||
+          videoTrackType === AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackBoth;
+        const hasAudio = audioTrackType !== AliRtcEngineClass.AliRtcAudioTrack.AliRtcAudioTrackNo;
+
+        try {
+          if (hasCamera || hasAudio) {
+            rtcEngine.subscribeRemoteMediaStream(
+              String(uid),
+              AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackCamera,
+              Boolean(hasCamera),
+              Boolean(hasAudio)
+            );
+          }
+          if (hasScreen) {
+            rtcEngine.subscribeRemoteMediaStream(
+              String(uid),
+              AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackScreen,
+              true,
+              false
+            );
+          }
+
+          const player = ensureParticipantCard(participantId, '远端 UID：' + uid, false);
+          if (!player) return;
+
+          if (hasCamera) {
+            const videoEl = ensureParticipantMediaElement(participantId);
+            if (videoEl) {
+              rtcEngine.setRemoteViewConfig(videoEl, String(uid), AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackCamera);
+            }
+          } else if (hasScreen) {
+            const videoEl = ensureParticipantMediaElement(participantId);
+            if (videoEl) {
+              rtcEngine.setRemoteViewConfig(videoEl, String(uid), AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackScreen);
+            }
+          } else if (hasAudio) {
+            showPlaceholder(player, '仅音频模式（无视频画面）');
+          } else {
+            showPlaceholder(player, '远端未发布可用媒体流。');
+          }
+        } catch (error) {
+          showStatus('订阅远端流失败：' + (error?.message || '未知错误'), true);
+        }
+
+        updateMemberCount();
+      });
+    }
+
+    function showStatus(text, error) {
+      statusBox.textContent = text;
+      statusBox.className = error ? 'status error' : 'status';
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char] || char));
+    }
+
+    function chatTime(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '--:--';
+      return date.toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function setChatEnabled(enabled) {
+      chatInput.disabled = !enabled;
+      chatSendBtn.disabled = !enabled;
+    }
+
+    function appendChatMessage(payload, isSelf) {
+      const sender = escapeText(payload?.sender || '访客');
+      const text = escapeText(payload?.text || '');
+      const time = chatTime(payload?.at || new Date().toISOString());
+
+      if (chatList.querySelector('.chat-empty')) {
+        chatList.innerHTML = '';
+      }
+
+      const row = document.createElement('div');
+      row.className = 'chat-item' + (isSelf ? ' self' : '');
+      row.innerHTML = '<div class="chat-meta">' + sender + ' · ' + time + '</div><div class="chat-text">' + text + '</div>';
+      chatList.appendChild(row);
+      chatList.scrollTop = chatList.scrollHeight;
+    }
+
+    async function stopChatSync() {
+      if (!realtimeEnabled) {
+        setChatEnabled(false);
+        return;
+      }
+      if (chatChannel) {
+        await supabase.removeChannel(chatChannel);
+        chatChannel = null;
+      }
+      setChatEnabled(false);
+    }
+
+    async function startChatSync(channelName, senderName) {
+      if (!realtimeEnabled) {
+        setChatEnabled(false);
+        chatList.innerHTML = '<div class="chat-empty">当前环境未加载 Realtime SDK，文字消息功能已自动停用（不影响视频通话）。</div>';
+        return;
+      }
+
+      await stopChatSync();
+      chatSender = senderName;
+      const realtimeName = 'video-chat:' + channelName;
+
+      chatChannel = supabase.channel(realtimeName, {
+        config: {
+          broadcast: { self: false }
+        }
+      });
+
+      chatChannel.on('broadcast', { event: 'message' }, ({ payload }) => {
+        appendChatMessage(payload, false);
+      });
+
+      await new Promise((resolve, reject) => {
+        chatChannel.subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            resolve();
+            return;
+          }
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+            reject(err || new Error('realtime subscribe failed'));
+          }
+        });
+      });
+
+      setChatEnabled(true);
+      if (chatList.querySelector('.chat-empty')) {
+        chatList.innerHTML = '';
+      }
+      appendChatMessage({ sender: '系统', text: '文字消息可通过此处发送。', at: new Date().toISOString() }, false);
+    }
+
+    function updateMemberCount() {
+      const totalCount = participantGrid.children.length;
+      memberCount.textContent = totalCount + ' 人';
+      participantGrid.classList.toggle('empty', totalCount === 0);
+    }
+
+    function setControlsWhenJoined(value) {
+      joined = value;
+      startCallBtn.disabled = value || joining;
+      testDeviceBtn.disabled = value || joining;
+      leaveBtn.disabled = !value;
+      muteBtn.disabled = !value;
+      cameraBtn.disabled = !value;
+      channelInput.disabled = value;
+      uidInput.disabled = value;
+      startCallBtn.textContent = value ? '已连线' : (joining ? '连接中...' : '开始线上笔录');
+    }
+
+    function resetCallUi() {
+      participantGrid.innerHTML = '';
+      remoteUserMap.clear();
+      localParticipantId = null;
+      activeParticipantId = null;
+      updateMemberCount();
+      callStatus.textContent = '尚未启动，请点击“开始线上笔录”。';
+      muteBtn.textContent = '麦克风静音';
+      cameraBtn.textContent = '镜头关闭';
+      muted = false;
+      cameraOff = false;
+    }
+
+    function renderCameraOptions(cameras) {
+      const selected = cameraSelect.value;
+      const options = ['<option value="">系统默认相机</option>'];
+      cameras.forEach((camera, index) => {
+        const label = camera.label || ('相机设备 ' + (index + 1));
+        options.push('<option value="' + escapeText(camera.deviceId || '') + '">' + escapeText(label) + '</option>');
+      });
+      cameraSelect.innerHTML = options.join('');
+
+      if (selected && cameras.some((camera) => camera.deviceId === selected)) {
+        cameraSelect.value = selected;
+      }
+    }
+
+    async function refreshCameraDevices() {
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        cameraListCache = [];
+        renderCameraOptions([]);
+        return [];
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+      const cameras = devices.filter((item) => item.kind === 'videoinput');
+      cameraListCache = cameras;
+      renderCameraOptions(cameras);
+      return cameras;
+    }
+
+    async function stopDeviceTest(options = {}) {
+      const silent = Boolean(options.silent);
+
+      if (micLevelTimer) {
+        clearInterval(micLevelTimer);
+        micLevelTimer = null;
+      }
+
+      if (testTracks.analyser) {
+        testTracks.analyser.disconnect();
+        testTracks.analyser = null;
+      }
+      if (testTracks.audioContext) {
+        testTracks.audioContext.close().catch(() => {});
+        testTracks.audioContext = null;
+      }
+
+      if (testTracks.audioTrack) {
+        testTracks.audioTrack.stop();
+        testTracks.audioTrack = null;
+      }
+      if (testTracks.videoTrack) {
+        testTracks.videoTrack.stop();
+        testTracks.videoTrack = null;
+      }
+      if (testTracks.audioStream) {
+        testTracks.audioStream.getTracks().forEach((track) => track.stop());
+        testTracks.audioStream = null;
+      }
+      if (testTracks.videoStream) {
+        testTracks.videoStream.getTracks().forEach((track) => track.stop());
+        testTracks.videoStream = null;
+      }
+
+      testingDevice = false;
+      cameraTestError = null;
+      deviceTestBox.hidden = true;
+      devicePreview.innerHTML = '';
+      micLevelText.textContent = '麦克风音量：0%';
+      cameraStatusText.textContent = '相机状态：未测试';
+      deviceTestHint.textContent = '请确认已看到自己的画面，并对着麦克风说话。';
+      testDeviceBtn.textContent = '测试本机相机与麦克风';
+      retryCameraBtn.hidden = true;
+
+      if (!silent) {
+        showStatus('已结束本机设备测试。', false);
+      }
+    }
+
+    function prettyMediaError(error) {
+      if (!error) return '未知错误';
+      const message = String(error.message || error.name || '未知错误');
+      const normalized = message.toUpperCase();
+
+      if (normalized.includes('NOTREADABLEERROR') || normalized.includes('TRACK_IS_DISABLED') || normalized.includes('NOT_READABLE')) {
+        return '可能被其他程序占用';
+      }
+      if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
+        return '浏览器权限被拒绝';
+      }
+      if (normalized.includes('NOTFOUNDERROR') || normalized.includes('DEVICE_NOT_FOUND') || normalized.includes('DEVICENOTFOUNDERROR')) {
+        return '浏览器找不到相机设备';
+      }
+
+      return message;
+    }
+
+    async function retryCameraTrackOnly() {
+      if (!testingDevice) {
+        showStatus('请先启动设备测试。', true);
+        return;
+      }
+
+      try {
+        refreshDeviceBtn.disabled = true;
+        await refreshCameraDevices();
+        const selectedCameraId = cameraSelect.value.trim();
+        if (testTracks.videoTrack) {
+          testTracks.videoTrack.stop();
+          testTracks.videoTrack = null;
+        }
+        if (testTracks.videoStream) {
+          testTracks.videoStream.getTracks().forEach((track) => track.stop());
+          testTracks.videoStream = null;
+        }
+
+        const constraints = selectedCameraId
+          ? { video: { deviceId: { exact: selectedCameraId } }, audio: false }
+          : { video: true, audio: false };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        testTracks.videoStream = stream;
+        testTracks.videoTrack = stream.getVideoTracks()[0] || null;
+        devicePreview.innerHTML = '';
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.srcObject = stream;
+        devicePreview.appendChild(video);
+        cameraTestError = null;
+        cameraStatusText.textContent = '相机状态：可用';
+        retryCameraBtn.hidden = true;
+        showStatus('相机已恢复可用。', false);
+      } catch (error) {
+        cameraTestError = error;
+        const reason = prettyMediaError(error);
+        cameraStatusText.textContent = '相机状态：不可用（' + reason + '）';
+        showStatus('相机仍不可用：' + reason, true);
+      } finally {
+        refreshDeviceBtn.disabled = false;
+      }
+    }
+
+    async function startDeviceTest() {
+      if (joining) {
+        showStatus('连接处理中，请稍后再测试。', true);
+        return;
+      }
+      if (joined) {
+        showStatus('已在会议中，镜头与麦克风可直接在会议内测试。', true);
+        return;
+      }
+      if (testingDevice) {
+        await stopDeviceTest();
+        return;
+      }
+
+      try {
+        let cameraError = null;
+        let micError = null;
+
+        const cameras = await refreshCameraDevices();
+        const selectedCameraId = cameraSelect.value.trim();
+
+        try {
+          const videoConstraints = selectedCameraId
+            ? { video: { deviceId: { exact: selectedCameraId } }, audio: false }
+            : { video: true, audio: false };
+          const videoStream = await navigator.mediaDevices.getUserMedia(videoConstraints);
+          testTracks.videoStream = videoStream;
+          testTracks.videoTrack = videoStream.getVideoTracks()[0] || null;
+        } catch (error) {
+          cameraError = error;
+        }
+
+        try {
+          const audioStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          testTracks.audioStream = audioStream;
+          testTracks.audioTrack = audioStream.getAudioTracks()[0] || null;
+        } catch (error) {
+          micError = error;
+        }
+
+        const microphones = (await navigator.mediaDevices.enumerateDevices().catch(() => [])).filter((item) => item.kind === 'audioinput');
+
+        if (!testTracks.videoTrack && !testTracks.audioTrack) {
+          const camMsg = cameraError?.message ? String(cameraError.message) : '相机不可用';
+          const micMsg = micError?.message ? String(micError.message) : '麦克风不可用';
+          throw new Error('相机：' + camMsg + '；麦克风：' + micMsg + '。');
+        }
+
+        cameraTestError = cameraError;
+
+        testingDevice = true;
+        testDeviceBtn.textContent = '结束设备测试';
+        deviceTestBox.hidden = false;
+        if (testTracks.videoTrack) {
+          devicePreview.innerHTML = '';
+          const video = document.createElement('video');
+          video.autoplay = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.srcObject = testTracks.videoStream;
+          devicePreview.appendChild(video);
+          cameraStatusText.textContent = '相机状态：可用';
+          retryCameraBtn.hidden = true;
+        } else {
+          devicePreview.innerHTML = '<div class="participant-placeholder">未启用相机（可先测试麦克风）</div>';
+          const reason = prettyMediaError(cameraError);
+          cameraStatusText.textContent = '相机状态：不可用（' + reason + '）';
+          if (cameras.length > 1) {
+            deviceTestHint.textContent = '检测到多个相机来源，请切换“相机来源”后按“重试相机”。';
+          }
+          retryCameraBtn.hidden = false;
+        }
+
+        if (!window.isSecureContext) {
+          deviceTestHint.textContent = '当前站点不是安全连接（HTTPS），部分浏览器可能限制相机/麦克风。';
+        } else if (!cameras.length || !microphones.length) {
+          deviceTestHint.textContent = '已拿到设备权限；若仍异常，请检查浏览器权限与其他软件是否占用。';
+        }
+
+        if (testTracks.audioTrack) {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(testTracks.audioStream);
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          testTracks.audioContext = audioContext;
+          testTracks.analyser = analyser;
+          const sample = new Uint8Array(analyser.frequencyBinCount);
+
+          const updateMicLevel = () => {
+            if (!testTracks.analyser) return;
+            testTracks.analyser.getByteFrequencyData(sample);
+            const avg = sample.reduce((sum, value) => sum + value, 0) / (sample.length || 1);
+            const level = Math.round((avg / 255) * 100);
+            micLevelText.textContent = '麦克风音量：' + level + '%';
+          };
+
+          updateMicLevel();
+          micLevelTimer = setInterval(updateMicLevel, 500);
+        } else {
+          micLevelText.textContent = '麦克风音量：未检测到麦克风';
+        }
+
+        if (testTracks.videoTrack && testTracks.audioTrack) {
+          showStatus('本机测试已启动，请确认画面与麦克风音量是否有变化。', false);
+        } else if (testTracks.videoTrack) {
+          showStatus('本机测试已启动：相机可用，麦克风当前不可用。', false);
+        } else {
+          showStatus('本机测试已启动：麦克风可用，相机当前不可用。', false);
+        }
+      } catch (error) {
+        await stopDeviceTest({ silent: true });
+        const rawMessage = error && error.message ? String(error.message) : '未知错误';
+        const normalized = rawMessage.toUpperCase();
+        const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+        const cameras = devices.filter((item) => item.kind === 'videoinput');
+        const microphones = devices.filter((item) => item.kind === 'audioinput');
+        const envHint = '（HTTPS：' + (window.isSecureContext ? '是' : '否') + '，相机数：' + cameras.length + '，麦克风数：' + microphones.length + '）';
+        if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
+          showStatus('设备测试失败：浏览器未授权相机或麦克风，请先允许后再重试。' + envHint, true);
+          return;
+        }
+        if (normalized.includes('NOTFOUNDERROR') || normalized.includes('DEVICE_NOT_FOUND') || normalized.includes('DEVICENOTFOUNDERROR')) {
+          showStatus('设备测试失败：浏览器找不到可用相机或麦克风，请检查是否被其他程序占用。' + envHint, true);
+          return;
+        }
+        if (!window.isSecureContext) {
+          showStatus('设备测试失败：当前网页不是 HTTPS 安全环境，浏览器可能阻止相机/麦克风。', true);
+          return;
+        }
+        showStatus('设备测试失败：' + rawMessage + envHint, true);
+      }
+    }
+
+    function setActiveParticipant(participantId) {
+      activeParticipantId = participantId;
+      Array.from(participantGrid.querySelectorAll('.participant-card')).forEach((card) => {
+        card.classList.toggle('featured', card.dataset.participantId === participantId);
+      });
+    }
+
+    function ensureParticipantCard(participantId, label, isLocal) {
+      const id = 'participant_' + participantId.replace(/[^a-zA-Z0-9_-]/g, '_');
+      let card = document.getElementById(id);
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'participant-card' + (isLocal ? ' local' : '');
+        card.id = id;
+        card.dataset.participantId = participantId;
+        card.innerHTML = '<div class="participant-head">' + escapeText(label) + '</div><div class="participant-media" id="media_' + id + '"><div class="participant-placeholder">等待视频画面...</div></div>';
+        card.addEventListener('click', () => setActiveParticipant(participantId));
+        participantGrid.appendChild(card);
+      }
+
+      if (!activeParticipantId) {
+        setActiveParticipant(participantId);
+      }
+
+      updateMemberCount();
+      return document.getElementById('media_' + id);
+    }
+
+    function showPlaceholder(container, text) {
+      container.innerHTML = '<div class="participant-placeholder">' + escapeText(text) + '</div>';
+    }
+
+    function removeParticipantCard(participantId) {
+      const domId = 'participant_' + participantId.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const card = document.getElementById(domId);
+      if (card && card.parentNode) {
+        card.parentNode.removeChild(card);
+      }
+
+      if (activeParticipantId === participantId) {
+        const nextCard = participantGrid.querySelector('.participant-card');
+        activeParticipantId = null;
+        if (nextCard) {
+          setActiveParticipant(nextCard.dataset.participantId);
+        }
+      }
+
+      updateMemberCount();
+    }
+
+    function ensureAgoraClient() {
+      if (!AgoraRTC || typeof AgoraRTC.createClient !== 'function') {
+        throw new Error('Agora RTC SDK 不可用。');
+      }
+      if (agoraClient) return agoraClient;
+
+      agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+      agoraClient.on('user-published', async (user, mediaType) => {
+        await agoraClient.subscribe(user, mediaType);
+        const participantId = 'remote:' + user.uid;
+        if (mediaType === 'video') {
+          const container = ensureParticipantCard(participantId, '远端 UID：' + user.uid, false);
+          if (container) {
+            container.innerHTML = '';
+            user.videoTrack.play(container);
+          }
+        }
+        if (mediaType === 'audio') {
+          user.audioTrack.play();
+        }
+        updateMemberCount();
+      });
+      agoraClient.on('user-unpublished', (user, mediaType) => {
+        if (mediaType === 'video') removeParticipantCard('remote:' + user.uid);
+      });
+      agoraClient.on('user-left', (user) => {
+        removeParticipantCard('remote:' + user.uid);
+      });
+      return agoraClient;
+    }
+
+    async function destroyAgoraClient() {
+      [agoraMicTrack, agoraCameraTrack].filter(Boolean).forEach((track) => {
+        track.stop();
+        track.close();
+      });
+      agoraMicTrack = null;
+      agoraCameraTrack = null;
+      if (agoraClient) {
+        await agoraClient.leave();
+        agoraClient.removeAllListeners();
+        agoraClient = null;
+      }
+    }
+
+    async function joinRtcCall() {
+      if (!AgoraRTC) {
+        showStatus('RTC SDK 尚不可用，请检查 SDK 是否加载。', true);
+        return;
+      }
+
+      if (joined || joining) {
+        showStatus('当前正在连接或已在会议中，请稍后。', true);
+        return;
+      }
+
+      const appId = String(cfg.appId || '').trim();
+      const tokenRaw = String(cfg.token || '').trim();
+      const channel = channelInput.value.trim();
+      const rawUid = uidInput.value.trim();
+
+      if (!channel) {
+        showStatus('请先输入会议频道。', true);
+        return;
+      }
+
+        if (!isValidRtcIdentifier(channel)) {
+          showStatus('频道名称格式无效：仅支持 1-64 位大小写字母、数字、下划线、中划线。', true);
+          return;
+        }
+
+      if (tokenRaw && isHex32(tokenRaw)) {
+        showStatus('系统 Token 设置格式不正确，请联系管理员更新 RTC Token。', true);
+        return;
+      }
+
+      joining = true;
+      setControlsWhenJoined(false);
+      callStatus.textContent = '连接中，请稍候...';
+      let joinDebug = null;
+
+      try {
+        if (testingDevice) {
+          await stopDeviceTest({ silent: true });
+        }
+
+        const uid = rawUid ? String(rawUid) : String(Math.floor(100000 + Math.random() * 900000));
+        if (!rawUid) {
+          uidInput.value = uid;
+        }
+
+        let token = tokenRaw;
+        let joinAppId = appId;
+        let tokenProvider = '';
+        let expiresAt = 0;
+        let issuedAt = 0;
+        let serverNonce = '';
+        let tokenUid = uid;
+        let tokenChannel = channel;
+        let tokenSource = tokenRaw ? 'config-token' : '';
+
+        if (!tokenRaw) {
+          const tokenData = await requestRtcToken(channel, uid);
+          token = tokenData.token;
+          tokenProvider = tokenData.provider;
+          expiresAt = tokenData.expiresAt;
+          issuedAt = tokenData.timestamp;
+          serverNonce = tokenData.nonce;
+          tokenSource = tokenData.tokenSource || 'api-unknown';
+          tokenUid = tokenData.uid !== undefined && tokenData.uid !== null ? String(tokenData.uid) : uid;
+          tokenChannel = tokenData.channel || channel;
+          if (tokenData.appId) {
+            if (joinAppId && tokenData.appId !== joinAppId) {
+              showStatus('检测到 Token API 返回的 App ID 与当前配置不同，已自动采用 API 返回值。', false);
+            }
+            joinAppId = tokenData.appId;
+          }
+        }
+
+        if (!joinAppId) {
+          throw new Error('Token API 未返回 App ID，且本地也未配置 App ID。');
+        }
+
+        if (String(token || '').startsWith('aliyun-rtc-v1.')) {
+          throw new Error('检测到自定义 aliyun-rtc-v1 token（来源：' + (tokenSource || 'unknown') + '）。请改用官方签发器返回的原生 token。');
+        }
+        if (rtcSdkMode === 'dingrtc' && /^[a-f0-9]{64}$/i.test(String(token || '').trim())) {
+          throw new Error('当前为 DingRTC（RTC 3.0）模式，检测到旧版十六进制自签 token。请改用 RTC 3.0 官方签发 token（例如接入工具生成的临时 token 或官方服务端签发 token）。');
+        }
+        const tokenMeta = parseAliyunTokenMeta(token);
+        if (rtcSdkMode !== 'dingrtc' && !tokenMeta && tokenRaw && isLikelyRtcToken(tokenRaw)) {
+          throw new Error('检测到旧版 Agora Token，请改用阿里云 RTC Token。');
+        }
+        const nowSec = Math.floor(Date.now() / 1000);
+        const authTimestamp = Number(issuedAt || tokenMeta?.iat || nowSec);
+        const authInfo = {
+          appId: joinAppId,
+          channelId: tokenChannel,
+          userId: tokenUid,
+          nonce: serverNonce || tokenMeta?.nonce || randomNonce(),
+          timestamp: authTimestamp,
+          token
+        };
+
+        if (!isValidRtcIdentifier(authInfo.channelId)) {
+          throw new Error('Token API 返回的频道格式无效，请检查 channelId。');
+        }
+        if (!isValidRtcIdentifier(authInfo.userId)) {
+          throw new Error('Token API 返回的用户 ID 格式无效，请检查 userId。');
+        }
+        joinDebug = {
+          sdk: rtcSdkMode,
+          appId: String(authInfo.appId || '').trim(),
+          channel: String(authInfo.channelId || '').trim(),
+          uid: String(authInfo.userId || '').trim(),
+          nonce: String(authInfo.nonce || '').trim(),
+          timestamp: Number(authInfo.timestamp || 0) || 0,
+          tokenPrefix: String(authInfo.token || '').slice(0, 12),
+          tokenSource: String(tokenSource || '').trim() || 'unknown'
+        };
+
+        if (tokenProvider && tokenProvider !== 'agora') {
+          throw new Error('当前页面使用 Agora RTC，但 Token API 返回了其他供应商。');
+        }
+
+        const senderName = '访客#' + tokenUid;
+        if (rtcSdkMode === 'agora') {
+          const client = ensureAgoraClient();
+          const assignedUid = await client.join(authInfo.appId, authInfo.channelId, authInfo.token, authInfo.userId);
+          tokenUid = String(assignedUid);
+          localParticipantId = 'local:' + tokenUid;
+          const localContainer = ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+          [agoraMicTrack, agoraCameraTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+          if (localContainer) {
+            localContainer.innerHTML = '';
+            agoraCameraTrack.play(localContainer);
+          }
+          await client.publish([agoraMicTrack, agoraCameraTrack]);
+        } else if (rtcSdkMode === 'dingrtc') {
+          const client = ensureDingClient();
+          await client.join({
+            appId: authInfo.appId,
+            token: authInfo.token,
+            uid: String(authInfo.userId),
+            channel: authInfo.channelId,
+            userName: senderName
+          });
+
+          localParticipantId = 'local:' + tokenUid;
+          const localContainer = ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+
+          try {
+            dingCameraTrack = await dingRtcFactory.createCameraVideoTrack({
+              frameRate: 15,
+              dimension: 'VD_640x480'
+            });
+            if (localContainer) {
+              localContainer.innerHTML = '';
+              dingCameraTrack.play(localContainer);
+            }
+          } catch (cameraError) {
+            console.warn('DingRTC 摄像头轨道创建失败：', cameraError);
+            if (localContainer) {
+              showPlaceholder(localContainer, '本地摄像头不可用：' + (cameraError?.message || '未知错误'));
+            }
+          }
+
+          try {
+            dingMicTrack = await dingRtcFactory.createMicrophoneAudioTrack();
+          } catch (micError) {
+            console.warn('DingRTC 麦克风轨道创建失败：', micError);
+          }
+
+          const localTracks = [dingCameraTrack, dingMicTrack].filter(Boolean);
+          if (localTracks.length) {
+            await client.publish(localTracks);
+          }
+        } else {
+          const rtcEngine = ensureEngine();
+          await rtcEngine.joinChannel(authInfo, tokenUid);
+          localParticipantId = 'local:' + tokenUid;
+          ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+          const localVideoEl = ensureParticipantMediaElement(localParticipantId);
+          if (localVideoEl) {
+            await rtcEngine.setLocalViewConfig(localVideoEl, AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackCamera);
+            await rtcEngine.startPreview();
+          }
+          if (typeof rtcEngine.publishLocalAudioStream === 'function') {
+            rtcEngine.publishLocalAudioStream(true);
+          }
+          if (typeof rtcEngine.publishLocalVideoStream === 'function') {
+            rtcEngine.publishLocalVideoStream(true);
+          }
+        }
+
+        joinedUid = tokenUid;
+        localParticipantId = 'local:' + joinedUid;
+        ensureParticipantCard(localParticipantId, '本机 UID：' + joinedUid, true);
+        try {
+          await startChatSync(tokenChannel, senderName);
+        } catch (chatError) {
+          console.warn('chat init failed:', chatError);
+        }
+        setControlsWhenJoined(true);
+        callStatus.textContent = '已加入频道 ' + tokenChannel + '，UID：' + joinedUid + '。';
+        showStatus('Agora RTC 已连接。', false);
+      } catch (error) {
+        const rawMessage = error && error.message ? error.message : '未知错误';
+        const normalized = String(rawMessage).toUpperCase();
+
+        if (normalized.includes('PERMISSION_DENIED') || normalized.includes('NOTALLOWEDERROR')) {
+          await leaveRtcCall(true);
+          resetCallUi();
+          callStatus.textContent = '尚未启动，请先允许相机/麦克风后重试。';
+          showStatus('启动失败：浏览器权限不足，请允许 Camera/Microphone 后重试。', true);
+          return;
+        }
+
+        if (normalized.includes('ALREADY JOINED') || normalized.includes('ALREADY IN CONNECTING/CONNECTED STATE')) {
+          await leaveRtcCall(true);
+          await destroyEngineInstance();
+          resetCallUi();
+          showStatus('检测到连接状态异常，系统已自动恢复到未连接状态。', true);
+          return;
+        }
+
+        if (normalized.includes('SIGNAL ERROR') || normalized.includes('CONNECT FAILED') || normalized.includes('ONCONNECTFAIL')) {
+          if (rtcSdkMode === 'dingrtc') {
+            await destroyDingClient();
+          }
+          await destroyEngineInstance();
+        }
+
+        if (joinDebug) {
+          console.warn('join-debug', joinDebug, 'raw error:', error);
+        }
+        const errorCode = error && (error.code !== undefined && error.code !== null) ? error.code : '';
+        const errorName = error && error.name ? error.name : '';
+        const diagText = joinDebug
+          ? ('｜sdk=' + joinDebug.sdk + ', appId=' + joinDebug.appId + ', ch=' + joinDebug.channel + ', uid=' + joinDebug.uid + ', nonce=' + joinDebug.nonce + ', ts=' + joinDebug.timestamp + ', src=' + joinDebug.tokenSource + ', tk=' + joinDebug.tokenPrefix + (errorCode !== '' ? ', errCode=' + errorCode : '') + (errorName ? ', errName=' + errorName : ''))
+          : '';
+        showStatus('启动失败：' + rawMessage + diagText, true);
+      } finally {
+        joining = false;
+        setControlsWhenJoined(joined);
+      }
+    }
+
+    async function leaveRtcCall(silent = false) {
+      if (joining) return;
+      if (!joined) return;
+      try {
+        await stopChatSync();
+
+        if (rtcSdkMode === 'agora') {
+          await destroyAgoraClient();
+        } else if (rtcSdkMode === 'dingrtc') {
+          await destroyDingClient();
+        } else if (engine) {
+          try {
+            await engine.stopPreview();
+          } catch (_) {
+            // ignore
+          }
+          await engine.leaveChannel();
+        }
+      } finally {
+        await destroyEngineInstance();
+        joinedUid = '';
+        setControlsWhenJoined(false);
+        resetCallUi();
+        if (!silent) {
+          showStatus('已离开会议。', false);
+        }
+      }
+    }
+
+    channelInput.value = presetChannel || cfg.channel || '';
+    uidInput.value = presetUid || cfg.uid || '';
+
+    setControlsWhenJoined(false);
+    leaveBtn.disabled = true;
+    muteBtn.disabled = true;
+    cameraBtn.disabled = true;
+    if (!realtimeEnabled) {
+      setChatEnabled(false);
+      chatList.innerHTML = '<div class="chat-empty">当前环境未加载 Realtime SDK，文字消息功能已自动停用（不影响视频通话）。</div>';
+    }
+
+    if (AgoraRTC) {
+      showStatus('当前使用 Agora RTC Web SDK。', false);
+    }
+
+    startCallBtn.addEventListener('click', joinRtcCall);
+    testDeviceBtn.addEventListener('click', startDeviceTest);
+    refreshDeviceBtn.addEventListener('click', async () => {
+      const cameras = await refreshCameraDevices();
+      if (!cameras.length) {
+        showStatus('未检测到可用相机设备，请确认系统与浏览器权限。', true);
+        return;
+      }
+      showStatus('设备列表已刷新，可切换相机后重试。', false);
+    });
+    retryCameraBtn.addEventListener('click', retryCameraTrackOnly);
+    leaveBtn.addEventListener('click', leaveRtcCall);
+
+    refreshCameraDevices();
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', () => {
+        refreshCameraDevices();
+      });
+    }
+
+    if (shouldAutoJoin && channelInput.value.trim()) {
+      window.addEventListener('load', () => {
+        if (!joined && !joining) {
+          joinRtcCall();
+        }
+      }, { once: true });
+    }
+
+    muteBtn.addEventListener('click', async () => {
+      if (rtcSdkMode === 'agora') {
+        if (!joined || !agoraMicTrack) return;
+        muted = !muted;
+        await agoraMicTrack.setMuted(muted);
+        muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
+        callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
+        return;
+      }
+      if (rtcSdkMode === 'dingrtc') {
+        if (!joined || !dingMicTrack) return;
+        muted = !muted;
+        await dingMicTrack.setMuted(muted);
+        muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
+        callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
+        return;
+      }
+      if (!joined || !engine) return;
+      muted = !muted;
+      engine.muteLocalMic(muted);
+      muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
+      callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
+    });
+
+    cameraBtn.addEventListener('click', async () => {
+      if (rtcSdkMode === 'agora') {
+        if (!joined || !agoraCameraTrack) return;
+        cameraOff = !cameraOff;
+        await agoraCameraTrack.setMuted(cameraOff);
+        cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
+        callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
+        return;
+      }
+      if (rtcSdkMode === 'dingrtc') {
+        if (!joined || !dingCameraTrack) return;
+        cameraOff = !cameraOff;
+        await dingCameraTrack.setMuted(cameraOff);
+        cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
+        callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
+        return;
+      }
+      if (!joined || !engine) return;
+      cameraOff = !cameraOff;
+      await engine.muteLocalCamera(cameraOff);
+      cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
+      callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
+    });
+
+    chatForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!realtimeEnabled) {
+        showStatus('当前环境未启用聊天室 SDK。', true);
+        return;
+      }
+      if (!joined || !chatChannel) {
+        showStatus('请先加入会议后再发送消息。', true);
+        return;
+      }
+
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      const payload = {
+        sender: chatSender || '访客',
+        text,
+        at: new Date().toISOString()
+      };
+
+      const sendResult = await chatChannel.send({
+        type: 'broadcast',
+        event: 'message',
+        payload
+      });
+
+      if (sendResult !== 'ok') {
+        showStatus('发送消息失败，请确认 Realtime 服务已连接。', true);
+        return;
+      }
+
+      appendChatMessage(payload, true);
+      chatInput.value = '';
+      chatInput.focus();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (joined) {
+        leaveRtcCall();
+      }
+      stopDeviceTest({ silent: true });
+      stopChatSync();
+    });
+  </script>
+</body>
+</html>

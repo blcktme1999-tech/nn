@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案件查询 - 公安便民入口</title>
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main { width:min(1480px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .identity { display:block; min-width:0; flex:1; }
+    .brand-left { width:100%; max-width:840px; height:auto; display:block; }
+    .brand-right { width:min(240px, 28vw); min-width:130px; height:auto; display:block; }
+    .brand-blue { display:none; width:100%; height:auto; }
+    body.result-mode .brand-classic, body.result-mode .brand-right { display:none; }
+    body.result-mode .brand-blue { display:block; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:58px 0 70px; }
+    .query-panel { width:min(1200px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:5px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 8px 22px #00000018; padding:38px 44px 42px; }
+    .query-panel[hidden] { display:none; }
+    .query-panel h1 { margin:0 0 28px; color:var(--red); text-align:center; font-size:31px; letter-spacing:1px; }
+    .wanted-banner { margin-bottom:12px; overflow:hidden; border:1px solid #d6a0a0; background:#111; }
+    .wanted-banner img { width:100%; height:auto; display:block; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
+    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    input:focus { outline:2px solid #d5223740; border-color:var(--red); }
+    .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .actions { margin-top:18px; }
+    .submit { width:100%; min-height:52px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 17px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
+    .submit:hover { background:var(--deep-red); }
+    .hint { margin:14px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
+    .msg { margin-top:14px; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
+    .msg.show { display:block; }
+    .msg.error { display:block; border:1px solid #f2d7a5; background:#fff8e7; color:#835812; }
+    .msg.ok { display:block; border:1px solid #cfe7d5; background:#f2fbf4; color:#246f43; }
+    .result { display:none; width:min(1420px, 100%); margin:0 auto; border:1px solid #dadada; overflow:hidden; background:#fff; box-shadow:0 8px 22px #00000018; }
+    .result.show { display:block; }
+    .result-head { background:linear-gradient(#f8f8f8, #ececec); padding:13px 18px; font-size:17px; color:#555; border-bottom:1px solid #d9d9d9; }
+    .detail-scroll { overflow-x:auto; }
+    .detail-table { width:100%; min-width:900px; border-collapse:collapse; table-layout:fixed; color:#39434c; font-size:18px; line-height:1.75; }
+    .detail-table col.label { width:138px; }
+    .detail-table col.value { width:auto; }
+    .detail-table col.portrait-col { width:238px; }
+    .detail-table th, .detail-table td { border:1px solid #aebdc8; padding:13px 16px; vertical-align:middle; word-break:break-word; }
+    .detail-table th { background:#d8eef2; color:#3e525c; font-weight:700; text-align:center; }
+    .detail-table td { min-height:38px; background:#fbfbfb; }
+    .detail-table .long-value { min-height:96px; white-space:pre-wrap; }
+    .portrait-cell { padding:10px !important; background:#f1f1f1 !important; }
+    .portrait { width:100%; aspect-ratio:4/5; display:grid; place-items:center; overflow:hidden; background:#e5e5e5; color:#888; font-size:13px; }
+    .portrait img { width:100%; height:100%; object-fit:cover; display:block; }
+    .attachments { padding:22px 18px 25px; border-top:1px solid #ccd5db; background:#f6f7f8; }
+    .attachments h2 { margin:0 0 14px; color:#435460; font-size:19px; }
+    .attachment-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+    .attachment-slot { min-width:0; aspect-ratio:4/3; display:grid; place-items:center; overflow:hidden; border:1px solid #b9c3ca; background:#e9edef; color:#89939a; font-size:13px; text-align:center; }
+    .attachment-slot img { width:100%; height:100%; object-fit:cover; display:block; }
+    .empty { padding:18px 14px; color:#777; font-size:13px; line-height:1.6; }
+    @media (max-width:700px) {
+      .masthead { min-height:78px; }
+      .brand-right { display:none; }
+      .brand-left { max-width:100%; }
+      .return-home { padding:5px 8px; font-size:12px; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
+      main { padding-top:32px; }
+      .query-panel { padding:28px 22px 30px; }
+      .query-panel h1 { margin-bottom:22px; font-size:25px; }
+      .login-grid { grid-template-columns:1fr; }
+      .actions { margin-top:12px; }
+      .submit { width:100%; }
+      .attachment-grid { grid-template-columns:1fr; }
+      .attachment-slot { aspect-ratio:16/10; }
+      .detail-table { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="index (2).html" aria-label="返回首页">
+        <img class="brand-left brand-classic" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
+        <img class="brand-blue" src="photo_2026-08-12_00-15-24.jpg" alt="中华人民共和国公安部">
+      </a>
+      <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
+      <a class="return-home" href="index (2).html">← 返回首页</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="index (2).html">首页</a><a href="mm1.html">便民服务</a><a class="active" href="case-search.html">案件查询</a>
+    </div></nav>
+  </header>
+
+  <main>
+    <section class="query-panel">
+      <h1>案件查询</h1>
+      <form id="loginForm">
+        <div class="login-grid">
+          <div class="field">
+            <label for="displayName">姓名</label>
+            <input id="displayName" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="caseNumber">案件编号</label>
+            <input id="caseNumber" autocomplete="off">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="submit" type="submit">查询</button>
+        </div>
+      </form>
+
+      <div id="message" class="msg" aria-live="polite"></div>
+    </section>
+
+    <section id="resultPanel" class="result" aria-live="polite">
+      <div class="wanted-banner">
+        <img src="photo_2026-08-12_00-20-55.jpg" alt="公安部专案通缉令">
+      </div>
+      <div class="result-head">专案通缉令资料</div>
+      <div id="detailBox"></div>
+    </section>
+  </main>
+
+  <script>
+    const loginForm = document.querySelector('#loginForm');
+    const queryPanel = document.querySelector('.query-panel');
+    const displayNameInput = document.querySelector('#displayName');
+    const caseNumberInput = document.querySelector('#caseNumber');
+    const messageBox = document.querySelector('#message');
+    const resultPanel = document.querySelector('#resultPanel');
+    const detailBox = document.querySelector('#detailBox');
+
+    function showMessage(text, type = 'ok') {
+      messageBox.textContent = text;
+      messageBox.className = 'msg show ' + type;
+    }
+
+    function clearMessage() {
+      messageBox.textContent = '';
+      messageBox.className = 'msg';
+    }
+
+    function escapeText(value) {
+      return String(value ?? '').replace(/[&<>\"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char] || char));
+    }
+
+    function displayValue(value) {
+      const text = String(value ?? '').trim();
+      return escapeText(text || '-');
+    }
+
+    function renderWantedDetail(profile, record, photos) {
+      if (!record) {
+        detailBox.innerHTML = '<div class="empty">没有找到案件信息。</div>';
+        return;
+      }
+      const name = String(profile?.display_name || '未命名人员');
+      const portraitHtml = profile?.avatar_url
+        ? '<img alt="' + escapeText(name) + '照片" src="' + escapeText(profile.avatar_url) + '">'
+        : '<span>照片待补</span>';
+      const attachmentHtml = Array.from({ length: 3 }, (_, index) => {
+        const photo = photos[index];
+        return photo?.photo_url
+          ? '<div class="attachment-slot"><img src="' + escapeText(photo.photo_url) + '" alt="案件附件照片 ' + (index + 1) + '"></div>'
+          : '<div class="attachment-slot" aria-label="空白附件照片栏位"></div>';
+      }).join('');
+
+      detailBox.innerHTML = '<div class="detail-scroll"><table class="detail-table">' +
+        '<colgroup><col class="label"><col class="value"><col class="label"><col class="value"><col class="portrait-col"></colgroup>' +
+        '<tbody>' +
+          '<tr><th>姓名</th><td>' + displayValue(profile.display_name) + '</td><th>通缉日期</th><td>' + displayValue(record.wanted_date) + '</td><td class="portrait-cell" rowspan="4"><div class="portrait">' + portraitHtml + '</div></td></tr>' +
+          '<tr><th>性别</th><td>' + displayValue(profile.gender) + '</td><th>现在身份</th><td>' + displayValue(profile.current_identity) + '</td></tr>' +
+          '<tr><th>出生日期</th><td>' + displayValue(profile.birth_date) + '</td><th>身份证号</th><td>' + displayValue(profile.id_number) + '</td></tr>' +
+          '<tr><th>户籍地</th><td>' + displayValue(profile.household_registration || profile.issuing_place) + '</td><th>案件编号</th><td>' + displayValue(record.title) + '</td></tr>' +
+          '<tr><th>涉案类别</th><td class="long-value" colspan="4">' + displayValue(record.case_category) + '</td></tr>' +
+          '<tr><th>现在住址</th><td class="long-value" colspan="4">' + displayValue(record.current_address) + '</td></tr>' +
+          '<tr><th>立案单位</th><td class="long-value" colspan="4">' + displayValue(record.filing_unit) + '</td></tr>' +
+          '<tr><th>简要案情</th><td class="long-value" colspan="4">' + displayValue(record.case_summary || record.info_text) + '</td></tr>' +
+          '<tr><th>备注</th><td class="long-value" colspan="4">' + displayValue(record.notes) + '</td></tr>' +
+          '<tr><th>申请事项</th><td class="long-value" colspan="4">' + displayValue(record.application_request) + '</td></tr>' +
+        '</tbody></table></div>' +
+        '<section class="attachments"><h2>案件附件照片</h2><div class="attachment-grid">' + attachmentHtml + '</div></section>';
+    }
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      const rawText = await response.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        data = {};
+      }
+      if (!response.ok) {
+        throw new Error(data.error || ('请求失败（HTTP ' + response.status + '）。'));
+      }
+      return data;
+    }
+
+    function renderResult(data) {
+      const profile = data.profile || {};
+      const record = (data.records || [])[0];
+
+      renderWantedDetail(profile, record, (data.photos || []).slice(0, 3));
+
+      document.body.classList.add('result-mode');
+      queryPanel.hidden = true;
+      resultPanel.classList.add('show');
+      resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearMessage();
+      resultPanel.classList.remove('show');
+
+      const displayName = displayNameInput.value.trim();
+      const caseNumber = caseNumberInput.value.trim();
+
+      if (!displayName || !caseNumber) {
+        showMessage('请先输入姓名与案件编号。', 'error');
+        return;
+      }
+
+      try {
+        const data = await requestJson('/api/case-search', {
+          method: 'POST',
+          body: JSON.stringify({ displayName, caseNumber })
+        });
+        renderResult(data);
+      } catch (error) {
+        showMessage('查询失败：' + (error?.message || '未知错误'), 'error');
+      }
+    });
+  </script>
+</body>
+</html>

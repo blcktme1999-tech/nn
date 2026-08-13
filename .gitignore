@@ -1,0 +1,31 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.ppk
+*.key
+
+# Dependencies
+node_modules/
+
+# Local databases and runtime data
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Deployment archives
+*.zip
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
