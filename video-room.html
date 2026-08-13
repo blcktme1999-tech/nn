@@ -900,7 +900,7 @@
       }
     }
 
-    function prettyMediaError(error) {
+    function prettyMediaError(error, deviceLabel = '相机') {
       if (!error) return '未知错误';
       const message = String(error.message || error.name || '未知错误');
       const normalized = message.toUpperCase();
@@ -912,7 +912,7 @@
         return '浏览器权限被拒绝';
       }
       if (normalized.includes('NOTFOUNDERROR') || normalized.includes('DEVICE_NOT_FOUND') || normalized.includes('DEVICENOTFOUNDERROR')) {
-        return '浏览器找不到相机设备';
+        return '浏览器找不到' + deviceLabel + '设备';
       }
 
       return message;
@@ -1206,14 +1206,14 @@
         agoraMicTrack = await AgoraRTC.createMicrophoneAudioTrack();
       } catch (micError) {
         console.warn('Agora 麦克风轨道创建失败：', micError);
-        errors.push('麦克风不可用：' + prettyMediaError(micError));
+        errors.push('麦克风不可用：' + prettyMediaError(micError, '麦克风'));
       }
 
       try {
         agoraCameraTrack = await AgoraRTC.createCameraVideoTrack();
       } catch (cameraError) {
         console.warn('Agora 摄像头轨道创建失败：', cameraError);
-        errors.push('相机不可用：' + prettyMediaError(cameraError));
+        errors.push('相机不可用：' + prettyMediaError(cameraError, '相机'));
       }
 
       const tracks = [agoraMicTrack, agoraCameraTrack].filter(Boolean);
@@ -1362,7 +1362,7 @@
           }
           await client.publish(localMedia.tracks);
           if (localMedia.errors.length) {
-            joinDeviceWarning = '已加入会议，但部分设备不可用：' + localMedia.errors.join('；');
+            joinDeviceWarning = '已加入会议。' + localMedia.errors.join('；') + '。不影响已可用的音视频。';
           }
         } else if (rtcSdkMode === 'dingrtc') {
           const client = ensureDingClient();
@@ -1431,7 +1431,7 @@
         }
         setControlsWhenJoined(true);
         callStatus.textContent = '已加入频道 ' + tokenChannel + '，UID：' + joinedUid + '。';
-        showStatus(joinDeviceWarning || 'Agora RTC 已连接。', Boolean(joinDeviceWarning));
+        showStatus(joinDeviceWarning || 'Agora RTC 已连接。', false);
       } catch (error) {
         const rawMessage = error && error.message ? error.message : '未知错误';
         const normalized = String(rawMessage).toUpperCase();
