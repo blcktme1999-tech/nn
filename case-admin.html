@@ -411,7 +411,7 @@
     }
 
     function renderRecordSelectOptions(records) {
-      const options = ['<option value="">请选择案件</option>'].concat(records.map((record) => {
+      const options = ['<option value="">新增案件</option>'].concat(records.map((record) => {
         const title = record.title || '未命名案件';
         return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
       }));
