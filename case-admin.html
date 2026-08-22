@@ -43,6 +43,8 @@
     .section { padding:14px 12px 16px; border-bottom:1px solid #efefef; }
     .section:last-child { border-bottom:0; }
     .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
+    .subsection-title { margin:18px 0 10px; padding-top:14px; border-top:1px solid #efefef; color:#555; font-size:14px; font-weight:700; }
+    .subsection-title:first-of-type { margin-top:0; padding-top:0; border-top:0; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
     .overview-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; }
@@ -167,7 +169,9 @@
         </div>
 
         <div class="section">
-          <h4 id="profileEditorTitle">编辑当前人员资料</h4>
+          <h4 id="profileEditorTitle">同一份编辑资料</h4>
+          <p class="admin-note">人員資料、目前案件與附件照片集中在這裡維護；選擇不同案件後，下方案件內容與照片會一起切換。只有「新增案件」可重複新增多筆。</p>
+          <div class="subsection-title">人員資料</div>
           <div class="form-row">
             <div class="field">
               <label for="displayNameEdit">姓名</label>
@@ -204,19 +208,11 @@
               <input id="householdRegistrationEdit" placeholder="例如：上海市静安区">
             </div>
           </div>
-          <div class="inline-actions">
-            <button class="admin-btn" id="saveProfileBtn" type="button">保存基本资料</button>
-            <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
-            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
-          </div>
-        </div>
 
-        <div class="section">
-          <h4>案件资料</h4>
-          <p class="admin-note">这里维护当前选中人员底下的案件。新增人员时，请先保存基本资料，再新增案件。</p>
+          <div class="subsection-title">案件資料</div>
           <div class="form-row">
             <div class="field">
-              <label for="recordSelect">选择已有案件（更新用）</label>
+              <label for="recordSelect">目前案件</label>
               <select id="recordSelect"></select>
             </div>
             <div class="field">
@@ -252,20 +248,9 @@
             <label for="applicationRequestEdit">申请事项</label>
             <textarea id="applicationRequestEdit" placeholder="请输入申请事项"></textarea>
           </div>
-          <div class="inline-actions">
-            <button class="admin-btn" id="updateRecordBtn" type="button">更新所选案件</button>
-            <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
-            <button class="admin-btn danger" id="deleteRecordBtn" type="button">删除所选案件</button>
-          </div>
-        </div>
 
-        <div class="section">
-          <h4>案件附件照片（最多三张）</h4>
+          <div class="subsection-title">案件附件照片（最多三张）</div>
           <div class="form-row">
-            <div class="field">
-              <label for="photoRecordSelect">应用到哪笔案件</label>
-              <select id="photoRecordSelect"></select>
-            </div>
             <div class="field">
               <label for="photoCaptionInput">照片说明</label>
               <input id="photoCaptionInput" placeholder="例如：现场正面照">
@@ -283,7 +268,14 @@
               <p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>
             </div>
           </div>
-          <div class="inline-actions"><button class="admin-btn" id="addPhotoBtn" type="button">新增照片</button></div>
+          <div class="inline-actions">
+            <button class="admin-btn" id="saveProfileBtn" type="button">保存当前资料</button>
+            <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
+            <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
+            <button class="admin-btn alt" id="addPhotoBtn" type="button">新增照片</button>
+            <button class="admin-btn danger" id="deleteRecordBtn" type="button">删除所选案件</button>
+            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
+          </div>
         </div>
       </div>
     </section>
@@ -317,7 +309,6 @@
     const caseSummaryEdit = document.querySelector('#caseSummaryEdit');
     const notesEdit = document.querySelector('#notesEdit');
     const applicationRequestEdit = document.querySelector('#applicationRequestEdit');
-    const photoRecordSelect = document.querySelector('#photoRecordSelect');
     const photoCaptionInput = document.querySelector('#photoCaptionInput');
     const photoFileInput = document.querySelector('#photoFileInput');
     const photoPreview = document.querySelector('#photoPreview');
@@ -335,7 +326,6 @@
     const deleteProfileBtn = document.querySelector('#deleteProfileBtn');
     const saveProfileBtn = document.querySelector('#saveProfileBtn');
     const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
-    const updateRecordBtn = document.querySelector('#updateRecordBtn');
     const createRecordBtn = document.querySelector('#createRecordBtn');
     const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
     const addPhotoBtn = document.querySelector('#addPhotoBtn');
@@ -344,6 +334,7 @@
     let recordsCache = [];
     let photosByRecordId = Object.create(null);
     let selectedProfileId = '';
+    let selectedRecordId = '';
 
     function showMessage(text, type = 'ok') {
       messageBox.textContent = text;
@@ -425,7 +416,6 @@
         return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
       }));
       recordSelect.innerHTML = options.join('');
-      photoRecordSelect.innerHTML = options.join('');
     }
 
     function renderProfileSelectOptions(profiles) {
@@ -460,7 +450,7 @@
 
     function updateProfileActionState() {
       const isEditing = Boolean(selectedProfileId);
-      saveProfileBtn.textContent = isEditing ? '更新资料' : '新增人员';
+      saveProfileBtn.textContent = isEditing ? '保存当前资料' : '保存新人员资料';
       uploadAvatarBtn.textContent = isEditing ? '上传头像并套用' : '上传头像并套用到新人员';
       deleteProfileBtn.disabled = !isEditing;
     }
@@ -492,10 +482,10 @@
 
     function setSelectedRecord(recordId) {
       const selectedId = String(recordId || '');
+      selectedRecordId = selectedId;
       const found = recordsCache.find((record) => String(record.id) === selectedId);
 
       recordSelect.value = selectedId;
-      photoRecordSelect.value = selectedId;
 
       Array.from(recordQuickList.querySelectorAll('.record-quick-item')).forEach((button) => {
         button.classList.toggle('active', button.dataset.recordId === selectedId);
@@ -548,7 +538,10 @@
       renderOverview(profile, profileRecords);
       renderRecordSelectOptions(profileRecords);
 
-      if (profileRecords.length) {
+      const keptRecord = profileRecords.find((record) => String(record.id) === selectedRecordId);
+      if (keptRecord) {
+        setSelectedRecord(keptRecord.id);
+      } else if (profileRecords.length) {
         setSelectedRecord(profileRecords[0].id);
       } else {
         setSelectedRecord('');
@@ -615,6 +608,30 @@
         notes: notesEdit.value.trim() || null,
         application_request: applicationRequestEdit.value.trim() || null
       };
+    }
+
+    async function saveProfileFromForm() {
+      const payload = getProfilePayload();
+      const wasCreating = !payload.id;
+      const result = await requestJson('/api/admin/profile', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      if (result?.profile?.id) {
+        selectedProfileId = String(result.profile.id);
+      }
+      return { wasCreating, profileId: selectedProfileId };
+    }
+
+    async function updateSelectedRecordFromForm(recordId) {
+      const selectedId = String(recordId || '');
+      if (!selectedId) return false;
+      const payload = getRecordPayload();
+      await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+      return true;
     }
 
     async function requestJson(url, options) {
@@ -711,16 +728,12 @@
           method: 'DELETE'
         });
         selectedProfileId = '';
+        selectedRecordId = '';
         await loadAdminData();
         showMessage('人员资料已删除。', 'ok');
       } catch (error) {
         showMessage('删除人员失败：' + (error?.message || '未知错误'), 'error');
       }
-    });
-
-    photoRecordSelect.addEventListener('change', () => {
-      const selectedId = photoRecordSelect.value;
-      setSelectedRecord(selectedId);
     });
 
     recordQuickList.addEventListener('click', (event) => {
@@ -731,22 +744,17 @@
 
     saveProfileBtn.addEventListener('click', async () => {
       try {
-        const payload = getProfilePayload();
-        const wasCreating = !payload.id;
-        const result = await requestJson('/api/admin/profile', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        if (result?.profile?.id) {
-          selectedProfileId = String(result.profile.id);
-        }
+        const currentRecordId = recordSelect.value;
+        const { wasCreating } = await saveProfileFromForm();
+        const recordUpdated = await updateSelectedRecordFromForm(currentRecordId);
         await loadAdminData();
-        if (wasCreating && !selectedProfileId && profilesCache.length) {
-          setSelectedProfile(profilesCache[0].id);
+        if (recordUpdated) {
+          showMessage(wasCreating ? '新人员与目前案件已保存。' : '当前资料与目前案件已保存。', 'ok');
+        } else {
+          showMessage(wasCreating ? '新人员已新增，并已自动选中。' : '当前人员资料已保存。', 'ok');
         }
-        showMessage(wasCreating ? '新人员已新增，并已自动选中。' : '资料已更新。', 'ok');
       } catch (error) {
-        showMessage('更新基本资料失败：' + (error?.message || '未知错误'), 'error');
+        showMessage('保存当前资料失败：' + (error?.message || '未知错误'), 'error');
       }
     });
 
@@ -789,30 +797,11 @@
       }
     });
 
-    updateRecordBtn.addEventListener('click', async () => {
-      try {
-        const selectedId = recordSelect.value;
-        if (!selectedId) {
-          showMessage('请先选择要更新的案件。', 'error');
-          return;
-        }
-
-        const payload = getRecordPayload();
-        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
-          method: 'PATCH',
-          body: JSON.stringify(payload)
-        });
-        await loadAdminData();
-        showMessage('案件资料已更新。', 'ok');
-      } catch (error) {
-        showMessage('更新案件失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
     createRecordBtn.addEventListener('click', async () => {
       try {
+        await saveProfileFromForm();
         if (!selectedProfileId) {
-          showMessage('请先选择人员，或先保存新增人员的基本资料。', 'error');
+          showMessage('请先填写并保存人员资料。', 'error');
           return;
         }
 
@@ -822,7 +811,7 @@
           body: JSON.stringify(payload)
         });
         await loadAdminData();
-        showMessage('新案件已新增。', 'ok');
+        showMessage('当前人员资料已保存，新案件已新增。', 'ok');
       } catch (error) {
         showMessage('新增案件失败：' + (error?.message || '未知错误'), 'error');
       }
@@ -846,6 +835,7 @@
         await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
           method: 'DELETE'
         });
+        selectedRecordId = '';
         await loadAdminData();
         showMessage('案件已删除。', 'ok');
       } catch (error) {
@@ -855,7 +845,7 @@
 
     addPhotoBtn.addEventListener('click', async () => {
       try {
-        const recordId = photoRecordSelect.value;
+        const recordId = recordSelect.value;
         const selectedFile = photoFileInput.files && photoFileInput.files[0];
         if (!recordId) {
           showMessage('请先选择要加照片的案件。', 'error');
