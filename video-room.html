@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -1465,7 +1465,7 @@
         }
         setControlsWhenJoined(true);
         callStatus.textContent = '已加入频道 ' + tokenChannel + '，UID：' + joinedUid + '。';
-        showStatus(joinDeviceWarning || 'Agora RTC 已连接。', false);
+        showStatus(joinDeviceWarning || '已連線成功。', false);
       } catch (error) {
         const rawMessage = error && error.message ? error.message : '未知错误';
         const normalized = String(rawMessage).toUpperCase();
