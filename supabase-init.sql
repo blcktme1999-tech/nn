@@ -1,5 +1,8 @@
--- Supabase bootstrap for this workspace (fresh project friendly)
--- Safe to run multiple times.
+-- Supabase schema repair for this workspace.
+-- Safe to run multiple times. Existing case data is preserved.
+-- Run the entire file in Supabase Dashboard > SQL Editor.
+
+begin;
 
 create extension if not exists pgcrypto;
 
@@ -302,8 +305,6 @@ create policy video_chat_messages_insert_authenticated on public.video_chat_mess
   for insert to authenticated
   with check (true);
 
-notify pgrst, 'reload schema';
-
 -- Public bucket used by /api/admin/upload-image
 insert into storage.buckets (id, name, public)
 values ('case-photos', 'case-photos', true)
@@ -331,3 +332,27 @@ drop policy if exists case_photos_public_read on storage.objects;
 create policy case_photos_public_read on storage.objects
   for select to public
   using (bucket_id = 'case-photos');
+
+notify pgrst, 'reload schema';
+
+commit;
+
+-- Verification results: five tables and one public bucket should be returned.
+select
+  schemaname,
+  tablename,
+  rowsecurity
+from pg_tables
+where schemaname = 'public'
+  and tablename in (
+    'user_profiles',
+    'user_records',
+    'record_photos',
+    'record_messages',
+    'video_chat_messages'
+  )
+order by tablename;
+
+select id, name, public
+from storage.buckets
+where id = 'case-photos';

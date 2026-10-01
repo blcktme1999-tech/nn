@@ -1,8 +1,8 @@
 const { getJsonBody, json, methodNotAllowed, requireAdminSession, signInAdmin } = require('../_lib/admin');
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    methodNotAllowed(res, ['POST']);
+  if (!['POST', 'DELETE'].includes(req.method)) {
+    methodNotAllowed(res, ['POST', 'DELETE']);
     return;
   }
 
@@ -12,6 +12,18 @@ module.exports = async function handler(req, res) {
 
   try {
     const { client } = await signInAdmin();
+    if (req.method === 'DELETE') {
+      const photoId = String((req.query && req.query.id) || '').trim();
+      if (!photoId) {
+        json(res, 400, { error: '缺少照片 ID。' });
+        return;
+      }
+      const { error } = await client.from('record_photos').delete().eq('id', photoId);
+      if (error) throw error;
+      json(res, 200, { ok: true });
+      return;
+    }
+
     const body = await getJsonBody(req);
     const photoUrl = String(body?.photo_url || '').trim();
 

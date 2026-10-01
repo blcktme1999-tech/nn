@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>案件后台管理 - 公安便民入口</title>
   <style>
-    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
+    :root { --red:#c90822; --deep-red:#a40018; --blue:#123c77; --ink:#242424; --paper:#f5f6f7; --ok:#287342; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
     a { color:inherit; text-decoration:none; }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; }
     .site-header { background:#fff; border-top:3px solid #1f1f1f; }
     .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
     .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
@@ -21,94 +23,94 @@
     .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
     .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
     main { min-height:670px; padding:42px 0 70px; }
-    .panel { width:min(920px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
-    .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
-    .intro { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; }
+    .panel { width:min(1020px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel > h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
+    .intro { margin:6px 0 25px; color:#888; text-align:center; font-size:13px; }
     .field { margin-bottom:14px; }
-    .field label { display:block; margin:0 0 6px; color:#666; font-size:14px; font-weight:700; }
-    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; font:14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
+    .field label { display:block; margin:0 0 6px; color:#555; font-size:14px; font-weight:700; }
+    input, select, textarea { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; color:#333; background:#fff; box-shadow:inset 0 1px 3px #0000000d; }
     textarea { min-height:96px; resize:vertical; }
     input:focus, select:focus, textarea:focus { outline:2px solid #d5223740; border-color:var(--red); }
-    .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .actions { margin-top:16px; }
-    .submit { width:100%; min-height:44px; border:0; border-radius:3px; color:#fff; background:var(--red); box-shadow:0 2px 5px #8a001430; font:700 16px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; letter-spacing:5px; text-indent:5px; cursor:pointer; }
-    .submit:hover { background:var(--deep-red); }
-    .msg { margin-top:14px; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
+    input:disabled, textarea:disabled, input[readonly] { color:#777; background:#f3f3f3; }
+    .login-grid, .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .full { grid-column:1 / -1; }
+    .submit, .btn { min-height:42px; border:0; border-radius:3px; padding:0 17px; color:#fff; background:var(--red); font-weight:700; box-shadow:0 2px 5px #8a001430; }
+    .submit { width:100%; margin-top:4px; font-size:16px; letter-spacing:4px; }
+    .submit:hover, .btn:hover { background:var(--deep-red); }
+    .btn.secondary { background:#fff; color:#444; border:1px solid #aaa; box-shadow:none; }
+    .btn.secondary:hover { background:#f3f3f3; }
+    .btn.danger { background:#6b0f1a; }
+    .btn.danger:hover { background:#520b14; }
+    .btn:disabled { cursor:not-allowed; opacity:.55; }
+    .msg { margin:14px 0 0; border-radius:4px; display:none; padding:10px 12px; font-size:13px; line-height:1.6; }
     .msg.show { display:block; }
     .msg.error { border:1px solid #f2d7a5; background:#fff8e7; color:#835812; }
     .msg.ok { border:1px solid #cfe7d5; background:#f2fbf4; color:#246f43; }
-    .admin { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
+    .admin { display:none; margin-top:18px; }
     .admin.show { display:block; }
-    .admin-head { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
-    .workspace-toolbar { display:grid; grid-template-columns:minmax(220px, 1fr) auto auto; gap:10px; align-items:end; }
-    .workspace-toolbar .field { margin:0; }
-    .density-toggle { display:flex; border:1px solid #c9c9c9; border-radius:3px; overflow:hidden; }
-    .density-btn { min-height:40px; border:0; border-right:1px solid #c9c9c9; padding:0 12px; background:#fff; color:#555; font-weight:700; cursor:pointer; }
-    .density-btn:last-child { border-right:0; }
-    .density-btn.active { color:#fff; background:#555; }
-    .case-count { margin:12px 0 8px; color:#666; font-size:13px; }
-    .case-list { display:grid; gap:12px; }
-    .case-row { border:1px solid #dcdcdc; border-left:4px solid var(--red); border-radius:4px; background:#fff; padding:14px; }
-    .case-row-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
-    .case-person { margin:0; color:#242424; font-size:17px; }
-    .case-number { margin:3px 0 0; color:#777; font-size:12px; }
-    .case-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .case-fields .field { margin:0; }
-    .case-fields .case-notes { grid-column:1 / -1; }
-    .case-fields textarea { min-height:72px; }
-    .case-photo-strip { display:flex; gap:8px; margin:12px 0; overflow:auto; }
-    .case-photo-strip img, .case-photo-empty { flex:0 0 76px; width:76px; height:76px; border:1px solid #ddd; border-radius:4px; object-fit:cover; background:#f6f6f6; }
-    .case-photo-empty { display:grid; place-items:center; color:#888; font-size:12px; text-align:center; }
-    .case-row-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .case-row-actions input[type="file"] { flex:1 1 220px; width:auto; min-height:38px; padding:6px; }
-    .row-status { min-height:20px; margin-left:auto; color:#287342; font-size:12px; font-weight:700; }
-    .case-list.compact { gap:7px; }
-    .case-list.compact .case-row { padding:9px 11px; }
-    .case-list.compact .case-row-head { margin-bottom:7px; }
-    .case-list.compact .case-photo-strip { margin:8px 0; }
-    .case-list.compact .case-photo-strip img, .case-list.compact .case-photo-empty { flex-basis:54px; width:54px; height:54px; }
-    .empty-state { padding:24px 14px; border:1px dashed #ccc; background:#fafafa; color:#666; text-align:center; }
-    .section { padding:14px 12px 16px; border-bottom:1px solid #efefef; }
-    .section:last-child { border-bottom:0; }
-    .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
-    .subsection-title { margin:18px 0 10px; padding-top:14px; border-top:1px solid #efefef; color:#555; font-size:14px; font-weight:700; }
-    .subsection-title:first-of-type { margin-top:0; padding-top:0; border-top:0; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
-    .overview-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; }
-    .summary-card { border:1px solid #e3e3e3; border-radius:6px; background:#fff; padding:13px 14px; }
-    .summary-card strong { display:block; margin-bottom:8px; color:#123c77; font-size:14px; }
-    .person-actions { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:end; }
-    .summary-list { display:grid; gap:7px; margin:0; }
-    .summary-row { display:grid; grid-template-columns:78px 1fr; gap:8px; font-size:13px; line-height:1.55; }
-    .summary-row dt { color:#777; font-weight:700; }
-    .summary-row dd { margin:0; color:#333; word-break:break-word; }
-    .record-quick-list { display:grid; gap:8px; max-height:250px; overflow:auto; padding-right:2px; }
-    .record-quick-item { width:100%; border:1px solid #e2e2e2; border-radius:6px; background:#fbfbfb; padding:10px 11px; text-align:left; cursor:pointer; }
-    .record-quick-item:hover, .record-quick-item.active { border-color:#c90822; background:#fff7f8; }
-    .record-quick-item b { display:block; color:#333; font-size:13px; margin-bottom:5px; }
-    .record-quick-item span { display:block; color:#777; font-size:12px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .record-preview { margin-top:10px; border:1px dashed #d6d6d6; border-radius:6px; background:#fcfcfc; padding:11px 12px; }
-    .record-preview-title { margin:0 0 7px; color:#333; font-size:13px; font-weight:700; }
-    .record-preview-text { margin:0; color:#555; font-size:13px; line-height:1.65; white-space:pre-wrap; word-break:break-word; max-height:130px; overflow:auto; }
-    .admin-btn { border:0; border-radius:3px; background:var(--red); color:#fff; min-height:38px; padding:0 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
-    .admin-btn.alt { background:#8d1726; }
-    .admin-btn.danger { background:#6b0f1a; }
-    .admin-btn.danger:hover { background:#520b14; }
-    .admin-note { font-size:12px; color:#666; line-height:1.6; }
-    .field.full { grid-column:1 / -1; }
-    .photo-preview { margin-top:10px; max-width:220px; border:1px solid #ddd; border-radius:6px; background:#f7f7f7; overflow:hidden; }
-    .photo-preview img { width:100%; display:block; }
-    .avatar-preview { margin-top:10px; width:112px; height:112px; border:1px solid #ddd; border-radius:50%; background:#f7f7f7; overflow:hidden; }
-    .avatar-preview img { width:100%; height:100%; object-fit:cover; display:block; }
-    .record-photo-gallery { margin-top:8px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
-    .record-photo-item { border:1px solid #e6e6e6; border-radius:6px; background:#fff; overflow:hidden; }
-    .record-photo-item img { width:100%; aspect-ratio:1 / 1; object-fit:cover; display:block; background:#f7f7f7; }
-    .record-photo-item p { margin:0; padding:7px 8px 8px; font-size:12px; color:#555; line-height:1.5; }
-    .record-photo-placeholder { min-height:156px; display:grid; place-items:center; border:1px dashed #bcc5cc; background:#f3f5f6; color:#89939a; font-size:12px; text-align:center; }
-    .photo-help { margin-top:8px; font-size:12px; color:#666; line-height:1.6; }
+    .admin-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; padding:10px 12px; border:1px solid #e2e2e2; background:#f8f8f8; color:#555; font-size:13px; }
+    .screen { display:none; }
+    .screen.active { display:block; }
+    .screen-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:20px; padding-bottom:13px; border-bottom:1px solid #e5e5e5; }
+    .screen-head h2 { margin:0; color:var(--blue); font-size:21px; }
+    .screen-actions { display:flex; gap:9px; flex-wrap:wrap; }
+    .entry-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:720px; margin:36px auto 18px; }
+    .entry-button { min-height:170px; border:1px solid #d5d5d5; border-top:5px solid var(--red); border-radius:6px; background:#fff; color:var(--blue); font-size:22px; font-weight:700; box-shadow:0 4px 12px #00000012; }
+    .entry-button:hover { border-color:#bd8790; background:#fff8f8; }
+    .step-bar { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:22px; }
+    .step { padding:10px 12px; border-bottom:3px solid #d4d4d4; color:#888; text-align:center; font-size:13px; font-weight:700; }
+    .step.active { border-color:var(--red); color:var(--red); }
+    .form-card { max-width:760px; margin:auto; padding:20px; border:1px solid #ddd; background:#fff; }
+    .form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap; }
+    .avatar-picker { position:relative; width:150px; height:180px; margin:0 auto 18px; border:1px dashed #999; background:#f3f4f5; overflow:hidden; cursor:pointer; }
+    .avatar-picker img { width:100%; height:100%; object-fit:cover; display:block; }
+    .avatar-placeholder { height:100%; display:grid; place-items:center; padding:16px; color:#666; text-align:center; line-height:1.6; }
+    .upload-state { min-height:20px; margin-top:8px; color:var(--ok); text-align:center; font-size:12px; font-weight:700; }
+    .people-toolbar { display:grid; grid-template-columns:minmax(220px, 1fr) auto; gap:12px; align-items:end; margin-bottom:16px; }
+    .people-toolbar .field { margin:0; }
+    .people-count { color:#666; font-size:13px; }
+    .people-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; }
+    .person-card { display:grid; grid-template-columns:92px 1fr; gap:14px; padding:15px; border:1px solid #ddd; border-left:4px solid var(--red); background:#fff; }
+    .person-card-photo { width:92px; height:112px; border:1px solid #ddd; background:#f1f2f3; object-fit:cover; }
+    .person-card-placeholder { display:grid; place-items:center; color:#888; font-size:12px; text-align:center; }
+    .person-card h3 { margin:0 0 7px; font-size:18px; }
+    .person-meta { margin:3px 0; color:#666; font-size:13px; line-height:1.5; word-break:break-word; }
+    .person-card-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .person-card-actions .btn { padding:0 8px; font-size:13px; }
+    .empty-state { padding:32px 16px; border:1px dashed #bbb; background:#fafafa; color:#666; text-align:center; }
+    .record-switcher { display:grid; grid-template-columns:minmax(220px, 1fr) auto; gap:10px; align-items:end; margin-bottom:16px; }
+    .record-switcher .field { margin:0; }
+    .wanted-banner { margin-bottom:12px; overflow:hidden; background:#e9e9e9; }
+    .wanted-banner img { width:100%; max-height:185px; object-fit:cover; display:block; }
+    .wanted-editor { border:1px solid #c9c9c9; background:#fff; }
+    .wanted-title { padding:10px 14px; background:var(--red); color:#fff; text-align:center; font-size:17px; font-weight:700; }
+    .table-scroll { overflow-x:auto; }
+    .wanted-table { width:100%; min-width:820px; border-collapse:collapse; table-layout:fixed; }
+    .wanted-table col.label { width:105px; }
+    .wanted-table col.value { width:auto; }
+    .wanted-table col.portrait-col { width:178px; }
+    .wanted-table th, .wanted-table td { border:1px solid #aaa; padding:7px; vertical-align:middle; }
+    .wanted-table th { background:#f1f1f1; color:#333; font-size:13px; }
+    .wanted-table input, .wanted-table textarea { min-height:38px; border-color:#aaa; box-shadow:none; }
+    .wanted-table textarea { min-height:74px; }
+    .portrait-cell { padding:9px !important; }
+    .image-control { position:relative; border:1px dashed #8b8b8b; background:#f1f2f3; overflow:hidden; cursor:pointer; }
+    .portrait-control { width:145px; height:178px; margin:auto; }
+    .image-control img { width:100%; height:100%; object-fit:cover; display:block; }
+    .image-placeholder { height:100%; display:grid; place-items:center; padding:12px; color:#666; text-align:center; font-size:12px; line-height:1.55; }
+    .image-remove { position:absolute; top:5px; right:5px; width:28px; height:28px; border:0; border-radius:50%; background:#6b0f1ae8; color:#fff; font-weight:700; box-shadow:0 1px 4px #0005; }
+    .image-busy::after { content:"上传中..."; position:absolute; inset:0; display:grid; place-items:center; background:#ffffffdc; color:var(--red); font-size:12px; font-weight:700; }
+    .no-record { margin:14px; padding:18px; border:1px dashed #bbb; background:#fafafa; color:#666; text-align:center; }
+    .attachments { padding:18px; border-top:1px solid #ccc; }
+    .attachments h3 { margin:0 0 12px; color:var(--blue); font-size:16px; }
+    .attachment-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+    .attachment-control { aspect-ratio:4 / 3; }
+    .editor-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; flex-wrap:wrap; }
+    .save-group { display:flex; align-items:center; gap:12px; margin-left:auto; }
+    .save-state { min-width:60px; color:var(--ok); font-size:13px; font-weight:700; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    [hidden] { display:none !important; }
     @media (max-width:700px) {
       .masthead { min-height:78px; }
       .brand-right { display:none; }
@@ -116,21 +118,21 @@
       .return-home { padding:5px 8px; font-size:12px; }
       .nav-inner { overflow:auto; justify-content:flex-start; }
       .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
-      .panel { padding:23px 22px 27px; }
-      .login-grid { grid-template-columns:1fr; }
-      .form-row { grid-template-columns:1fr; }
-      .overview-grid { grid-template-columns:1fr; }
-      .person-actions { grid-template-columns:1fr; }
-      .record-photo-gallery { grid-template-columns:1fr; }
-      .workspace-toolbar { grid-template-columns:1fr; }
-      .density-toggle { width:100%; }
-      .density-btn { flex:1; }
-      .case-fields { grid-template-columns:1fr; }
-      .case-fields .case-notes { grid-column:auto; }
-      .case-row-head { align-items:center; flex-wrap:wrap; }
-      .case-row-head > div { min-width:0; flex:1 1 150px; }
-      .row-delete { flex:0 0 auto; margin-left:auto; }
-      .row-status { width:100%; margin-left:0; }
+      main { padding-top:24px; }
+      .panel { padding:22px 18px 26px; }
+      .login-grid, .form-grid, .entry-grid, .people-grid, .people-toolbar, .record-switcher { grid-template-columns:1fr; }
+      .entry-button { min-height:112px; }
+      .screen-head { align-items:flex-start; flex-direction:column; }
+      .screen-actions { width:100%; }
+      .screen-actions .btn { flex:1; }
+      .person-card { grid-template-columns:76px 1fr; }
+      .person-card-photo { width:76px; height:94px; }
+      .person-card-actions { grid-template-columns:1fr; }
+      .attachment-grid { grid-template-columns:1fr; }
+      .attachment-control { aspect-ratio:16 / 10; }
+      .editor-footer { align-items:stretch; flex-direction:column; }
+      .save-group { width:100%; margin-left:0; }
+      .save-group .btn { flex:1; }
     }
   </style>
 </head>
@@ -151,1035 +153,264 @@
   <main>
     <section class="panel">
       <h1>案件后台管理</h1>
-      <p class="intro">此页提供给管理员维护通缉人员、案件内容与照片；前台用户输入姓名与案件编号后即可查询对应资料。</p>
-
+      <p class="intro" id="pageIntro">管理员登录后即可新增人员或编辑已有资料。</p>
       <form id="loginForm">
         <div class="login-grid">
-          <div class="field">
-            <label for="adminLogin">登录账号</label>
-            <input id="adminLogin" autocomplete="username" placeholder="请输入管理员账号">
-          </div>
-          <div class="field">
-            <label for="password">密码</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
-          </div>
+          <div class="field"><label for="adminLogin">登录账号</label><input id="adminLogin" autocomplete="username" placeholder="请输入管理员账号"></div>
+          <div class="field"><label for="password">密码</label><input id="password" type="password" autocomplete="current-password" placeholder="请输入密码"></div>
         </div>
-        <div class="actions"><button class="submit" type="submit">登 入 后 台</button></div>
+        <button class="submit" type="submit">登录后台</button>
       </form>
-
       <div id="message" class="msg" aria-live="polite"></div>
 
       <div id="adminPanel" class="admin" aria-live="polite">
-        <div class="admin-head"><span>案件工作区</span><button class="admin-btn alt" id="logoutBtn" type="button">登出</button></div>
+        <div class="admin-bar"><span id="adminLocation">管理首页</span><button class="btn secondary" id="logoutBtn" type="button">退出登录</button></div>
 
-        <div class="section">
-          <h4>搜尋與快速更新</h4>
-          <p class="admin-note">輸入姓名即可篩選；每筆案件可直接修改狀態、處理時間、備註與照片，再按該筆的儲存。</p>
-          <div class="workspace-toolbar">
-            <div class="field">
-              <label for="caseSearchInput">搜尋姓名</label>
-              <input id="caseSearchInput" type="search" placeholder="輸入客戶姓名" autocomplete="off">
-            </div>
-            <div class="density-toggle" aria-label="列表密度">
-              <button class="density-btn active" type="button" data-density="comfortable">精簡</button>
-              <button class="density-btn" type="button" data-density="compact">緊湊</button>
-            </div>
-            <button class="admin-btn" id="newProfileBtn" type="button">新增案件</button>
+        <section class="screen" id="homeScreen">
+          <div class="entry-grid">
+            <button class="entry-button" id="startAddPersonBtn" type="button">新增人员</button>
+            <button class="entry-button" id="openPeopleBtn" type="button">编辑已有资料</button>
           </div>
-          <p id="caseCount" class="case-count"></p>
-          <div id="caseList" class="case-list"></div>
-        </div>
+        </section>
 
-        <div class="section">
-          <h4>完整資料編輯</h4>
-          <p class="admin-note">选择既有人员后，下方会立即显示该人员资料，并可直接编辑、删除、维护案件。</p>
-          <div class="field">
-            <label for="profileSelect">选择已有人员</label>
-            <select id="profileSelect"></select>
-          </div>
-        </div>
+        <section class="screen" id="peopleScreen">
+          <div class="screen-head"><h2>选择人员</h2><div class="screen-actions"><button class="btn secondary" id="peopleHomeBtn" type="button">返回管理首页</button><button class="btn" id="peopleAddBtn" type="button">新增人员</button></div></div>
+          <div class="people-toolbar"><div class="field"><label for="peopleSearch">搜索姓名</label><input id="peopleSearch" type="search" placeholder="输入姓名" autocomplete="off"></div><span id="peopleCount" class="people-count"></span></div>
+          <div id="peopleGrid" class="people-grid"></div>
+        </section>
 
-        <div class="section">
-          <h4>前台显示预览</h4>
-          <div class="overview-grid">
-            <div class="summary-card">
-              <strong>用户查询页会看到的基本资料</strong>
-              <dl class="summary-list">
-                <div class="summary-row"><dt>姓名</dt><dd id="summaryName">未填写</dd></div>
-                <div class="summary-row"><dt>证件号码</dt><dd id="summaryIdNumber">未填写</dd></div>
-                <div class="summary-row"><dt>户籍地</dt><dd id="summaryIssuingPlace">未填写</dd></div>
-                <div class="summary-row"><dt>头像</dt><dd id="summaryAvatar">未设置</dd></div>
-                <div class="summary-row"><dt>案件数量</dt><dd id="summaryRecordCount">0 笔</dd></div>
-              </dl>
+        <section class="screen" id="addPersonScreen">
+          <div class="screen-head"><h2>新增人员</h2><button class="btn secondary back-people" type="button">返回人员列表</button></div>
+          <div class="step-bar"><div class="step active">1　人员资料</div><div class="step">2　第一笔案件（可略过）</div></div>
+          <div class="form-card">
+            <input id="newAvatarFile" type="file" accept="image/*" hidden>
+            <div class="avatar-picker" id="newAvatarPicker" role="button" tabindex="0" aria-label="上传头像"><div id="newAvatarPlaceholder" class="avatar-placeholder">点击上传头像</div><img id="newAvatarPreview" alt="头像预览" hidden></div>
+            <div id="newAvatarState" class="upload-state" aria-live="polite"></div>
+            <div class="form-grid">
+              <div class="field"><label for="newName">姓名 *</label><input id="newName" placeholder="请输入姓名"></div>
+              <div class="field"><label for="newIdNumber">证件号码</label><input id="newIdNumber" placeholder="请输入证件号码"></div>
+              <div class="field"><label for="newGender">性别</label><input id="newGender" placeholder="例如：男 / 女"></div>
+              <div class="field"><label for="newBirthDate">出生日期</label><input id="newBirthDate" placeholder="例如：1980-01-01"></div>
+              <div class="field full"><label for="newHousehold">户籍地</label><input id="newHousehold" placeholder="请输入户籍地"></div>
             </div>
-            <div class="summary-card">
-              <strong>已有案件快捷选择</strong>
-              <div id="recordQuickList" class="record-quick-list"><p class="admin-note">暂无案件。</p></div>
-            </div>
+            <div class="form-actions"><button class="btn" id="createPersonNextBtn" type="button">保存并下一步</button></div>
           </div>
-          <div class="record-preview">
-            <p id="recordPreviewTitle" class="record-preview-title">尚未选择案件</p>
-            <p id="recordPreviewText" class="record-preview-text">选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。</p>
-          </div>
-        </div>
+        </section>
 
-        <div class="section">
-          <h4 id="profileEditorTitle">同一份编辑资料</h4>
-          <p class="admin-note">人員資料、目前案件與附件照片集中在這裡維護；選擇不同案件後，下方案件內容與照片會一起切換。只有「新增案件」可重複新增多筆。</p>
-          <div class="subsection-title">人員資料</div>
-          <div class="form-row">
-            <div class="field">
-              <label for="displayNameEdit">姓名</label>
-              <input id="displayNameEdit" placeholder="例如：王小明">
-            </div>
-            <div class="field">
-              <label for="avatarUrlEdit">头像网址</label>
-              <input id="avatarUrlEdit" placeholder="https://...">
-            </div>
-            <div class="field full">
-              <label for="avatarFileInput">上传头像（圆形预览）</label>
-              <input id="avatarFileInput" type="file" accept="image/*">
-              <div class="photo-help">可直接上传头像图片，系统会自动压缩、上传并套用到头像网址。</div>
-              <div id="avatarPreview" class="avatar-preview" hidden><img id="avatarPreviewImg" alt="头像预览"></div>
-            </div>
-            <div class="field">
-              <label for="idNumberEdit">证件号码</label>
-              <input id="idNumberEdit" placeholder="例如：A123456789">
-            </div>
-            <div class="field">
-              <label for="genderEdit">性别</label>
-              <input id="genderEdit" placeholder="例如：男 / 女">
-            </div>
-            <div class="field">
-              <label for="birthDateEdit">出生日期</label>
-              <input id="birthDateEdit" placeholder="例如：1980-01-01">
-            </div>
-            <div class="field">
-              <label for="currentIdentityEdit">现在身份</label>
-              <input id="currentIdentityEdit" placeholder="例如：无业人员">
-            </div>
-            <div class="field">
-              <label for="householdRegistrationEdit">户籍地</label>
-              <input id="householdRegistrationEdit" placeholder="例如：上海市静安区">
-            </div>
+        <section class="screen" id="editorScreen">
+          <div class="screen-head"><h2 id="editorHeading">编辑已有资料</h2><button class="btn secondary back-people" type="button">返回人员列表</button></div>
+          <div id="wizardSteps" class="step-bar" hidden><div class="step">1　人员资料</div><div class="step active">2　第一笔案件（可略过）</div></div>
+          <div id="recordSwitcher" class="record-switcher"><div class="field"><label for="recordSelect">当前案件</label><select id="recordSelect"></select></div></div>
+          <div class="wanted-banner"><img src="https://i.ibb.co/mFPGVdX0/t.jpg" alt="公安部专案通缉令"></div>
+          <div class="wanted-editor">
+            <div class="wanted-title">专案通缉令资料</div>
+            <div class="table-scroll"><table class="wanted-table">
+              <colgroup><col class="label"><col class="value"><col class="label"><col class="value"><col class="portrait-col"></colgroup>
+              <tbody>
+                <tr><th>姓名</th><td><input id="editName" aria-label="姓名"></td><th>通缉日期</th><td><input id="editWantedDate" aria-label="通缉日期"></td><td class="portrait-cell" rowspan="4"><input id="editAvatarFile" type="file" accept="image/*" hidden><div class="image-control portrait-control" id="editAvatarControl" role="button" tabindex="0" aria-label="更换头像"><div id="editAvatarPlaceholder" class="image-placeholder">点击上传头像</div><img id="editAvatarImage" alt="头像" hidden><button class="image-remove" id="removeAvatarBtn" type="button" aria-label="删除头像" hidden>×</button></div></td></tr>
+                <tr><th>性别</th><td><input id="editGender" aria-label="性别"></td><th>现在身份</th><td><input id="editIdentity" aria-label="现在身份"></td></tr>
+                <tr><th>出生日期</th><td><input id="editBirthDate" aria-label="出生日期"></td><th>身份证号</th><td><input id="editIdNumber" aria-label="身份证号"></td></tr>
+                <tr><th>户籍地</th><td><input id="editHousehold" aria-label="户籍地"></td><th>案件编号</th><td><input id="editRecordTitle" aria-label="案件编号"></td></tr>
+                <tr><th>涉案类别</th><td colspan="4"><input id="editCategory" aria-label="涉案类别"></td></tr>
+                <tr><th>现在住址</th><td colspan="4"><input id="editAddress" aria-label="现在住址"></td></tr>
+                <tr><th>立案单位</th><td colspan="4"><input id="editFilingUnit" aria-label="立案单位"></td></tr>
+                <tr><th>简要案情</th><td colspan="4"><textarea id="editSummary" aria-label="简要案情"></textarea></td></tr>
+                <tr><th>备注</th><td colspan="4"><textarea id="editNotes" aria-label="备注"></textarea></td></tr>
+                <tr><th>申请事项</th><td colspan="4"><textarea id="editApplication" aria-label="申请事项"></textarea></td></tr>
+              </tbody>
+            </table></div>
+            <div id="noRecordNotice" class="no-record" hidden>该人员目前没有案件。</div>
+            <section class="attachments" id="attachmentsSection"><h3>案件附件照片</h3><input id="attachmentFile" type="file" accept="image/*" hidden><div id="attachmentGrid" class="attachment-grid"></div></section>
           </div>
-
-          <div class="subsection-title">案件資料</div>
-          <div class="form-row">
-            <div class="field">
-              <label for="recordSelect">目前案件</label>
-              <select id="recordSelect"></select>
-            </div>
-            <div class="field">
-              <label for="recordTitleEdit">案件编号</label>
-              <input id="recordTitleEdit" placeholder="例如：A-2026-0001">
-            </div>
-            <div class="field">
-              <label for="wantedDateEdit">通缉日期</label>
-              <input id="wantedDateEdit" placeholder="例如：2026-08-12">
-            </div>
-            <div class="field">
-              <label for="caseCategoryEdit">涉案类别</label>
-              <input id="caseCategoryEdit" placeholder="请输入涉案类别">
-            </div>
-            <div class="field">
-              <label for="currentAddressEdit">现在住址</label>
-              <input id="currentAddressEdit" placeholder="请输入现在住址">
-            </div>
-            <div class="field">
-              <label for="filingUnitEdit">立案单位</label>
-              <input id="filingUnitEdit" placeholder="请输入立案单位">
-            </div>
-          </div>
-          <div class="field">
-            <label for="caseSummaryEdit">简要案情</label>
-            <textarea id="caseSummaryEdit" placeholder="请输入简要案情"></textarea>
-          </div>
-          <div class="field">
-            <label for="notesEdit">备注</label>
-            <textarea id="notesEdit" placeholder="请输入备注"></textarea>
-          </div>
-          <div class="field">
-            <label for="applicationRequestEdit">申请事项</label>
-            <textarea id="applicationRequestEdit" placeholder="请输入申请事项"></textarea>
-          </div>
-
-          <div class="subsection-title">案件附件照片（最多三张）</div>
-          <div class="form-row">
-            <div class="field">
-              <label for="photoCaptionInput">照片说明</label>
-              <input id="photoCaptionInput" placeholder="例如：现场正面照">
-            </div>
-          </div>
-          <div class="field">
-            <label for="photoFileInput">上传照片</label>
-            <input id="photoFileInput" type="file" accept="image/*">
-            <div class="photo-help">可直接选择手机或电脑照片，系统会自动压缩后上传；每笔案件固定保留三格。</div>
-            <div id="photoPreview" class="photo-preview" hidden><img id="photoPreviewImg" alt="照片预览"></div>
-          </div>
-          <div class="field">
-            <label>该案件已上传照片预览</label>
-            <div id="recordPhotoGallery" class="record-photo-gallery">
-              <p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>
-            </div>
-          </div>
-          <div class="inline-actions">
-            <button class="admin-btn" id="saveProfileBtn" type="button">保存当前资料</button>
-            <button class="admin-btn alt" id="createRecordBtn" type="button">新增案件</button>
-            <button class="admin-btn alt" id="uploadAvatarBtn" type="button">上传头像并套用</button>
-            <button class="admin-btn alt" id="addPhotoBtn" type="button">新增照片</button>
-            <button class="admin-btn danger" id="deleteRecordBtn" type="button">删除所选案件</button>
-            <button class="admin-btn danger" id="deleteProfileBtn" type="button">删除当前人员</button>
-          </div>
-        </div>
+          <div class="editor-footer"><button class="btn danger" id="deleteRecordBtn" type="button">删除当前案件</button><button class="btn secondary" id="skipCaseBtn" type="button" hidden>略过案件</button><div class="save-group"><span id="saveState" class="save-state" aria-live="polite"></span><button class="btn" id="saveAllBtn" type="button">保存全部</button></div></div>
+        </section>
       </div>
     </section>
   </main>
-
   <footer class="site-footer"><div class="site-footer-inner">本页为管理员专用，请勿提供给普通案件查询用户。</div></footer>
 
   <script>
     const loginForm = document.querySelector('#loginForm');
     const adminLoginInput = document.querySelector('#adminLogin');
     const passwordInput = document.querySelector('#password');
+    const pageIntro = document.querySelector('#pageIntro');
     const messageBox = document.querySelector('#message');
     const adminPanel = document.querySelector('#adminPanel');
-    const logoutBtn = document.querySelector('#logoutBtn');
-    const caseSearchInput = document.querySelector('#caseSearchInput');
-    const caseCount = document.querySelector('#caseCount');
-    const caseList = document.querySelector('#caseList');
-    const newProfileBtn = document.querySelector('#newProfileBtn');
-    const profileSelect = document.querySelector('#profileSelect');
-    const displayNameEdit = document.querySelector('#displayNameEdit');
-    const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
-    const avatarFileInput = document.querySelector('#avatarFileInput');
-    const avatarPreview = document.querySelector('#avatarPreview');
-    const avatarPreviewImg = document.querySelector('#avatarPreviewImg');
-    const idNumberEdit = document.querySelector('#idNumberEdit');
-    const genderEdit = document.querySelector('#genderEdit');
-    const birthDateEdit = document.querySelector('#birthDateEdit');
-    const currentIdentityEdit = document.querySelector('#currentIdentityEdit');
-    const householdRegistrationEdit = document.querySelector('#householdRegistrationEdit');
+    const adminLocation = document.querySelector('#adminLocation');
+    const screens = Array.from(document.querySelectorAll('.screen'));
+    const peopleSearch = document.querySelector('#peopleSearch');
+    const peopleGrid = document.querySelector('#peopleGrid');
+    const peopleCount = document.querySelector('#peopleCount');
+    const newAvatarFile = document.querySelector('#newAvatarFile');
+    const newAvatarPicker = document.querySelector('#newAvatarPicker');
+    const newAvatarPreview = document.querySelector('#newAvatarPreview');
+    const newAvatarPlaceholder = document.querySelector('#newAvatarPlaceholder');
+    const newAvatarState = document.querySelector('#newAvatarState');
+    const newName = document.querySelector('#newName');
+    const newIdNumber = document.querySelector('#newIdNumber');
+    const newGender = document.querySelector('#newGender');
+    const newBirthDate = document.querySelector('#newBirthDate');
+    const newHousehold = document.querySelector('#newHousehold');
+    const editorHeading = document.querySelector('#editorHeading');
+    const wizardSteps = document.querySelector('#wizardSteps');
+    const recordSwitcher = document.querySelector('#recordSwitcher');
     const recordSelect = document.querySelector('#recordSelect');
-    const recordTitleEdit = document.querySelector('#recordTitleEdit');
-    const wantedDateEdit = document.querySelector('#wantedDateEdit');
-    const caseCategoryEdit = document.querySelector('#caseCategoryEdit');
-    const currentAddressEdit = document.querySelector('#currentAddressEdit');
-    const filingUnitEdit = document.querySelector('#filingUnitEdit');
-    const caseSummaryEdit = document.querySelector('#caseSummaryEdit');
-    const notesEdit = document.querySelector('#notesEdit');
-    const applicationRequestEdit = document.querySelector('#applicationRequestEdit');
-    const photoCaptionInput = document.querySelector('#photoCaptionInput');
-    const photoFileInput = document.querySelector('#photoFileInput');
-    const photoPreview = document.querySelector('#photoPreview');
-    const photoPreviewImg = document.querySelector('#photoPreviewImg');
-    const recordPhotoGallery = document.querySelector('#recordPhotoGallery');
-    const summaryName = document.querySelector('#summaryName');
-    const summaryIdNumber = document.querySelector('#summaryIdNumber');
-    const summaryIssuingPlace = document.querySelector('#summaryIssuingPlace');
-    const summaryAvatar = document.querySelector('#summaryAvatar');
-    const summaryRecordCount = document.querySelector('#summaryRecordCount');
-    const recordQuickList = document.querySelector('#recordQuickList');
-    const recordPreviewTitle = document.querySelector('#recordPreviewTitle');
-    const recordPreviewText = document.querySelector('#recordPreviewText');
-    const profileEditorTitle = document.querySelector('#profileEditorTitle');
-    const deleteProfileBtn = document.querySelector('#deleteProfileBtn');
-    const saveProfileBtn = document.querySelector('#saveProfileBtn');
-    const uploadAvatarBtn = document.querySelector('#uploadAvatarBtn');
-    const createRecordBtn = document.querySelector('#createRecordBtn');
+    const editName = document.querySelector('#editName');
+    const editWantedDate = document.querySelector('#editWantedDate');
+    const editGender = document.querySelector('#editGender');
+    const editIdentity = document.querySelector('#editIdentity');
+    const editBirthDate = document.querySelector('#editBirthDate');
+    const editIdNumber = document.querySelector('#editIdNumber');
+    const editHousehold = document.querySelector('#editHousehold');
+    const editRecordTitle = document.querySelector('#editRecordTitle');
+    const editCategory = document.querySelector('#editCategory');
+    const editAddress = document.querySelector('#editAddress');
+    const editFilingUnit = document.querySelector('#editFilingUnit');
+    const editSummary = document.querySelector('#editSummary');
+    const editNotes = document.querySelector('#editNotes');
+    const editApplication = document.querySelector('#editApplication');
+    const editAvatarFile = document.querySelector('#editAvatarFile');
+    const editAvatarControl = document.querySelector('#editAvatarControl');
+    const editAvatarImage = document.querySelector('#editAvatarImage');
+    const editAvatarPlaceholder = document.querySelector('#editAvatarPlaceholder');
+    const removeAvatarBtn = document.querySelector('#removeAvatarBtn');
+    const noRecordNotice = document.querySelector('#noRecordNotice');
+    const attachmentsSection = document.querySelector('#attachmentsSection');
+    const attachmentFile = document.querySelector('#attachmentFile');
+    const attachmentGrid = document.querySelector('#attachmentGrid');
     const deleteRecordBtn = document.querySelector('#deleteRecordBtn');
-    const addPhotoBtn = document.querySelector('#addPhotoBtn');
-
+    const skipCaseBtn = document.querySelector('#skipCaseBtn');
+    const saveAllBtn = document.querySelector('#saveAllBtn');
+    const saveState = document.querySelector('#saveState');
+    const profileInputs = [editName, editGender, editIdentity, editBirthDate, editIdNumber, editHousehold];
+    const recordInputs = [editWantedDate, editRecordTitle, editCategory, editAddress, editFilingUnit, editSummary, editNotes, editApplication];
     let profilesCache = [];
     let recordsCache = [];
     let photosByRecordId = Object.create(null);
     let selectedProfileId = '';
     let selectedRecordId = '';
-    const dirtyItems = new Set();
+    let editorMode = 'edit';
+    let pendingAvatarUrl = '';
+    let selectedAttachmentIndex = 0;
+    let isDirty = false;
 
-    function showMessage(text, type = 'ok') {
-      messageBox.textContent = text;
-      messageBox.className = 'msg show ' + type;
-    }
-
-    function clearMessage() {
-      messageBox.textContent = '';
-      messageBox.className = 'msg';
-    }
-
-    function escapeText(value) {
-      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[char] || char));
-    }
-
-    function fileToImage(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error('图片读取失败，请改用 JPG 或 PNG。'));
-          img.src = String(reader.result || '');
-        };
-        reader.onerror = () => reject(new Error('图片读取失败，请重新选择文件。'));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function fileToCompressedDataUrl(file) {
-      const image = await fileToImage(file);
-      const maxWidth = 1600;
-      const maxHeight = 1600;
-      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
-      const width = Math.max(1, Math.round(image.width * ratio));
-      const height = Math.max(1, Math.round(image.height * ratio));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('浏览器不支持图片处理，请改用较新版本浏览器。');
-      }
-      ctx.drawImage(image, 0, 0, width, height);
-
-      let dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-      if (dataUrl.length > 1900000) {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-      }
-      if (dataUrl.length > 1900000) {
-        throw new Error('照片文件仍过大，请选择较小照片后再上传。');
-      }
-      return dataUrl;
-    }
-
-    async function uploadImageAndGetUrl(dataUrl, fileName) {
-      const data = await requestJson('/api/admin/upload-image', {
-        method: 'POST',
-        body: JSON.stringify({ dataUrl, fileName })
-      });
-
-      const hostedUrl = String(data?.url || '').trim();
-      if (!hostedUrl) {
-        throw new Error('图床未返回网址，请稍后再试。');
-      }
-      return hostedUrl;
-    }
-
-    function renderRecordSelectOptions(records) {
-      const options = ['<option value="">新增案件</option>'].concat(records.map((record) => {
-        const title = record.title || '未命名案件';
-        return '<option value="' + escapeText(record.id) + '">' + escapeText(title) + '</option>';
-      }));
-      recordSelect.innerHTML = options.join('');
-    }
-
-    function renderProfileSelectOptions(profiles) {
-      const options = ['<option value="">新增人员 / 未选择</option>'].concat(profiles.map((profile) => {
-        const name = profile.display_name || '未填写姓名';
-        const idNumber = profile.id_number ? '（' + profile.id_number + '）' : '';
-        return '<option value="' + escapeText(profile.id) + '">' + escapeText(name + idNumber) + '</option>';
-      }));
-      profileSelect.innerHTML = options.join('');
-    }
-
-    function getRecordsForProfile(profileId) {
-      const id = String(profileId || '');
-      if (!id) return [];
-      return recordsCache.filter((record) => String(record.profile_id || '') === id);
-    }
-
-    function getProfileForRecord(record) {
-      return profilesCache.find((profile) => String(profile.id) === String(record.profile_id || '')) || {};
-    }
-
-    function renderCaseList() {
-      const query = caseSearchInput.value.trim().toLocaleLowerCase();
-      const visibleRecords = recordsCache.filter((record) => {
-        const profile = getProfileForRecord(record);
-        return !query || String(profile.display_name || '').toLocaleLowerCase().includes(query);
-      });
-
-      caseCount.textContent = query
-        ? '找到 ' + visibleRecords.length + ' 筆案件'
-        : '共 ' + visibleRecords.length + ' 筆案件';
-
-      if (!visibleRecords.length) {
-        caseList.innerHTML = '<div class="empty-state">' + (query ? '找不到符合姓名的案件。' : '目前尚無案件，請點選「新增案件」。') + '</div>';
-        return;
-      }
-
-      caseList.innerHTML = visibleRecords.map((record) => {
-        const profile = getProfileForRecord(record);
-        const photos = photosByRecordId[String(record.id)] || [];
-        const photoHtml = photos.length
-          ? photos.map((photo) => '<img src="' + escapeText(photo.photo_url || '') + '" alt="案件照片">').join('')
-          : '<span class="case-photo-empty">尚無照片</span>';
-        return '<article class="case-row" data-record-id="' + escapeText(record.id) + '">' +
-          '<div class="case-row-head"><div><h3 class="case-person">' + escapeText(profile.display_name || '未填姓名') + '</h3>' +
-          '<p class="case-number">' + escapeText(record.title || '未命名案件') + '</p></div>' +
-          '<button class="admin-btn danger row-delete" type="button">刪除</button></div>' +
-          '<div class="case-fields"><div class="field"><label>案件狀態</label><input data-field="case_category" value="' + escapeText(record.case_category || '') + '" placeholder="直接輸入目前狀態"></div>' +
-          '<div class="field"><label>預約或處理時間</label><input data-field="wanted_date" value="' + escapeText(record.wanted_date || '') + '" placeholder="例如：2026-10-02 14:00"></div>' +
-          '<div class="field case-notes"><label>備註</label><textarea data-field="notes" placeholder="輸入最新備註">' + escapeText(record.notes || '') + '</textarea></div></div>' +
-          '<div class="case-photo-strip">' + photoHtml + '</div>' +
-          '<div class="case-row-actions"><input class="row-photo-input" type="file" accept="image/*" aria-label="選擇案件照片">' +
-          '<button class="admin-btn alt row-photo-upload" type="button">上傳照片</button>' +
-          '<button class="admin-btn row-save" type="button">儲存這筆</button>' +
-          '<button class="admin-btn alt row-details" type="button">完整資料</button>' +
-          '<span class="row-status" aria-live="polite"></span></div></article>';
-      }).join('');
-    }
-
-    function getRecordPayloadFromRow(row, record) {
-      return {
-        profile_id: record.profile_id,
-        title: record.title || '未命名案件',
-        info_text: record.case_summary || record.info_text || '',
-        wanted_date: row.querySelector('[data-field="wanted_date"]').value.trim() || null,
-        case_category: row.querySelector('[data-field="case_category"]').value.trim() || null,
-        current_address: record.current_address || null,
-        filing_unit: record.filing_unit || null,
-        case_summary: record.case_summary || record.info_text || null,
-        notes: row.querySelector('[data-field="notes"]').value.trim() || null,
-        application_request: record.application_request || null
-      };
-    }
-
-    function normalizeProfiles(data) {
-      const profiles = Array.isArray(data.profiles) ? data.profiles.filter(Boolean) : [];
-      const profile = data.profile && typeof data.profile === 'object' ? data.profile : null;
-      if (!profiles.length && profile && (profile.display_name || profile.id_number || profile.household_registration || profile.issuing_place || profile.avatar_url)) {
-        return [{
-          ...profile,
-          id: profile.id || 'default-profile'
-        }];
-      }
-      return profiles.map((item, index) => ({
-        ...item,
-        id: item.id || ('profile-' + index)
-      }));
-    }
-
-    function updateProfileActionState() {
-      const isEditing = Boolean(selectedProfileId);
-      saveProfileBtn.textContent = isEditing ? '保存当前资料' : '保存新人员资料';
-      uploadAvatarBtn.textContent = isEditing ? '上传头像并套用' : '上传头像并套用到新人员';
-      deleteProfileBtn.disabled = !isEditing;
-    }
-
-    function summarizeText(value) {
-      const text = String(value || '').trim().replace(/\s+/g, ' ');
-      if (!text) return '尚未填写内容';
-      return text.length > 58 ? text.slice(0, 58) + '...' : text;
-    }
-
-    function renderOverview(profile, records) {
-      summaryName.textContent = profile.display_name || '未填写';
-      summaryIdNumber.textContent = profile.id_number || '未填写';
-      summaryIssuingPlace.textContent = profile.household_registration || profile.issuing_place || '未填写';
-      summaryAvatar.textContent = profile.avatar_url ? '已设置' : '未设置';
-      summaryRecordCount.textContent = String(records.length) + ' 笔';
-
-      if (!records.length) {
-        recordQuickList.innerHTML = '<p class="admin-note">暂无案件，填写案件编号和内容后点击「新增案件」。</p>';
-        return;
-      }
-
-      recordQuickList.innerHTML = records.map((record) => {
-        const title = escapeText(record.title || '未命名案件');
-        const summary = escapeText(summarizeText(record.case_summary || record.info_text));
-        return '<button class="record-quick-item" type="button" data-record-id="' + escapeText(record.id) + '"><b>' + title + '</b><span>' + summary + '</span></button>';
-      }).join('');
-    }
-
-    function setSelectedRecord(recordId) {
-      const selectedId = String(recordId || '');
-      selectedRecordId = selectedId;
-      const found = recordsCache.find((record) => String(record.id) === selectedId);
-
-      recordSelect.value = selectedId;
-
-      Array.from(recordQuickList.querySelectorAll('.record-quick-item')).forEach((button) => {
-        button.classList.toggle('active', button.dataset.recordId === selectedId);
-      });
-
-      if (!found) {
-        recordTitleEdit.value = '';
-        wantedDateEdit.value = '';
-        caseCategoryEdit.value = '';
-        currentAddressEdit.value = '';
-        filingUnitEdit.value = '';
-        caseSummaryEdit.value = '';
-        notesEdit.value = '';
-        applicationRequestEdit.value = '';
-        recordPreviewTitle.textContent = '尚未选择案件';
-        recordPreviewText.textContent = '选择已有案件后，这里会显示当前内容，方便客户确认正在编辑哪一笔。';
-        renderRecordPhotoGallery('');
-        return;
-      }
-
-      recordTitleEdit.value = found.title || '';
-      wantedDateEdit.value = found.wanted_date || '';
-      caseCategoryEdit.value = found.case_category || '';
-      currentAddressEdit.value = found.current_address || '';
-      filingUnitEdit.value = found.filing_unit || '';
-      caseSummaryEdit.value = found.case_summary || found.info_text || '';
-      notesEdit.value = found.notes || '';
-      applicationRequestEdit.value = found.application_request || '';
-      recordPreviewTitle.textContent = '正在编辑：' + (found.title || '未命名案件');
-      recordPreviewText.textContent = found.case_summary || found.info_text || '该案件目前尚未填写内容。';
-      renderRecordPhotoGallery(selectedId);
-    }
-
-    function setSelectedProfile(profileId) {
-      selectedProfileId = String(profileId || '');
-      const profile = profilesCache.find((item) => String(item.id) === selectedProfileId) || {};
-      const profileRecords = getRecordsForProfile(selectedProfileId);
-
-      profileSelect.value = selectedProfileId;
-      profileEditorTitle.textContent = selectedProfileId ? '编辑当前人员资料' : '新增人员资料';
-      updateProfileActionState();
-      displayNameEdit.value = profile.display_name || '';
-      avatarUrlEdit.value = profile.avatar_url || '';
-      idNumberEdit.value = profile.id_number || '';
-      genderEdit.value = profile.gender || '';
-      birthDateEdit.value = profile.birth_date || '';
-      currentIdentityEdit.value = profile.current_identity || '';
-      householdRegistrationEdit.value = profile.household_registration || profile.issuing_place || '';
-      setAvatarPreview(profile.avatar_url || '');
-      renderOverview(profile, profileRecords);
-      renderRecordSelectOptions(profileRecords);
-
-      const keptRecord = profileRecords.find((record) => String(record.id) === selectedRecordId);
-      if (keptRecord) {
-        setSelectedRecord(keptRecord.id);
-      } else if (profileRecords.length) {
-        setSelectedRecord(profileRecords[0].id);
-      } else {
-        setSelectedRecord('');
-      }
-    }
-
-    function setAvatarPreview(url) {
-      const cleanUrl = String(url || '').trim();
-      if (!cleanUrl) {
-        avatarPreview.hidden = true;
-        avatarPreviewImg.removeAttribute('src');
-        return;
-      }
-      avatarPreviewImg.src = cleanUrl;
-      avatarPreview.hidden = false;
-    }
-
-    function renderRecordPhotoGallery(recordId) {
-      const photos = photosByRecordId[recordId] || [];
-      addPhotoBtn.disabled = photos.length >= 3;
-      if (!recordId) {
-        recordPhotoGallery.innerHTML = '<p class="admin-note">请先选择案件，即可查看该案件已上传的照片。</p>';
-        return;
-      }
-
-      const html = Array.from({ length: 3 }, (_, index) => {
-        const photo = photos[index];
-        if (!photo) {
-          return '<div class="record-photo-placeholder">附件照片 ' + (index + 1) + '<br>待上传</div>';
-        }
-        const url = escapeText(photo.photo_url || '');
-        const caption = escapeText(photo.caption || ('附件照片 ' + (index + 1)));
-        return '<article class="record-photo-item"><img src="' + url + '" alt="案件照片"><p>' + caption + '</p></article>';
-      });
-      recordPhotoGallery.innerHTML = html.join('');
-    }
-
-    function getProfilePayload() {
-      const payload = {
-        display_name: displayNameEdit.value.trim() || null,
-        avatar_url: avatarUrlEdit.value.trim() || null,
-        issuing_place: householdRegistrationEdit.value.trim() || null,
-        id_number: idNumberEdit.value.trim() || null,
-        gender: genderEdit.value.trim() || null,
-        birth_date: birthDateEdit.value.trim() || null,
-        current_identity: currentIdentityEdit.value.trim() || null,
-        household_registration: householdRegistrationEdit.value.trim() || null
-      };
-      if (selectedProfileId) payload.id = selectedProfileId;
-      return payload;
-    }
-
-    function getRecordPayload() {
-      const caseSummary = caseSummaryEdit.value.trim();
-      return {
-        profile_id: selectedProfileId || null,
-        title: recordTitleEdit.value.trim() || '未命名案件',
-        info_text: caseSummary,
-        wanted_date: wantedDateEdit.value.trim() || null,
-        case_category: caseCategoryEdit.value.trim() || null,
-        current_address: currentAddressEdit.value.trim() || null,
-        filing_unit: filingUnitEdit.value.trim() || null,
-        case_summary: caseSummary || null,
-        notes: notesEdit.value.trim() || null,
-        application_request: applicationRequestEdit.value.trim() || null
-      };
-    }
-
-    async function saveProfileFromForm() {
-      const payload = getProfilePayload();
-      const wasCreating = !payload.id;
-      const result = await requestJson('/api/admin/profile', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      if (result?.profile?.id) {
-        selectedProfileId = String(result.profile.id);
-      }
-      return { wasCreating, profileId: selectedProfileId };
-    }
-
-    async function updateSelectedRecordFromForm(recordId) {
-      const selectedId = String(recordId || '');
-      if (!selectedId) return false;
-      const payload = getRecordPayload();
-      await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
-        method: 'PATCH',
-        body: JSON.stringify(payload)
-      });
-      return true;
-    }
+    function showMessage(text, type = 'ok') { messageBox.textContent = text; messageBox.className = 'msg show ' + type; }
+    function clearMessage() { messageBox.textContent = ''; messageBox.className = 'msg'; }
+    function escapeText(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char] || char)); }
+    function showScreen(screenId, locationText) { screens.forEach((screen) => screen.classList.toggle('active', screen.id === screenId)); adminLocation.textContent = locationText; clearMessage(); window.scrollTo({ top:0, behavior:'smooth' }); }
+    function confirmDiscard() { return !isDirty || window.confirm('目前有尚未保存的修改，确定要离开吗？'); }
+    function getProfile(profileId = selectedProfileId) { return profilesCache.find((profile) => String(profile.id) === String(profileId)) || null; }
+    function getRecord(recordId = selectedRecordId) { return recordsCache.find((record) => String(record.id) === String(recordId)) || null; }
+    function getProfileRecords(profileId = selectedProfileId) { return recordsCache.filter((record) => String(record.profile_id) === String(profileId)); }
+    function normalizeProfiles(data) { return (Array.isArray(data.profiles) ? data.profiles : []).filter(Boolean).map((profile, index) => ({ ...profile, id:profile.id || ('profile-' + index) })); }
 
     async function requestJson(url, options) {
-      const response = await fetch(url, {
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        ...options
-      });
+      const response = await fetch(url, { credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, ...options });
       const rawText = await response.text();
       let data = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch (_) {
-        data = {};
-      }
-      if (!response.ok) {
-        const errorText = data.error || ('请求失败（HTTP ' + response.status + '）。');
-        throw new Error(errorText);
-      }
+      try { data = rawText ? JSON.parse(rawText) : {}; } catch (_) { data = {}; }
+      if (!response.ok) throw new Error(data.error || ('请求失败（HTTP ' + response.status + '）。'));
       return data;
     }
-
-    function clearServerSessionSilently() {
-      return fetch('/api/admin/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-        keepalive: true
-      }).catch(() => {
-      });
-    }
-
+    function clearServerSessionSilently() { return fetch('/api/admin/logout', { method:'POST', credentials:'same-origin', keepalive:true }).catch(() => {}); }
     async function loadAdminData() {
       const data = await requestJson('/api/admin/data');
       profilesCache = normalizeProfiles(data);
-      recordsCache = data.records || [];
+      recordsCache = Array.isArray(data.records) ? data.records : [];
       photosByRecordId = Object.create(null);
-      (data.photos || []).forEach((photo) => {
-        const key = String(photo?.record_id || '');
-        if (!key) return;
-        if (!photosByRecordId[key]) photosByRecordId[key] = [];
-        photosByRecordId[key].push(photo);
-      });
-      renderProfileSelectOptions(profilesCache);
-      renderCaseList();
-      const stillExists = profilesCache.some((item) => String(item.id) === selectedProfileId);
-      setSelectedProfile(stillExists ? selectedProfileId : (profilesCache[0]?.id || ''));
+      (data.photos || []).forEach((photo) => { const id = String(photo?.record_id || ''); if (!id) return; if (!photosByRecordId[id]) photosByRecordId[id] = []; photosByRecordId[id].push(photo); });
     }
 
-    loginForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      clearMessage();
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error('图片读取失败，请改用 JPG 或 PNG。')); image.src = String(reader.result || ''); }; reader.onerror = () => reject(new Error('图片读取失败，请重新选择文件。')); reader.readAsDataURL(file); });
+    }
+    async function fileToCompressedDataUrl(file) {
+      if (!file?.type?.startsWith('image/')) throw new Error('只支持图片文件。');
+      const image = await fileToImage(file);
+      const ratio = Math.min(1600 / image.width, 1600 / image.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * ratio)); canvas.height = Math.max(1, Math.round(image.height * ratio));
+      const context = canvas.getContext('2d'); if (!context) throw new Error('浏览器不支持图片处理。');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      let dataUrl = canvas.toDataURL('image/jpeg', .82); if (dataUrl.length > 1900000) dataUrl = canvas.toDataURL('image/jpeg', .7); if (dataUrl.length > 1900000) throw new Error('照片过大，请选择较小的照片。');
+      return dataUrl;
+    }
+    async function uploadImage(file) {
+      const data = await requestJson('/api/admin/upload-image', { method:'POST', body:JSON.stringify({ dataUrl:await fileToCompressedDataUrl(file), fileName:file.name || 'case-photo.jpg' }) });
+      const url = String(data?.url || '').trim(); if (!url) throw new Error('图片上传后没有返回网址。'); return url;
+    }
 
-      const loginId = adminLoginInput.value.trim();
-      const password = passwordInput.value;
+    function resetNewPersonForm() {
+      [newName, newIdNumber, newGender, newBirthDate, newHousehold].forEach((input) => { input.value = ''; });
+      newAvatarFile.value = ''; pendingAvatarUrl = ''; newAvatarPreview.hidden = true; newAvatarPreview.removeAttribute('src'); newAvatarPlaceholder.hidden = false; newAvatarState.textContent = ''; isDirty = false;
+    }
+    function renderPeople() {
+      const query = peopleSearch.value.trim().toLocaleLowerCase();
+      const profiles = [...profilesCache].sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || ''))).filter((profile) => !query || String(profile.display_name || '').toLocaleLowerCase().includes(query));
+      peopleCount.textContent = query ? '找到 ' + profiles.length + ' 位人员' : '共 ' + profiles.length + ' 位人员';
+      if (!profiles.length) { peopleGrid.innerHTML = '<div class="empty-state">' + (query ? '没有找到符合姓名的人员。' : '目前还没有人员资料。') + '</div>'; return; }
+      peopleGrid.innerHTML = profiles.map((profile) => {
+        const records = getProfileRecords(profile.id); const latest = records[0]; const extra = Math.max(0, records.length - 1);
+        const photo = profile.avatar_url ? '<img class="person-card-photo" src="' + escapeText(profile.avatar_url) + '" alt="' + escapeText(profile.display_name || '人员') + '头像">' : '<div class="person-card-photo person-card-placeholder">暂无头像</div>';
+        const caseText = latest ? escapeText(latest.title || '未命名案件') + (extra ? '，另有 ' + extra + ' 笔' : '') : '暂无案件';
+        return '<article class="person-card" data-profile-id="' + escapeText(profile.id) + '">' + photo + '<div><h3>' + escapeText(profile.display_name || '未填写姓名') + '</h3><p class="person-meta">证件号码：' + escapeText(profile.id_number || '未填写') + '</p><p class="person-meta">案件：' + caseText + '</p></div><div class="person-card-actions"><button class="btn card-edit" type="button">编辑资料</button><button class="btn secondary card-add-case" type="button">新增案件</button><button class="btn danger card-delete" type="button">删除人员</button></div></article>';
+      }).join('');
+    }
+    function openPeopleScreen() { if (!confirmDiscard()) return; isDirty = false; peopleSearch.value = ''; renderPeople(); showScreen('peopleScreen', '人员列表'); }
+    function setAvatarDisplay(url) { const clean = String(url || '').trim(); editAvatarImage.hidden = !clean; editAvatarPlaceholder.hidden = Boolean(clean); removeAvatarBtn.hidden = !clean || editorMode === 'add'; if (clean) editAvatarImage.src = clean; else editAvatarImage.removeAttribute('src'); }
+    function setEditorInputMode(profileReadonly, recordDisabled) { profileInputs.forEach((input) => { input.readOnly = profileReadonly; }); editAvatarControl.style.cursor = profileReadonly ? 'default' : 'pointer'; editAvatarControl.setAttribute('aria-disabled', profileReadonly ? 'true' : 'false'); recordInputs.forEach((input) => { input.disabled = recordDisabled; }); }
+    function fillEditor(profile, record) {
+      editName.value = profile?.display_name || ''; editGender.value = profile?.gender || ''; editIdentity.value = profile?.current_identity || ''; editBirthDate.value = profile?.birth_date || ''; editIdNumber.value = profile?.id_number || ''; editHousehold.value = profile?.household_registration || profile?.issuing_place || ''; setAvatarDisplay(profile?.avatar_url || '');
+      editWantedDate.value = record?.wanted_date || ''; editRecordTitle.value = record?.title || ''; editCategory.value = record?.case_category || ''; editAddress.value = record?.current_address || ''; editFilingUnit.value = record?.filing_unit || ''; editSummary.value = record?.case_summary || record?.info_text || ''; editNotes.value = record?.notes || ''; editApplication.value = record?.application_request || '';
+      const noRecord = editorMode === 'edit' && !record; noRecordNotice.hidden = !noRecord; attachmentsSection.hidden = noRecord; deleteRecordBtn.hidden = !record || editorMode === 'add'; setEditorInputMode(editorMode === 'add', noRecord); renderAttachments(); isDirty = false; saveState.textContent = '';
+    }
+    function renderRecordOptions(records) { if (!records.length) { recordSelect.innerHTML = '<option value="">暂无案件</option>'; return; } recordSelect.innerHTML = records.map((record) => '<option value="' + escapeText(record.id) + '">' + escapeText(record.title || '未命名案件') + '</option>').join(''); recordSelect.value = selectedRecordId; }
+    function renderAttachments() {
+      const photos = selectedRecordId ? (photosByRecordId[selectedRecordId] || []) : [];
+      attachmentGrid.innerHTML = Array.from({ length:3 }, (_, index) => { const photo = photos[index]; const content = photo ? '<img src="' + escapeText(photo.photo_url || '') + '" alt="案件附件照片 ' + (index + 1) + '"><button class="image-remove remove-photo" data-photo-id="' + escapeText(photo.id) + '" type="button" aria-label="删除照片">×</button>' : '<div class="image-placeholder">点击上传附件照片 ' + (index + 1) + '</div>'; return '<div class="image-control attachment-control" data-photo-index="' + index + '" role="button" tabindex="0" aria-label="上传附件照片 ' + (index + 1) + '">' + content + '</div>'; }).join('');
+    }
+    function openEditor(profileId, mode = 'edit', recordId = '', fromWizard = false) {
+      selectedProfileId = String(profileId || ''); editorMode = mode; const profile = getProfile(); const records = getProfileRecords(); selectedRecordId = mode === 'add' ? '' : String(recordId || records[0]?.id || '');
+      editorHeading.textContent = mode === 'add' ? '新增案件' : '编辑已有资料'; wizardSteps.hidden = !fromWizard; recordSwitcher.hidden = mode === 'add'; skipCaseBtn.hidden = !fromWizard; saveAllBtn.textContent = mode === 'add' ? '保存案件' : '保存全部'; renderRecordOptions(records); fillEditor(profile, getRecord()); showScreen('editorScreen', mode === 'add' ? '新增案件' : '编辑已有资料');
+    }
+    function getProfilePayload(profile, avatarUrl = profile?.avatar_url || null) { return { id:profile?.id, display_name:editName.value.trim() || null, avatar_url:avatarUrl || null, issuing_place:editHousehold.value.trim() || null, id_number:editIdNumber.value.trim() || null, gender:editGender.value.trim() || null, birth_date:editBirthDate.value.trim() || null, current_identity:editIdentity.value.trim() || null, household_registration:editHousehold.value.trim() || null }; }
+    function getCachedProfilePayload(profile, avatarUrl) { return { id:profile.id, display_name:profile.display_name || null, avatar_url:avatarUrl || null, issuing_place:profile.household_registration || profile.issuing_place || null, id_number:profile.id_number || null, gender:profile.gender || null, birth_date:profile.birth_date || null, current_identity:profile.current_identity || null, household_registration:profile.household_registration || profile.issuing_place || null }; }
+    function getRecordPayload() { const summary = editSummary.value.trim(); return { profile_id:selectedProfileId, title:editRecordTitle.value.trim(), info_text:summary, wanted_date:editWantedDate.value.trim() || null, case_category:editCategory.value.trim() || null, current_address:editAddress.value.trim() || null, filing_unit:editFilingUnit.value.trim() || null, case_summary:summary || null, notes:editNotes.value.trim() || null, application_request:editApplication.value.trim() || null }; }
+    async function createDraftRecordIfNeeded() { if (selectedRecordId) return selectedRecordId; const payload = getRecordPayload(); if (!payload.title) throw new Error('请先填写案件编号，再上传附件照片。'); const result = await requestJson('/api/admin/records', { method:'POST', body:JSON.stringify(payload) }); selectedRecordId = String(result?.record?.id || ''); if (!selectedRecordId) throw new Error('案件建立后没有返回 ID。'); recordsCache.unshift(result.record); return selectedRecordId; }
+    async function saveEditor() {
+      const profile = getProfile(); if (!profile) throw new Error('找不到人员资料。');
+      if (editorMode === 'add') { const payload = getRecordPayload(); if (!payload.title) throw new Error('请填写案件编号。'); if (selectedRecordId) await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedRecordId), { method:'PATCH', body:JSON.stringify(payload) }); else { const result = await requestJson('/api/admin/records', { method:'POST', body:JSON.stringify(payload) }); selectedRecordId = String(result?.record?.id || ''); } await loadAdminData(); openEditor(selectedProfileId, 'edit', selectedRecordId, false); saveState.textContent = '已保存'; return; }
+      if (!editName.value.trim()) throw new Error('姓名不能为空。'); await requestJson('/api/admin/profile', { method:'POST', body:JSON.stringify(getProfilePayload(profile)) }); if (selectedRecordId) { const payload = getRecordPayload(); if (!payload.title) throw new Error('案件编号不能为空。'); await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedRecordId), { method:'PATCH', body:JSON.stringify(payload) }); } await loadAdminData(); fillEditor(getProfile(), getRecord()); saveState.textContent = '已保存';
+    }
 
-      if (!loginId || !password) {
-        showMessage('请先输入账号与密码。', 'error');
-        return;
-      }
-
-      try {
-        await requestJson('/api/admin/login', {
-          method: 'POST',
-          body: JSON.stringify({ loginId, password })
-        });
-        await loadAdminData();
-        adminPanel.classList.add('show');
-        loginForm.hidden = true;
-        showMessage('已登录后台，可开始维护资料。', 'ok');
-      } catch (error) {
-        showMessage('登录失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
-    recordSelect.addEventListener('change', () => {
-      setSelectedRecord(recordSelect.value);
-    });
-
-    profileSelect.addEventListener('change', () => {
-      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要切換人員嗎？')) {
-        profileSelect.value = selectedProfileId;
-        return;
-      }
-      dirtyItems.clear();
-      setSelectedProfile(profileSelect.value);
-    });
-
-    caseSearchInput.addEventListener('input', renderCaseList);
-
-    document.querySelectorAll('.density-btn').forEach((button) => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.density-btn').forEach((item) => item.classList.toggle('active', item === button));
-        caseList.classList.toggle('compact', button.dataset.density === 'compact');
-      });
-    });
-
-    newProfileBtn.addEventListener('click', () => {
-      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要建立新案件嗎？')) return;
-      dirtyItems.clear();
-      setSelectedProfile('');
-      profileSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      displayNameEdit.focus();
-    });
-
-    caseList.addEventListener('input', (event) => {
-      const row = event.target.closest('.case-row');
-      if (!row || !event.target.matches('[data-field]')) return;
-      dirtyItems.add(String(row.dataset.recordId || ''));
-      row.querySelector('.row-status').textContent = '尚未儲存';
-    });
-
-    caseList.addEventListener('click', async (event) => {
-      const row = event.target.closest('.case-row');
-      if (!row) return;
-      const recordId = String(row.dataset.recordId || '');
-      const record = recordsCache.find((item) => String(item.id) === recordId);
-      if (!record) return;
-      const status = row.querySelector('.row-status');
-
-      if (event.target.closest('.row-details')) {
-        if (dirtyItems.has(recordId) && !window.confirm('這筆案件尚未儲存，確定要開啟完整資料嗎？')) return;
-        setSelectedProfile(record.profile_id);
-        setSelectedRecord(recordId);
-        profileEditorTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
-      if (event.target.closest('.row-save')) {
-        try {
-          status.textContent = '儲存中...';
-          await requestJson('/api/admin/records?id=' + encodeURIComponent(recordId), {
-            method: 'PATCH',
-            body: JSON.stringify(getRecordPayloadFromRow(row, record))
-          });
-          dirtyItems.delete(recordId);
-          await loadAdminData();
-          const refreshedRow = caseList.querySelector('[data-record-id="' + CSS.escape(recordId) + '"]');
-          if (refreshedRow) refreshedRow.querySelector('.row-status').textContent = '已儲存';
-        } catch (error) {
-          status.textContent = '儲存失敗';
-          showMessage('儲存案件失敗：' + (error?.message || '未知錯誤'), 'error');
-        }
-        return;
-      }
-
-      if (event.target.closest('.row-photo-upload')) {
-        const input = row.querySelector('.row-photo-input');
-        const file = input.files && input.files[0];
-        if (!file || !file.type.startsWith('image/')) {
-          status.textContent = '請先選擇照片';
-          return;
-        }
-        if ((photosByRecordId[recordId] || []).length >= 3) {
-          status.textContent = '最多三張照片';
-          return;
-        }
-        try {
-          status.textContent = '照片上傳中...';
-          const photoDataUrl = await fileToCompressedDataUrl(file);
-          const hostedUrl = await uploadImageAndGetUrl(photoDataUrl, file.name || 'case-photo.jpg');
-          await requestJson('/api/admin/photos', {
-            method: 'POST',
-            body: JSON.stringify({ record_id: recordId, photo_url: hostedUrl, caption: null })
-          });
-          await loadAdminData();
-          const refreshedRow = caseList.querySelector('[data-record-id="' + CSS.escape(recordId) + '"]');
-          if (refreshedRow) refreshedRow.querySelector('.row-status').textContent = '照片已上傳';
-        } catch (error) {
-          status.textContent = '上傳失敗';
-          showMessage('上傳照片失敗：' + (error?.message || '未知錯誤'), 'error');
-        }
-        return;
-      }
-
-      if (event.target.closest('.row-delete')) {
-        if (!window.confirm('確定要刪除案件「' + (record.title || '未命名案件') + '」嗎？\n此操作無法恢復。')) return;
-        try {
-          await requestJson('/api/admin/records?id=' + encodeURIComponent(recordId), { method: 'DELETE' });
-          dirtyItems.delete(recordId);
-          await loadAdminData();
-          showMessage('案件已刪除。', 'ok');
-        } catch (error) {
-          showMessage('刪除案件失敗：' + (error?.message || '未知錯誤'), 'error');
-        }
-      }
-    });
-
-    logoutBtn.addEventListener('click', async () => {
-      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要登出嗎？')) return;
-      await clearServerSessionSilently();
-      window.location.reload();
-    });
-
-    deleteProfileBtn.addEventListener('click', async () => {
-      try {
-        if (!selectedProfileId) {
-          showMessage('请先选择要删除的人员。', 'error');
-          return;
-        }
-
-        const selected = profilesCache.find((profile) => String(profile.id) === selectedProfileId);
-        const name = selected?.display_name || '未填写姓名';
-        const confirmed = window.confirm('确定要删除人员「' + name + '」吗？\n此人员底下的案件和照片也会一起删除，无法恢复。');
-        if (!confirmed) return;
-
-        await requestJson('/api/admin/profile?id=' + encodeURIComponent(selectedProfileId), {
-          method: 'DELETE'
-        });
-        selectedProfileId = '';
-        selectedRecordId = '';
-        await loadAdminData();
-        showMessage('人员资料已删除。', 'ok');
-      } catch (error) {
-        showMessage('删除人员失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
-    recordQuickList.addEventListener('click', (event) => {
-      const button = event.target.closest('.record-quick-item');
-      if (!button) return;
-      setSelectedRecord(button.dataset.recordId || '');
-    });
-
-    saveProfileBtn.addEventListener('click', async () => {
-      try {
-        const currentRecordId = recordSelect.value;
-        const { wasCreating } = await saveProfileFromForm();
-        const recordUpdated = await updateSelectedRecordFromForm(currentRecordId);
-        await loadAdminData();
-        if (recordUpdated) {
-          showMessage(wasCreating ? '新人员与目前案件已保存。' : '当前资料与目前案件已保存。', 'ok');
-        } else {
-          showMessage(wasCreating ? '新人员已新增，并已自动选中。' : '当前人员资料已保存。', 'ok');
-        }
-      } catch (error) {
-        showMessage('保存当前资料失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
-    uploadAvatarBtn.addEventListener('click', async () => {
-      try {
-        const selectedFile = avatarFileInput.files && avatarFileInput.files[0];
-        if (!selectedFile) {
-          showMessage('请先选择头像图片。', 'error');
-          return;
-        }
-
-        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
-          showMessage('只支持图片文件，请重新选择。', 'error');
-          return;
-        }
-
-        uploadAvatarBtn.disabled = true;
-        showMessage('头像处理中，请稍候...', 'ok');
-
-        const avatarDataUrl = await fileToCompressedDataUrl(selectedFile);
-        const hostedUrl = await uploadImageAndGetUrl(avatarDataUrl, selectedFile.name || 'avatar.jpg');
-        avatarUrlEdit.value = hostedUrl;
-        setAvatarPreview(hostedUrl);
-
-        const result = await requestJson('/api/admin/profile', {
-          method: 'POST',
-          body: JSON.stringify(getProfilePayload())
-        });
-        if (result?.profile?.id) {
-          selectedProfileId = String(result.profile.id);
-        }
-
-        avatarFileInput.value = '';
-        await loadAdminData();
-        showMessage('头像已上传并套用。', 'ok');
-      } catch (error) {
-        showMessage('上传头像失败：' + (error?.message || '未知错误'), 'error');
-      } finally {
-        uploadAvatarBtn.disabled = false;
-      }
-    });
-
-    createRecordBtn.addEventListener('click', async () => {
-      try {
-        await saveProfileFromForm();
-        if (!selectedProfileId) {
-          showMessage('请先填写并保存人员资料。', 'error');
-          return;
-        }
-
-        const payload = getRecordPayload();
-        await requestJson('/api/admin/records', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        await loadAdminData();
-        showMessage('当前人员资料已保存，新案件已新增。', 'ok');
-      } catch (error) {
-        showMessage('新增案件失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
-    deleteRecordBtn.addEventListener('click', async () => {
-      try {
-        const selectedId = recordSelect.value;
-        if (!selectedId) {
-          showMessage('请先选择要删除的案件。', 'error');
-          return;
-        }
-
-        const selected = recordsCache.find((record) => record.id === selectedId);
-        const selectedTitle = selected?.title || '未命名案件';
-        const confirmed = window.confirm('确定要删除案件「' + selectedTitle + '」吗？\n此操作无法恢复。');
-        if (!confirmed) {
-          return;
-        }
-
-        await requestJson('/api/admin/records?id=' + encodeURIComponent(selectedId), {
-          method: 'DELETE'
-        });
-        selectedRecordId = '';
-        await loadAdminData();
-        showMessage('案件已删除。', 'ok');
-      } catch (error) {
-        showMessage('删除案件失败：' + (error?.message || '未知错误'), 'error');
-      }
-    });
-
-    addPhotoBtn.addEventListener('click', async () => {
-      try {
-        const recordId = recordSelect.value;
-        const selectedFile = photoFileInput.files && photoFileInput.files[0];
-        if (!recordId) {
-          showMessage('请先选择要加照片的案件。', 'error');
-          return;
-        }
-        if ((photosByRecordId[recordId] || []).length >= 3) {
-          showMessage('每笔案件最多上传三张附件照片。', 'error');
-          return;
-        }
-        if (!selectedFile) {
-          showMessage('请先选择照片文件。', 'error');
-          return;
-        }
-
-        if (!selectedFile.type || !selectedFile.type.startsWith('image/')) {
-          showMessage('只支持图片文件，请重新选择。', 'error');
-          return;
-        }
-
-        addPhotoBtn.disabled = true;
-        showMessage('照片处理中，请稍候...', 'ok');
-        const photoDataUrl = await fileToCompressedDataUrl(selectedFile);
-        const hostedUrl = await uploadImageAndGetUrl(photoDataUrl, selectedFile.name || 'case-photo.jpg');
-
-        const payload = {
-          record_id: recordId,
-          photo_url: hostedUrl,
-          caption: photoCaptionInput.value.trim() || null
-        };
-        await requestJson('/api/admin/photos', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        photoFileInput.value = '';
-        photoCaptionInput.value = '';
-        photoPreview.hidden = true;
-        photoPreviewImg.removeAttribute('src');
-        await loadAdminData();
-        showMessage('照片已新增（已自动转成网址）。', 'ok');
-      } catch (error) {
-        showMessage('新增照片失败：' + (error?.message || '未知错误'), 'error');
-      } finally {
-        addPhotoBtn.disabled = false;
-      }
-    });
-
-    photoFileInput.addEventListener('change', () => {
-      const file = photoFileInput.files && photoFileInput.files[0];
-      if (!file) {
-        photoPreview.hidden = true;
-        photoPreviewImg.removeAttribute('src');
-        return;
-      }
-
-      if (!file.type || !file.type.startsWith('image/')) {
-        showMessage('只支持图片文件，请重新选择。', 'error');
-        photoFileInput.value = '';
-        photoPreview.hidden = true;
-        photoPreviewImg.removeAttribute('src');
-        return;
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      photoPreviewImg.src = objectUrl;
-      photoPreview.hidden = false;
-      photoPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
-    });
-
-    avatarFileInput.addEventListener('change', () => {
-      const file = avatarFileInput.files && avatarFileInput.files[0];
-      if (!file) {
-        setAvatarPreview(avatarUrlEdit.value);
-        return;
-      }
-
-      if (!file.type || !file.type.startsWith('image/')) {
-        showMessage('只支持图片文件，请重新选择。', 'error');
-        avatarFileInput.value = '';
-        setAvatarPreview(avatarUrlEdit.value);
-        return;
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      avatarPreviewImg.src = objectUrl;
-      avatarPreview.hidden = false;
-      avatarPreviewImg.onload = () => URL.revokeObjectURL(objectUrl);
-    });
-
-    avatarUrlEdit.addEventListener('input', () => {
-      setAvatarPreview(avatarUrlEdit.value);
-    });
-
-    window.addEventListener('beforeunload', (event) => {
-      if (!dirtyItems.size) return;
-      event.preventDefault();
-      event.returnValue = '';
-    });
-
-    clearServerSessionSilently();
-
-    window.addEventListener('pagehide', () => {
-      clearServerSessionSilently();
-    });
+    loginForm.addEventListener('submit', async (event) => { event.preventDefault(); clearMessage(); const loginId = adminLoginInput.value.trim(); const password = passwordInput.value; if (!loginId || !password) return showMessage('请先输入账号与密码。', 'error'); try { await requestJson('/api/admin/login', { method:'POST', body:JSON.stringify({ loginId, password }) }); await loadAdminData(); loginForm.hidden = true; pageIntro.hidden = true; adminPanel.classList.add('show'); showScreen('homeScreen', '管理首页'); } catch (error) { showMessage('登录失败：' + (error?.message || '未知错误'), 'error'); } });
+    document.querySelector('#startAddPersonBtn').addEventListener('click', () => { resetNewPersonForm(); showScreen('addPersonScreen', '新增人员'); newName.focus(); });
+    document.querySelector('#openPeopleBtn').addEventListener('click', openPeopleScreen);
+    document.querySelector('#peopleHomeBtn').addEventListener('click', () => { if (confirmDiscard()) showScreen('homeScreen', '管理首页'); });
+    document.querySelector('#peopleAddBtn').addEventListener('click', () => { resetNewPersonForm(); showScreen('addPersonScreen', '新增人员'); });
+    document.querySelectorAll('.back-people').forEach((button) => button.addEventListener('click', openPeopleScreen));
+    peopleSearch.addEventListener('input', renderPeople);
+    [newName, newIdNumber, newGender, newBirthDate, newHousehold].forEach((input) => input.addEventListener('input', () => { isDirty = true; }));
+    [...profileInputs, ...recordInputs].forEach((input) => input.addEventListener('input', () => { isDirty = true; saveState.textContent = '尚未保存'; }));
+    function openFileInputOnKeyboard(event, input) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); input.click(); } }
+    newAvatarPicker.addEventListener('click', () => newAvatarFile.click()); newAvatarPicker.addEventListener('keydown', (event) => openFileInputOnKeyboard(event, newAvatarFile));
+    newAvatarFile.addEventListener('change', async () => { const file = newAvatarFile.files?.[0]; if (!file) return; try { newAvatarState.textContent = '头像上传中...'; pendingAvatarUrl = await uploadImage(file); newAvatarPreview.src = pendingAvatarUrl; newAvatarPreview.hidden = false; newAvatarPlaceholder.hidden = true; newAvatarState.textContent = '头像已上传'; isDirty = true; } catch (error) { newAvatarState.textContent = ''; showMessage('头像上传失败：' + (error?.message || '未知错误'), 'error'); } finally { newAvatarFile.value = ''; } });
+    document.querySelector('#createPersonNextBtn').addEventListener('click', async () => { const name = newName.value.trim(); if (!name) return showMessage('请填写姓名。', 'error'); try { const result = await requestJson('/api/admin/profile', { method:'POST', body:JSON.stringify({ display_name:name, avatar_url:pendingAvatarUrl || null, id_number:newIdNumber.value.trim() || null, gender:newGender.value.trim() || null, birth_date:newBirthDate.value.trim() || null, current_identity:null, issuing_place:newHousehold.value.trim() || null, household_registration:newHousehold.value.trim() || null }) }); await loadAdminData(); isDirty = false; openEditor(result.profile.id, 'add', '', true); } catch (error) { showMessage('新增人员失败：' + (error?.message || '未知错误'), 'error'); } });
+    peopleGrid.addEventListener('click', async (event) => { const card = event.target.closest('.person-card'); if (!card) return; const profileId = String(card.dataset.profileId || ''); if (event.target.closest('.card-edit')) return openEditor(profileId, 'edit'); if (event.target.closest('.card-add-case')) return openEditor(profileId, 'add'); if (event.target.closest('.card-delete')) { const profile = getProfile(profileId); if (!window.confirm('确定要删除人员「' + (profile?.display_name || '未填写姓名') + '」吗？\n该人员的案件和照片也会一起删除，无法恢复。')) return; try { await requestJson('/api/admin/profile?id=' + encodeURIComponent(profileId), { method:'DELETE' }); await loadAdminData(); renderPeople(); showMessage('人员资料已删除。', 'ok'); } catch (error) { showMessage('删除人员失败：' + (error?.message || '未知错误'), 'error'); } } });
+    recordSelect.addEventListener('change', () => { if (!confirmDiscard()) { recordSelect.value = selectedRecordId; return; } selectedRecordId = recordSelect.value; fillEditor(getProfile(), getRecord()); });
+    editAvatarControl.addEventListener('click', (event) => { if (event.target.closest('.image-remove') || editorMode === 'add') return; editAvatarFile.click(); });
+    editAvatarControl.addEventListener('keydown', (event) => { if (editorMode !== 'add') openFileInputOnKeyboard(event, editAvatarFile); });
+    editAvatarFile.addEventListener('change', async () => { const file = editAvatarFile.files?.[0]; const profile = getProfile(); if (!file || !profile) return; try { editAvatarControl.classList.add('image-busy'); const url = await uploadImage(file); await requestJson('/api/admin/profile', { method:'POST', body:JSON.stringify(getCachedProfilePayload(profile, url)) }); await loadAdminData(); setAvatarDisplay(getProfile()?.avatar_url || ''); saveState.textContent = '头像已保存'; } catch (error) { showMessage('头像上传失败：' + (error?.message || '未知错误'), 'error'); } finally { editAvatarControl.classList.remove('image-busy'); editAvatarFile.value = ''; } });
+    removeAvatarBtn.addEventListener('click', async (event) => { event.stopPropagation(); const profile = getProfile(); if (!profile || !window.confirm('确定要删除头像吗？')) return; try { await requestJson('/api/admin/profile', { method:'POST', body:JSON.stringify(getCachedProfilePayload(profile, null)) }); await loadAdminData(); setAvatarDisplay(''); saveState.textContent = '头像已删除'; } catch (error) { showMessage('删除头像失败：' + (error?.message || '未知错误'), 'error'); } });
+    attachmentGrid.addEventListener('click', async (event) => { const remove = event.target.closest('.remove-photo'); if (remove) { event.stopPropagation(); if (!window.confirm('确定要删除这张附件照片吗？')) return; try { await requestJson('/api/admin/photos?id=' + encodeURIComponent(remove.dataset.photoId || ''), { method:'DELETE' }); await loadAdminData(); renderAttachments(); saveState.textContent = '照片已删除'; } catch (error) { showMessage('删除照片失败：' + (error?.message || '未知错误'), 'error'); } return; } const slot = event.target.closest('.attachment-control'); if (!slot) return; selectedAttachmentIndex = Number(slot.dataset.photoIndex || 0); attachmentFile.click(); });
+    attachmentGrid.addEventListener('keydown', (event) => { const slot = event.target.closest('.attachment-control'); if (!slot || (event.key !== 'Enter' && event.key !== ' ')) return; event.preventDefault(); selectedAttachmentIndex = Number(slot.dataset.photoIndex || 0); attachmentFile.click(); });
+    attachmentFile.addEventListener('change', async () => { const file = attachmentFile.files?.[0]; if (!file) return; const slot = attachmentGrid.querySelector('[data-photo-index="' + selectedAttachmentIndex + '"]'); try { slot?.classList.add('image-busy'); await createDraftRecordIfNeeded(); const oldPhoto = (photosByRecordId[selectedRecordId] || [])[selectedAttachmentIndex]; const url = await uploadImage(file); if (oldPhoto) await requestJson('/api/admin/photos?id=' + encodeURIComponent(oldPhoto.id), { method:'DELETE' }); await requestJson('/api/admin/photos', { method:'POST', body:JSON.stringify({ record_id:selectedRecordId, photo_url:url, caption:null }) }); await loadAdminData(); renderAttachments(); saveState.textContent = '照片已保存'; } catch (error) { showMessage('照片上传失败：' + (error?.message || '未知错误'), 'error'); } finally { slot?.classList.remove('image-busy'); attachmentFile.value = ''; } });
+    saveAllBtn.addEventListener('click', async () => { try { saveAllBtn.disabled = true; saveState.textContent = '保存中...'; await saveEditor(); isDirty = false; } catch (error) { saveState.textContent = ''; showMessage('保存失败：' + (error?.message || '未知错误'), 'error'); } finally { saveAllBtn.disabled = false; } });
+    skipCaseBtn.addEventListener('click', () => { if (!confirmDiscard()) return; isDirty = false; openEditor(selectedProfileId, 'edit', '', false); });
+    deleteRecordBtn.addEventListener('click', async () => { const record = getRecord(); if (!record || !window.confirm('确定要删除案件「' + (record.title || '未命名案件') + '」吗？\n此操作无法恢复。')) return; try { await requestJson('/api/admin/records?id=' + encodeURIComponent(record.id), { method:'DELETE' }); await loadAdminData(); const remaining = getProfileRecords(); selectedRecordId = remaining[0]?.id || ''; renderRecordOptions(remaining); fillEditor(getProfile(), getRecord()); saveState.textContent = '案件已删除'; } catch (error) { showMessage('删除案件失败：' + (error?.message || '未知错误'), 'error'); } });
+    document.querySelector('#logoutBtn').addEventListener('click', async () => { if (!confirmDiscard()) return; await clearServerSessionSilently(); window.location.reload(); });
+    window.addEventListener('beforeunload', (event) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ''; });
+    clearServerSessionSilently(); window.addEventListener('pagehide', clearServerSessionSilently);
   </script>
 </body>
 </html>

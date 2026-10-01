@@ -39,9 +39,9 @@ module.exports = async function handler(req, res) {
         notes: body?.notes || null,
         application_request: body?.application_request || null
       };
-      const { error } = await client.from('user_records').insert(payload);
+      const { data: record, error } = await client.from('user_records').insert(payload).select('*').single();
       if (error) throw error;
-      json(res, 200, { ok: true });
+      json(res, 200, { ok: true, record });
       return;
     }
 
