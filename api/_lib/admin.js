@@ -7,7 +7,7 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 function getConfig() {
   const config = {
     sessionSecret: process.env.SESSION_SECRET,
-    sharedAdminLogin: process.env.SHARED_ADMIN_LOGIN,
+    sharedAdminLogin: String(process.env.SHARED_ADMIN_LOGIN || '').trim(),
     sharedAdminPassword: process.env.SHARED_ADMIN_PASSWORD,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,

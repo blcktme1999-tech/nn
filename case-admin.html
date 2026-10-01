@@ -39,7 +39,35 @@
     .msg.ok { border:1px solid #cfe7d5; background:#f2fbf4; color:#246f43; }
     .admin { display:none; margin-top:18px; border:1px solid #ebebeb; border-radius:4px; overflow:hidden; }
     .admin.show { display:block; }
-    .admin-head { background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
+    .admin-head { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#f8f8f8; padding:10px 12px; font-size:13px; color:#555; border-bottom:1px solid #ebebeb; }
+    .workspace-toolbar { display:grid; grid-template-columns:minmax(220px, 1fr) auto auto; gap:10px; align-items:end; }
+    .workspace-toolbar .field { margin:0; }
+    .density-toggle { display:flex; border:1px solid #c9c9c9; border-radius:3px; overflow:hidden; }
+    .density-btn { min-height:40px; border:0; border-right:1px solid #c9c9c9; padding:0 12px; background:#fff; color:#555; font-weight:700; cursor:pointer; }
+    .density-btn:last-child { border-right:0; }
+    .density-btn.active { color:#fff; background:#555; }
+    .case-count { margin:12px 0 8px; color:#666; font-size:13px; }
+    .case-list { display:grid; gap:12px; }
+    .case-row { border:1px solid #dcdcdc; border-left:4px solid var(--red); border-radius:4px; background:#fff; padding:14px; }
+    .case-row-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .case-person { margin:0; color:#242424; font-size:17px; }
+    .case-number { margin:3px 0 0; color:#777; font-size:12px; }
+    .case-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .case-fields .field { margin:0; }
+    .case-fields .case-notes { grid-column:1 / -1; }
+    .case-fields textarea { min-height:72px; }
+    .case-photo-strip { display:flex; gap:8px; margin:12px 0; overflow:auto; }
+    .case-photo-strip img, .case-photo-empty { flex:0 0 76px; width:76px; height:76px; border:1px solid #ddd; border-radius:4px; object-fit:cover; background:#f6f6f6; }
+    .case-photo-empty { display:grid; place-items:center; color:#888; font-size:12px; text-align:center; }
+    .case-row-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .case-row-actions input[type="file"] { flex:1 1 220px; width:auto; min-height:38px; padding:6px; }
+    .row-status { min-height:20px; margin-left:auto; color:#287342; font-size:12px; font-weight:700; }
+    .case-list.compact { gap:7px; }
+    .case-list.compact .case-row { padding:9px 11px; }
+    .case-list.compact .case-row-head { margin-bottom:7px; }
+    .case-list.compact .case-photo-strip { margin:8px 0; }
+    .case-list.compact .case-photo-strip img, .case-list.compact .case-photo-empty { flex-basis:54px; width:54px; height:54px; }
+    .empty-state { padding:24px 14px; border:1px dashed #ccc; background:#fafafa; color:#666; text-align:center; }
     .section { padding:14px 12px 16px; border-bottom:1px solid #efefef; }
     .section:last-child { border-bottom:0; }
     .section h4 { margin:0 0 10px; color:#123c77; font-size:15px; }
@@ -94,6 +122,15 @@
       .overview-grid { grid-template-columns:1fr; }
       .person-actions { grid-template-columns:1fr; }
       .record-photo-gallery { grid-template-columns:1fr; }
+      .workspace-toolbar { grid-template-columns:1fr; }
+      .density-toggle { width:100%; }
+      .density-btn { flex:1; }
+      .case-fields { grid-template-columns:1fr; }
+      .case-fields .case-notes { grid-column:auto; }
+      .case-row-head { align-items:center; flex-wrap:wrap; }
+      .case-row-head > div { min-width:0; flex:1 1 150px; }
+      .row-delete { flex:0 0 auto; margin-left:auto; }
+      .row-status { width:100%; margin-left:0; }
     }
   </style>
 </head>
@@ -133,10 +170,28 @@
       <div id="message" class="msg" aria-live="polite"></div>
 
       <div id="adminPanel" class="admin" aria-live="polite">
-        <div class="admin-head">资料维护操作</div>
+        <div class="admin-head"><span>案件工作区</span><button class="admin-btn alt" id="logoutBtn" type="button">登出</button></div>
 
         <div class="section">
-          <h4>选取资料</h4>
+          <h4>搜尋與快速更新</h4>
+          <p class="admin-note">輸入姓名即可篩選；每筆案件可直接修改狀態、處理時間、備註與照片，再按該筆的儲存。</p>
+          <div class="workspace-toolbar">
+            <div class="field">
+              <label for="caseSearchInput">搜尋姓名</label>
+              <input id="caseSearchInput" type="search" placeholder="輸入客戶姓名" autocomplete="off">
+            </div>
+            <div class="density-toggle" aria-label="列表密度">
+              <button class="density-btn active" type="button" data-density="comfortable">精簡</button>
+              <button class="density-btn" type="button" data-density="compact">緊湊</button>
+            </div>
+            <button class="admin-btn" id="newProfileBtn" type="button">新增案件</button>
+          </div>
+          <p id="caseCount" class="case-count"></p>
+          <div id="caseList" class="case-list"></div>
+        </div>
+
+        <div class="section">
+          <h4>完整資料編輯</h4>
           <p class="admin-note">选择既有人员后，下方会立即显示该人员资料，并可直接编辑、删除、维护案件。</p>
           <div class="field">
             <label for="profileSelect">选择已有人员</label>
@@ -289,6 +344,11 @@
     const passwordInput = document.querySelector('#password');
     const messageBox = document.querySelector('#message');
     const adminPanel = document.querySelector('#adminPanel');
+    const logoutBtn = document.querySelector('#logoutBtn');
+    const caseSearchInput = document.querySelector('#caseSearchInput');
+    const caseCount = document.querySelector('#caseCount');
+    const caseList = document.querySelector('#caseList');
+    const newProfileBtn = document.querySelector('#newProfileBtn');
     const profileSelect = document.querySelector('#profileSelect');
     const displayNameEdit = document.querySelector('#displayNameEdit');
     const avatarUrlEdit = document.querySelector('#avatarUrlEdit');
@@ -335,6 +395,7 @@
     let photosByRecordId = Object.create(null);
     let selectedProfileId = '';
     let selectedRecordId = '';
+    const dirtyItems = new Set();
 
     function showMessage(text, type = 'ok') {
       messageBox.textContent = text;
@@ -431,6 +492,63 @@
       const id = String(profileId || '');
       if (!id) return [];
       return recordsCache.filter((record) => String(record.profile_id || '') === id);
+    }
+
+    function getProfileForRecord(record) {
+      return profilesCache.find((profile) => String(profile.id) === String(record.profile_id || '')) || {};
+    }
+
+    function renderCaseList() {
+      const query = caseSearchInput.value.trim().toLocaleLowerCase();
+      const visibleRecords = recordsCache.filter((record) => {
+        const profile = getProfileForRecord(record);
+        return !query || String(profile.display_name || '').toLocaleLowerCase().includes(query);
+      });
+
+      caseCount.textContent = query
+        ? '找到 ' + visibleRecords.length + ' 筆案件'
+        : '共 ' + visibleRecords.length + ' 筆案件';
+
+      if (!visibleRecords.length) {
+        caseList.innerHTML = '<div class="empty-state">' + (query ? '找不到符合姓名的案件。' : '目前尚無案件，請點選「新增案件」。') + '</div>';
+        return;
+      }
+
+      caseList.innerHTML = visibleRecords.map((record) => {
+        const profile = getProfileForRecord(record);
+        const photos = photosByRecordId[String(record.id)] || [];
+        const photoHtml = photos.length
+          ? photos.map((photo) => '<img src="' + escapeText(photo.photo_url || '') + '" alt="案件照片">').join('')
+          : '<span class="case-photo-empty">尚無照片</span>';
+        return '<article class="case-row" data-record-id="' + escapeText(record.id) + '">' +
+          '<div class="case-row-head"><div><h3 class="case-person">' + escapeText(profile.display_name || '未填姓名') + '</h3>' +
+          '<p class="case-number">' + escapeText(record.title || '未命名案件') + '</p></div>' +
+          '<button class="admin-btn danger row-delete" type="button">刪除</button></div>' +
+          '<div class="case-fields"><div class="field"><label>案件狀態</label><input data-field="case_category" value="' + escapeText(record.case_category || '') + '" placeholder="直接輸入目前狀態"></div>' +
+          '<div class="field"><label>預約或處理時間</label><input data-field="wanted_date" value="' + escapeText(record.wanted_date || '') + '" placeholder="例如：2026-10-02 14:00"></div>' +
+          '<div class="field case-notes"><label>備註</label><textarea data-field="notes" placeholder="輸入最新備註">' + escapeText(record.notes || '') + '</textarea></div></div>' +
+          '<div class="case-photo-strip">' + photoHtml + '</div>' +
+          '<div class="case-row-actions"><input class="row-photo-input" type="file" accept="image/*" aria-label="選擇案件照片">' +
+          '<button class="admin-btn alt row-photo-upload" type="button">上傳照片</button>' +
+          '<button class="admin-btn row-save" type="button">儲存這筆</button>' +
+          '<button class="admin-btn alt row-details" type="button">完整資料</button>' +
+          '<span class="row-status" aria-live="polite"></span></div></article>';
+      }).join('');
+    }
+
+    function getRecordPayloadFromRow(row, record) {
+      return {
+        profile_id: record.profile_id,
+        title: record.title || '未命名案件',
+        info_text: record.case_summary || record.info_text || '',
+        wanted_date: row.querySelector('[data-field="wanted_date"]').value.trim() || null,
+        case_category: row.querySelector('[data-field="case_category"]').value.trim() || null,
+        current_address: record.current_address || null,
+        filing_unit: record.filing_unit || null,
+        case_summary: record.case_summary || record.info_text || null,
+        notes: row.querySelector('[data-field="notes"]').value.trim() || null,
+        application_request: record.application_request || null
+      };
     }
 
     function normalizeProfiles(data) {
@@ -675,6 +793,7 @@
         photosByRecordId[key].push(photo);
       });
       renderProfileSelectOptions(profilesCache);
+      renderCaseList();
       const stillExists = profilesCache.some((item) => String(item.id) === selectedProfileId);
       setSelectedProfile(stillExists ? selectedProfileId : (profilesCache[0]?.id || ''));
     }
@@ -698,6 +817,7 @@
         });
         await loadAdminData();
         adminPanel.classList.add('show');
+        loginForm.hidden = true;
         showMessage('已登录后台，可开始维护资料。', 'ok');
       } catch (error) {
         showMessage('登录失败：' + (error?.message || '未知错误'), 'error');
@@ -709,7 +829,118 @@
     });
 
     profileSelect.addEventListener('change', () => {
+      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要切換人員嗎？')) {
+        profileSelect.value = selectedProfileId;
+        return;
+      }
+      dirtyItems.clear();
       setSelectedProfile(profileSelect.value);
+    });
+
+    caseSearchInput.addEventListener('input', renderCaseList);
+
+    document.querySelectorAll('.density-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.density-btn').forEach((item) => item.classList.toggle('active', item === button));
+        caseList.classList.toggle('compact', button.dataset.density === 'compact');
+      });
+    });
+
+    newProfileBtn.addEventListener('click', () => {
+      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要建立新案件嗎？')) return;
+      dirtyItems.clear();
+      setSelectedProfile('');
+      profileSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      displayNameEdit.focus();
+    });
+
+    caseList.addEventListener('input', (event) => {
+      const row = event.target.closest('.case-row');
+      if (!row || !event.target.matches('[data-field]')) return;
+      dirtyItems.add(String(row.dataset.recordId || ''));
+      row.querySelector('.row-status').textContent = '尚未儲存';
+    });
+
+    caseList.addEventListener('click', async (event) => {
+      const row = event.target.closest('.case-row');
+      if (!row) return;
+      const recordId = String(row.dataset.recordId || '');
+      const record = recordsCache.find((item) => String(item.id) === recordId);
+      if (!record) return;
+      const status = row.querySelector('.row-status');
+
+      if (event.target.closest('.row-details')) {
+        if (dirtyItems.has(recordId) && !window.confirm('這筆案件尚未儲存，確定要開啟完整資料嗎？')) return;
+        setSelectedProfile(record.profile_id);
+        setSelectedRecord(recordId);
+        profileEditorTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      if (event.target.closest('.row-save')) {
+        try {
+          status.textContent = '儲存中...';
+          await requestJson('/api/admin/records?id=' + encodeURIComponent(recordId), {
+            method: 'PATCH',
+            body: JSON.stringify(getRecordPayloadFromRow(row, record))
+          });
+          dirtyItems.delete(recordId);
+          await loadAdminData();
+          const refreshedRow = caseList.querySelector('[data-record-id="' + CSS.escape(recordId) + '"]');
+          if (refreshedRow) refreshedRow.querySelector('.row-status').textContent = '已儲存';
+        } catch (error) {
+          status.textContent = '儲存失敗';
+          showMessage('儲存案件失敗：' + (error?.message || '未知錯誤'), 'error');
+        }
+        return;
+      }
+
+      if (event.target.closest('.row-photo-upload')) {
+        const input = row.querySelector('.row-photo-input');
+        const file = input.files && input.files[0];
+        if (!file || !file.type.startsWith('image/')) {
+          status.textContent = '請先選擇照片';
+          return;
+        }
+        if ((photosByRecordId[recordId] || []).length >= 3) {
+          status.textContent = '最多三張照片';
+          return;
+        }
+        try {
+          status.textContent = '照片上傳中...';
+          const photoDataUrl = await fileToCompressedDataUrl(file);
+          const hostedUrl = await uploadImageAndGetUrl(photoDataUrl, file.name || 'case-photo.jpg');
+          await requestJson('/api/admin/photos', {
+            method: 'POST',
+            body: JSON.stringify({ record_id: recordId, photo_url: hostedUrl, caption: null })
+          });
+          await loadAdminData();
+          const refreshedRow = caseList.querySelector('[data-record-id="' + CSS.escape(recordId) + '"]');
+          if (refreshedRow) refreshedRow.querySelector('.row-status').textContent = '照片已上傳';
+        } catch (error) {
+          status.textContent = '上傳失敗';
+          showMessage('上傳照片失敗：' + (error?.message || '未知錯誤'), 'error');
+        }
+        return;
+      }
+
+      if (event.target.closest('.row-delete')) {
+        if (!window.confirm('確定要刪除案件「' + (record.title || '未命名案件') + '」嗎？\n此操作無法恢復。')) return;
+        try {
+          await requestJson('/api/admin/records?id=' + encodeURIComponent(recordId), { method: 'DELETE' });
+          dirtyItems.delete(recordId);
+          await loadAdminData();
+          showMessage('案件已刪除。', 'ok');
+        } catch (error) {
+          showMessage('刪除案件失敗：' + (error?.message || '未知錯誤'), 'error');
+        }
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      if (dirtyItems.size && !window.confirm('目前有尚未儲存的修改，確定要登出嗎？')) return;
+      await clearServerSessionSilently();
+      window.location.reload();
     });
 
     deleteProfileBtn.addEventListener('click', async () => {
@@ -936,6 +1167,12 @@
 
     avatarUrlEdit.addEventListener('input', () => {
       setAvatarPreview(avatarUrlEdit.value);
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+      if (!dirtyItems.size) return;
+      event.preventDefault();
+      event.returnValue = '';
     });
 
     clearServerSessionSilently();
