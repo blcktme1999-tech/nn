@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -11,7 +11,8 @@
     body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
     a { color:inherit; text-decoration:none; }
     .site-header { background:#fff; border-top:3px solid #1f1f1f; }
-    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead, .nav-inner, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    main { width:min(1440px, calc(100% - 32px)); margin:auto; }
     .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
     .identity { display:block; min-width:0; flex:1; }
     .brand-left { width:100%; max-width:840px; height:auto; display:block; }
@@ -22,22 +23,26 @@
     .nav-inner a { color:#fff; min-width:145px; padding:13px 24px; text-align:center; font-weight:700; font-size:15px; }
     .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
     main { min-height:670px; padding:42px 0 70px; }
-    .panel { width:min(860px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel { width:100%; margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px 7px 3px 3px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
     .panel h1 { margin:0; color:var(--red); text-align:center; font-size:24px; letter-spacing:1px; }
     .sub { margin:6px 0 25px; color:#9a9a9a; text-align:center; font-size:13px; line-height:1.6; }
     .info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
-    .rtc-config { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .rtc-config { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:900px; margin:0 auto 18px; }
     .field label { display:block; margin:0 0 6px; color:#666; font-size:13px; font-weight:700; }
     .field input { width:100%; min-height:38px; padding:8px 10px; border:1px solid #cfcfcf; border-radius:4px; color:#333; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
     .field input:focus { outline:2px solid #d5223740; border-color:var(--red); }
     .box { border:1px solid #ececec; border-radius:6px; background:#fafafa; padding:14px; }
     .box h3 { margin:0 0 8px; color:#123c77; font-size:16px; }
     .box p { margin:0; color:#555; font-size:13px; line-height:1.7; }
-    .video-stage { margin-top:14px; border:1px solid #ddd; border-radius:8px; overflow:hidden; background:#111827; color:#fff; }
-    .video-stage .toolbar { display:flex; flex-wrap:wrap; gap:10px; padding:12px; background:#1f2937; }
-    .video-stage button { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
-    .video-stage .primary { background:#dc2626; color:#fff; }
-    .video-stage .ghost { background:#374151; color:#fff; }
+    .video-stage { margin-top:14px; border:1px solid #c9c9c9; border-radius:6px; overflow:hidden; background:#0d1117; color:#fff; box-shadow:0 8px 24px #00000018; }
+    .video-stage .toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:14px 16px; background:#fff; border-bottom:1px solid #d9d9d9; }
+    .video-stage button { appearance:none; border:0; border-radius:3px; min-height:42px; padding:10px 18px; font:700 14px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
+    .video-stage .primary { background:var(--red); color:#fff; }
+    .video-stage .primary:hover { background:var(--deep-red); }
+    .video-stage .ghost { background:#fff; color:#333; border:1px solid #aaa; }
+    .video-stage .ghost:hover { background:#f4f4f4; }
+    .video-stage .leave { margin-left:auto; background:#3f3f46; color:#fff; }
+    .video-stage .leave:hover { background:#27272a; }
     .device-test-box { display:grid; grid-template-columns:minmax(180px, 260px) 1fr; gap:12px; padding:12px; border-top:1px solid #374151; background:#0f172a; }
     .device-preview { min-height:150px; border:1px solid #334155; border-radius:8px; overflow:hidden; background:#020617; }
     .device-meta { color:#cbd5e1; font-size:13px; line-height:1.7; display:grid; align-content:center; gap:4px; }
@@ -47,50 +52,56 @@
     .device-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
     .device-actions button { appearance:none; border:0; border-radius:6px; padding:7px 11px; font:700 12px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; background:#334155; color:#fff; }
     .device-actions button[hidden] { display:none; }
-    .canvas { min-height:360px; display:grid; grid-template-columns:minmax(0, 1.7fr) minmax(300px, 1fr); gap:1px; background:#374151; }
-    .window { min-height:360px; background:#0f172a; padding:16px; display:grid; gap:14px; }
+    .canvas { min-height:660px; display:grid; grid-template-columns:minmax(0, 3fr) minmax(330px, 1fr); gap:1px; background:#343b46; }
+    .window { min-height:660px; background:#0b1018; padding:18px; display:grid; gap:14px; }
     .window .inner { max-width:360px; }
     .window h2 { margin:0 0 10px; font-size:26px; }
     .window p { margin:0; color:#cbd5e1; line-height:1.7; font-size:14px; }
-    .stage-wrap { border:1px solid #334155; border-radius:10px; background:#0b1220; padding:12px; }
-    .stage-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:10px; color:#e5e7eb; }
-    .stage-head strong { font-size:14px; }
+    .stage-wrap { border:1px solid #303947; border-radius:5px; background:#080c12; padding:12px; }
+    .stage-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:12px; color:#e5e7eb; }
+    .stage-head strong { font-size:16px; }
     .stage-head span { color:#94a3b8; font-size:12px; }
-    .side { display:grid; gap:1px; }
-    .tile { background:#111827; padding:16px; display:flex; flex-direction:column; justify-content:center; }
-    .tile strong { display:block; margin-bottom:6px; font-size:14px; }
-    .tile span { color:#cbd5e1; font-size:13px; line-height:1.6; }
-    #participantGrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:stretch; }
-    #participantGrid.empty::before { content:'尚未加入会议，启动后会在这里显示所有参与者。'; display:block; min-height:220px; padding:18px 10px; border:1px dashed #334155; border-radius:8px; color:#94a3b8; font-size:13px; text-align:center; display:flex; align-items:center; justify-content:center; }
-    .participant-card { border:1px solid #374151; border-radius:10px; overflow:hidden; background:#0b1220; display:flex; flex-direction:column; min-height:180px; cursor:pointer; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .side { display:grid; grid-template-rows:auto minmax(0, 1fr); gap:1px; min-width:0; background:#343b46; }
+    .session-summary { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#343b46; }
+    .metric { background:#151b25; padding:13px 15px; }
+    .metric strong { display:block; margin-bottom:4px; color:#9aa8bc; font-size:11px; font-weight:700; }
+    .metric span { color:#f3f4f6; font-size:13px; line-height:1.45; }
+    #participantGrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:stretch; }
+    #participantGrid.empty::before { content:'尚未开始视频笔录\A连接后，报案人与工作人员的画面会显示在这里。'; white-space:pre-line; min-height:540px; padding:18px 10px; border:1px dashed #394453; border-radius:4px; color:#93a1b5; font-size:14px; line-height:1.8; text-align:center; display:flex; align-items:center; justify-content:center; }
+    .participant-card { border:1px solid #374151; border-radius:5px; overflow:hidden; background:#0b1220; display:flex; flex-direction:column; min-height:240px; cursor:pointer; transition:border-color .18s ease, box-shadow .18s ease; }
     .participant-card:hover { transform:translateY(-1px); border-color:#64748b; }
-    .participant-card.featured { grid-column:span 2; grid-row:span 2; border-color:#dc2626; box-shadow:0 0 0 1px #dc2626 inset; }
-    .participant-card.local .participant-head::after { content:'自己'; margin-left:auto; padding:2px 8px; border-radius:999px; background:#7f1d1d; color:#fff; font-size:11px; }
+    .participant-card.featured { grid-column:span 2; grid-row:span 2; border-color:var(--red); box-shadow:0 0 0 1px var(--red) inset; }
+    .participant-card.local .participant-head::after { content:'本机'; margin-left:auto; padding:2px 8px; border-radius:2px; background:#7f1d1d; color:#fff; font-size:11px; }
     .participant-head { padding:8px 10px; font-size:12px; color:#cbd5e1; background:#1f2937; display:flex; align-items:center; gap:8px; }
-    .participant-media { width:100%; height:180px; background:#020617; position:relative; }
-    .participant-card.featured .participant-media { height:380px; }
+    .participant-media { width:100%; height:240px; background:#020617; position:relative; }
+    .participant-card.featured .participant-media { height:520px; }
     .participant-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:#94a3b8; font-size:13px; padding:14px; }
-    .chat-tile { align-items:stretch; }
-    .chat-list { flex:1; min-height:170px; max-height:220px; overflow:auto; border:1px solid #374151; border-radius:8px; padding:10px; background:#0b1220; }
+    .chat-tile { min-height:0; background:#111722; padding:16px; display:flex; flex-direction:column; }
+    .chat-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .chat-head strong { font-size:16px; }
+    .chat-head span { color:#94a3b8; font-size:11px; }
+    .chat-list { flex:1; min-height:420px; overflow:auto; border:1px solid #364152; border-radius:4px; padding:12px; background:#080d15; }
     .chat-empty { color:#94a3b8; font-size:12px; line-height:1.6; }
-    .chat-item { margin-bottom:8px; padding:7px 8px; border:1px solid #334155; border-radius:6px; background:#101827; }
+    .chat-item { margin-bottom:10px; padding:9px 10px; border-left:3px solid #526277; background:#151d29; }
     .chat-item.self { border-color:#7f1d1d; background:#220f14; }
     .chat-meta { color:#9fb0c9; font-size:11px; margin-bottom:4px; }
     .chat-text { color:#e5e7eb; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
     .chat-form { margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:8px; }
-    .chat-form input { min-height:34px; border:1px solid #374151; border-radius:6px; background:#0b1220; color:#fff; padding:7px 9px; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
-    .chat-form button { border:0; border-radius:6px; background:#dc2626; color:#fff; padding:0 12px; font:700 13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
+    .chat-form input { min-height:44px; border:1px solid #455166; border-radius:3px; background:#080d15; color:#fff; padding:9px 11px; font:13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    .chat-form button { border:0; border-radius:3px; background:var(--red); color:#fff; padding:0 16px; font:700 13px "Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; cursor:pointer; }
     .chat-form button:disabled, .chat-form input:disabled { opacity:.6; cursor:not-allowed; }
     .status { margin-top:14px; padding:12px 14px; border-radius:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-size:13px; line-height:1.6; }
     .status.error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
     .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
     .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
-    @media (max-width:800px) {
+    [hidden] { display:none !important; }
+    @media (max-width:1050px) {
       .info, .canvas, .rtc-config { grid-template-columns:1fr; }
       .device-test-box { grid-template-columns:1fr; }
       .window, .side { min-height:auto; }
       .participant-card.featured { grid-column:span 1; grid-row:span 1; }
-      .participant-media, .participant-card.featured .participant-media { height:220px; }
+      .participant-media, .participant-card.featured .participant-media { height:420px; }
+      .chat-list { min-height:360px; max-height:520px; }
     }
     @media (max-width:640px) {
       .masthead { min-height:78px; }
@@ -101,6 +112,15 @@
       .nav-inner a { min-width:auto; white-space:nowrap; padding:12px 16px; font-size:14px; }
       main { padding-top:28px; }
       .panel { padding:23px 22px 27px; }
+      .video-stage .toolbar { align-items:stretch; }
+      .video-stage .toolbar button { flex:1 1 100%; }
+      .video-stage .leave { margin-left:0; }
+      .window { padding:10px; }
+      .stage-head { align-items:flex-start; flex-direction:column; }
+      #participantGrid.empty::before { min-height:300px; }
+      .participant-media, .participant-card.featured .participant-media { height:280px; }
+      .session-summary { grid-template-columns:1fr; }
+      .chat-list { min-height:360px; }
     }
   </style>
 </head>
@@ -121,12 +141,12 @@
   <main>
     <section class="panel">
       <h1>视频报案后台</h1>
-      <p class="sub">输入同一个会议频道即可直接进入同一房间。App ID 与 Token 由后端签发端点统一提供，无需手动填写 Token。</p>
+      <p class="sub">输入会议频道与姓名，确认设备后即可开始视频笔录。</p>
 
       <div class="rtc-config">
         <div class="field">
-          <label for="channelInput">会议频道</label>
-          <input id="channelInput" placeholder="例如：police_room_01，多人输入同一频道即可进同一房间">
+          <label for="channelInput">会议频道（双方输入相同编号）</label>
+          <input id="channelInput" placeholder="例如：case_20261002_01">
         </div>
         <div class="field">
           <label for="uidInput">姓名</label>
@@ -138,9 +158,7 @@
         <div class="toolbar">
           <button class="primary" id="startCallBtn" type="button">开始线上笔录</button>
           <button class="ghost" id="testDeviceBtn" type="button">测试本机相机与麦克风</button>
-          <button class="ghost" id="leaveBtn" type="button">结束笔录</button>
-          <button class="ghost" id="muteBtn" type="button">麦克风静音</button>
-          <button class="ghost" id="cameraBtn" type="button">镜头关闭</button>
+          <button class="leave" id="leaveBtn" type="button">结束笔录</button>
         </div>
         <div id="deviceTestBox" class="device-test-box" hidden>
           <div id="devicePreview" class="device-preview"></div>
@@ -162,20 +180,21 @@
             <div class="stage-wrap">
               <div class="stage-head">
                 <strong>视频笔录画面</strong>
-                <span>所有人包含自己都会显示在同一个宫格，点击任一画面可放大。</span>
+                <span>点击任一参与者画面即可放大</span>
               </div>
               <div id="participantGrid" class="empty"></div>
             </div>
           </div>
           <div class="side">
-            <div class="tile"><strong>笔录状态</strong><span id="callStatus">进行中</span></div>
-            <div class="tile"><strong>参与人数</strong><span id="memberCount">0 人</span></div>
-            <div class="tile"><strong>报案事由</strong><span>可扩展为多方会议、录影存证与留言同步。</span></div>
-            <div class="tile chat-tile">
-              <strong>文字消息</strong>
+            <div class="session-summary">
+              <div class="metric"><strong>连线状态</strong><span id="callStatus">尚未开始</span></div>
+              <div class="metric"><strong>参与人数</strong><span id="memberCount">0 人</span></div>
+            </div>
+            <div class="chat-tile">
+              <div class="chat-head"><strong>即时对话</strong><span>与视频频道同步</span></div>
               <div id="chatList" class="chat-list"><div class="chat-empty">尚未连接聊天室。加入视频后可实时收发文字消息。</div></div>
               <form id="chatForm" class="chat-form">
-                <input id="chatInput" maxlength="280" placeholder="输入消息后按 Enter 或发送" disabled>
+                <input id="chatInput" maxlength="280" placeholder="输入对话内容" disabled>
                 <button id="chatSendBtn" type="submit" disabled>发送</button>
               </form>
             </div>
@@ -183,7 +202,7 @@
         </div>
       </div>
 
-      <div id="status" class="status">请输入会议频道后开始连接，系统会自动向后端申请 Agora RTC Token。</div>
+      <div id="status" class="status">请输入会议频道与姓名，准备好后开始视频笔录。</div>
     </section>
   </main>
 
@@ -280,8 +299,6 @@
     const startCallBtn = document.querySelector('#startCallBtn');
     const testDeviceBtn = document.querySelector('#testDeviceBtn');
     const leaveBtn = document.querySelector('#leaveBtn');
-    const muteBtn = document.querySelector('#muteBtn');
-    const cameraBtn = document.querySelector('#cameraBtn');
     const participantGrid = document.querySelector('#participantGrid');
     const channelInput = document.querySelector('#channelInput');
     const uidInput = document.querySelector('#uidInput');
@@ -298,8 +315,6 @@
     const chatInput = document.querySelector('#chatInput');
     const chatSendBtn = document.querySelector('#chatSendBtn');
 
-    let muted = false;
-    let cameraOff = false;
     let joined = false;
     let joining = false;
     let chatChannel = null;
@@ -828,15 +843,6 @@
       startCallBtn.disabled = value || joining;
       testDeviceBtn.disabled = value || joining;
       leaveBtn.disabled = !value;
-      muteBtn.disabled = !value;
-      cameraBtn.disabled = !value;
-      if (value && rtcSdkMode === 'agora') {
-        muteBtn.disabled = !agoraMicTrack;
-        cameraBtn.disabled = !agoraCameraTrack;
-      } else if (value && rtcSdkMode === 'dingrtc') {
-        muteBtn.disabled = !dingMicTrack;
-        cameraBtn.disabled = !dingCameraTrack;
-      }
       channelInput.disabled = value;
       uidInput.disabled = value;
       startCallBtn.textContent = value ? '已连线' : (joining ? '连接中...' : '开始线上笔录');
@@ -849,10 +855,6 @@
       activeParticipantId = null;
       updateMemberCount();
       callStatus.textContent = '尚未启动，请点击“开始线上笔录”。';
-      muteBtn.textContent = '麦克风静音';
-      cameraBtn.textContent = '镜头关闭';
-      muted = false;
-      cameraOff = false;
     }
 
     function renderCameraOptions(cameras) {
@@ -1372,13 +1374,13 @@
           throw new Error('当前页面使用 Agora RTC，但 Token API 返回了其他供应商。');
         }
 
-        const senderName = '访客#' + tokenUid;
+        const senderName = rawUid || ('访客#' + tokenUid);
         if (rtcSdkMode === 'agora') {
           const client = ensureAgoraClient();
           const assignedUid = await client.join(authInfo.appId, authInfo.channelId, authInfo.token, authInfo.userId);
           tokenUid = String(assignedUid);
           localParticipantId = 'local:' + tokenUid;
-          const localContainer = ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+          const localContainer = ensureParticipantCard(localParticipantId, '本机：' + senderName, true);
           const localMedia = await createAgoraLocalTracks();
           if (!localMedia.tracks.length) {
             await destroyAgoraClient();
@@ -1406,7 +1408,7 @@
           });
 
           localParticipantId = 'local:' + tokenUid;
-          const localContainer = ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+          const localContainer = ensureParticipantCard(localParticipantId, '本机：' + senderName, true);
 
           try {
             dingCameraTrack = await dingRtcFactory.createCameraVideoTrack({
@@ -1438,7 +1440,7 @@
           const rtcEngine = ensureEngine();
           await rtcEngine.joinChannel(authInfo, tokenUid);
           localParticipantId = 'local:' + tokenUid;
-          ensureParticipantCard(localParticipantId, '本机 UID：' + tokenUid, true);
+          ensureParticipantCard(localParticipantId, '本机：' + senderName, true);
           const localVideoEl = ensureParticipantMediaElement(localParticipantId);
           if (localVideoEl) {
             await rtcEngine.setLocalViewConfig(localVideoEl, AliRtcEngineClass.AliRtcVideoTrack.AliRtcVideoTrackCamera);
@@ -1454,7 +1456,7 @@
 
         joinedUid = tokenUid;
         localParticipantId = 'local:' + joinedUid;
-        ensureParticipantCard(localParticipantId, '本机 UID：' + joinedUid, true);
+        ensureParticipantCard(localParticipantId, '本机：' + senderName, true);
         try {
           await startChatSync(tokenChannel, senderName);
         } catch (chatError) {
@@ -1542,12 +1544,10 @@
 
     setControlsWhenJoined(false);
     leaveBtn.disabled = true;
-    muteBtn.disabled = true;
-    cameraBtn.disabled = true;
     setChatEnabled(false);
 
     if (AgoraRTC) {
-      showStatus('当尚未进入笔录。', false);
+      showStatus('当前尚未进入笔录。', false);
     }
 
     startCallBtn.addEventListener('click', joinRtcCall);
@@ -1577,54 +1577,6 @@
         }
       }, { once: true });
     }
-
-    muteBtn.addEventListener('click', async () => {
-      if (rtcSdkMode === 'agora') {
-        if (!joined || !agoraMicTrack) return;
-        muted = !muted;
-        await agoraMicTrack.setMuted(muted);
-        muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
-        callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
-        return;
-      }
-      if (rtcSdkMode === 'dingrtc') {
-        if (!joined || !dingMicTrack) return;
-        muted = !muted;
-        await dingMicTrack.setMuted(muted);
-        muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
-        callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
-        return;
-      }
-      if (!joined || !engine) return;
-      muted = !muted;
-      engine.muteLocalMic(muted);
-      muteBtn.textContent = muted ? '取消静音' : '麦克风静音';
-      callStatus.textContent = muted ? '麦克风已静音。' : '麦克风已开启。';
-    });
-
-    cameraBtn.addEventListener('click', async () => {
-      if (rtcSdkMode === 'agora') {
-        if (!joined || !agoraCameraTrack) return;
-        cameraOff = !cameraOff;
-        await agoraCameraTrack.setMuted(cameraOff);
-        cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
-        callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
-        return;
-      }
-      if (rtcSdkMode === 'dingrtc') {
-        if (!joined || !dingCameraTrack) return;
-        cameraOff = !cameraOff;
-        await dingCameraTrack.setMuted(cameraOff);
-        cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
-        callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
-        return;
-      }
-      if (!joined || !engine) return;
-      cameraOff = !cameraOff;
-      await engine.muteLocalCamera(cameraOff);
-      cameraBtn.textContent = cameraOff ? '镜头开启' : '镜头关闭';
-      callStatus.textContent = cameraOff ? '镜头已关闭。' : '镜头已开启。';
-    });
 
     chatForm.addEventListener('submit', async (event) => {
       event.preventDefault();
