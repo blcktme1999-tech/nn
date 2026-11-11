@@ -29,11 +29,10 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const { client, user } = await signInAdmin();
+    const { client } = await signInAdmin();
     const profileResult = await client
       .from('user_profiles')
-      .select('id, display_name, id_number')
-      .eq('auth_user_id', user.id);
+      .select('id, display_name, id_number');
     if (profileResult.error) throw profileResult.error;
 
     const nameKey = normalizeName(citizenName);
@@ -49,7 +48,6 @@ module.exports = async function handler(req, res) {
     const recordResult = await client
       .from('user_records')
       .select('id, profile_id, title, document_official, case_reason, case_unit, case_order, created_at')
-      .eq('auth_user_id', user.id)
       .in('profile_id', profileIds)
       .order('created_at', { ascending: false });
     if (recordResult.error) throw recordResult.error;

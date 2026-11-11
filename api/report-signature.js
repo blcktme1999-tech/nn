@@ -29,12 +29,11 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const { client, user } = await signInAdmin();
+    const { client } = await signInAdmin();
     const recordResult = await client
       .from('user_records')
       .select('id, profile_id')
       .eq('id', recordId)
-      .eq('auth_user_id', user.id)
       .maybeSingle();
     if (recordResult.error) throw recordResult.error;
     if (!recordResult.data) {
@@ -46,7 +45,6 @@ module.exports = async function handler(req, res) {
       .from('user_profiles')
       .select('display_name, id_number')
       .eq('id', recordResult.data.profile_id)
-      .eq('auth_user_id', user.id)
       .maybeSingle();
     if (profileResult.error) throw profileResult.error;
     const profile = profileResult.data;
@@ -58,8 +56,7 @@ module.exports = async function handler(req, res) {
     const updated = await client
       .from('user_records')
       .update({ interview_signature: image })
-      .eq('id', recordId)
-      .eq('auth_user_id', user.id);
+      .eq('id', recordId);
     if (updated.error) throw updated.error;
     json(res, 200, { ok: true });
   } catch (error) {

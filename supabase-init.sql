@@ -93,6 +93,8 @@ begin
 end;
 $$;
 
+alter table public.user_profiles alter column auth_user_id drop not null;
+
 create table if not exists public.user_records (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid not null references auth.users(id) on delete cascade,
@@ -126,6 +128,7 @@ alter table public.user_records add column if not exists case_reason text;
 alter table public.user_records add column if not exists case_unit text;
 alter table public.user_records add column if not exists case_order text;
 alter table public.user_records add column if not exists interview_signature text;
+alter table public.user_records alter column auth_user_id drop not null;
 alter table public.user_records add column if not exists created_at timestamptz not null default now();
 alter table public.user_records add column if not exists updated_at timestamptz not null default now();
 

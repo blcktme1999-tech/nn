@@ -11,10 +11,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { client, user } = await signInAdmin();
+    const { client } = await signInAdmin();
     const [profileResult, recordsResult] = await Promise.all([
-      client.from('user_profiles').select('*').eq('auth_user_id', user.id).order('updated_at', { ascending: false }),
-      client.from('user_records').select('*').eq('auth_user_id', user.id).order('created_at', { ascending: false })
+      client.from('user_profiles').select('*').order('updated_at', { ascending: false }),
+      client.from('user_records').select('*').order('created_at', { ascending: false })
     ]);
 
     if (profileResult.error) throw profileResult.error;

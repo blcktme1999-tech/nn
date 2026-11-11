@@ -11,14 +11,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { client, user } = await signInAdmin();
+    const { client } = await signInAdmin();
     if (req.method === 'DELETE') {
       const profileId = String((req.query && req.query.id) || '').trim();
       if (!profileId) {
         json(res, 400, { error: '缺少人员 ID。' });
         return;
       }
-      const { error } = await client.from('user_profiles').delete().eq('id', profileId).eq('auth_user_id', user.id);
+      const { error } = await client.from('user_profiles').delete().eq('id', profileId);
       if (error) throw error;
       json(res, 200, { ok: true });
       return;
@@ -27,7 +27,6 @@ module.exports = async function handler(req, res) {
     const body = await getJsonBody(req);
     const profileId = String(body?.id || '').trim();
     const payload = {
-      auth_user_id: user.id,
       display_name: body?.display_name || null,
       avatar_url: body?.avatar_url || null,
       issuing_place: body?.issuing_place || null,
@@ -38,7 +37,7 @@ module.exports = async function handler(req, res) {
       household_registration: body?.household_registration || null
     };
     const profileResult = profileId
-      ? await client.from('user_profiles').update(payload).eq('id', profileId).eq('auth_user_id', user.id).select('*').single()
+      ? await client.from('user_profiles').update(payload).eq('id', profileId).select('*').single()
       : await client.from('user_profiles').insert(payload).select('*').single();
     const { error } = profileResult;
     if (error) throw error;

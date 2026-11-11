@@ -33,7 +33,7 @@ Project-level instructions for AI coding agents working in this workspace.
   - `SHARED_ADMIN_PASSWORD`
 - Database mode:
   - `DB_MODE=supabase`
-  - Requires `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_ADMIN_EMAIL`, `SUPABASE_ADMIN_PASSWORD`
+  - Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 - Image upload endpoint:
   - Uses Supabase Storage bucket `SUPABASE_STORAGE_BUCKET` (default `case-photos`).
 - RTC token endpoint:

@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { client, user } = await signInAdmin();
+    const { client } = await signInAdmin();
     const body = req.method === 'DELETE' ? {} : await getJsonBody(req);
 
     if (req.method === 'POST') {
@@ -20,14 +20,13 @@ module.exports = async function handler(req, res) {
         json(res, 400, { error: '请先选择案件所属人员。' });
         return;
       }
-      const ownerResult = await client.from('user_profiles').select('id').eq('id', profileId).eq('auth_user_id', user.id).maybeSingle();
+      const ownerResult = await client.from('user_profiles').select('id').eq('id', profileId).maybeSingle();
       if (ownerResult.error) throw ownerResult.error;
       if (!ownerResult.data) {
         json(res, 400, { error: '案件所属人员不存在。' });
         return;
       }
       const payload = {
-        auth_user_id: user.id,
         profile_id: profileId,
         title: body?.title || '未命名案件',
         info_text: body?.case_summary || body?.info_text || '',
@@ -61,7 +60,7 @@ module.exports = async function handler(req, res) {
       return;
     }
     if (req.method === 'PATCH') {
-      const ownerResult = await client.from('user_profiles').select('id').eq('id', profileId).eq('auth_user_id', user.id).maybeSingle();
+      const ownerResult = await client.from('user_profiles').select('id').eq('id', profileId).maybeSingle();
       if (ownerResult.error) throw ownerResult.error;
       if (!ownerResult.data) {
         json(res, 400, { error: '案件所属人员不存在。' });
@@ -85,13 +84,13 @@ module.exports = async function handler(req, res) {
       case_order: body?.case_order || null
     };
     if (req.method === 'PATCH') {
-      const { error } = await client.from('user_records').update(payload).eq('id', recordId).eq('auth_user_id', user.id);
+      const { error } = await client.from('user_records').update(payload).eq('id', recordId);
       if (error) throw error;
       json(res, 200, { ok: true });
       return;
     }
 
-    const { error } = await client.from('user_records').delete().eq('id', recordId).eq('auth_user_id', user.id);
+    const { error } = await client.from('user_records').delete().eq('id', recordId);
     if (error) throw error;
     json(res, 200, { ok: true });
   } catch (error) {
