@@ -422,7 +422,7 @@
     deleteRecordBtn.addEventListener('click', async () => { const record = getRecord(); if (!record || !window.confirm('确定要删除案件「' + (record.title || '未命名案件') + '」吗？\n此操作无法恢复。')) return; try { await requestJson('/api/admin/records?id=' + encodeURIComponent(record.id), { method:'DELETE' }); await loadAdminData(); const remaining = getProfileRecords(); selectedRecordId = remaining[0]?.id || ''; renderRecordOptions(remaining); fillEditor(getProfile(), getRecord()); saveState.textContent = '案件已删除'; } catch (error) { showMessage('删除案件失败：' + (error?.message || '未知错误'), 'error'); } });
     document.querySelector('#logoutBtn').addEventListener('click', async () => { if (!confirmDiscard()) return; await clearServerSessionSilently(); window.location.reload(); });
     window.addEventListener('beforeunload', (event) => { if (!isDirty) return; event.preventDefault(); event.returnValue = ''; });
-    clearServerSessionSilently(); window.addEventListener('pagehide', clearServerSessionSilently);
+    clearServerSessionSilently();
   </script>
   <script src="assets/site-footer.js"></script>
 </body>

@@ -60,15 +60,6 @@
     </div></nav>
   </header>
   <main>
-    <form id="loginForm" class="panel">
-      <h1>报案工作台</h1>
-      <p class="intro">登录后可进入聊天室、视讯，并查看附件与案件讯息。案件资料请在案件管理中修改。</p>
-      <label for="adminLogin">账号</label>
-      <input id="adminLogin" autocomplete="username" placeholder="请输入账号">
-      <label for="password">密码</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
-      <button class="submit" type="submit">登录</button>
-    </form>
     <section id="desk" class="panel" hidden>
       <div class="toolbar"><h1>选择案件</h1><button id="logoutBtn" class="secondary" type="button">退出登录</button></div>
       <div id="caseList" class="case-list"></div>
@@ -79,7 +70,6 @@
   <footer class="site-footer"><div class="site-footer-inner">报案工作台只查看笔录现场，不在此修改案件资料。</div></footer>
   <script src="assets/report-room.js"></script>
   <script>
-    const loginForm = document.querySelector('#loginForm');
     const desk = document.querySelector('#desk');
     const roomStep = document.querySelector('#roomStep');
     const caseList = document.querySelector('#caseList');
@@ -91,7 +81,7 @@
       notice.className = text ? 'result show' : 'result';
     }
     async function requestJson(url, options) {
-      const response = await fetch(url, options);
+      const response = await fetch(url, { credentials: 'same-origin', ...options });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || '请求失败。');
       return data;
@@ -144,36 +134,23 @@
       } catch (error) {
         roomStep.hidden = true;
         roomStep.innerHTML = '';
-        loginForm.hidden = true;
         desk.hidden = false;
         showNotice(error.message || '镜头未开启。');
       }
     }
     async function loadDesk() {
       cache = await requestJson('/api/admin/data');
-      loginForm.hidden = true;
       desk.hidden = false;
       showNotice('');
       renderCases();
     }
-    loginForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const loginId = document.querySelector('#adminLogin').value.trim();
-      const password = document.querySelector('#password').value;
-      if (!loginId || !password) return showNotice('请先输入账号与密码。');
-      try {
-        await requestJson('/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ loginId, password }) });
-        await loadDesk();
-      } catch (error) {
-        showNotice(error.message || '登录失败。');
-      }
-    });
     document.querySelector('#logoutBtn').addEventListener('click', async () => {
-      await fetch('/api/admin/logout', { method:'POST' }).catch(() => {});
-      desk.hidden = true;
-      loginForm.hidden = false;
+      await fetch('/api/admin/logout', { method:'POST', credentials:'same-origin' }).catch(() => {});
+      window.location.replace('case-admin.html');
     });
-    requestJson('/api/admin/session').then(loadDesk).catch(() => {});
+    requestJson('/api/admin/session').then(loadDesk).catch(() => {
+      window.location.replace('case-admin.html');
+    });
   </script>
   <script src="assets/site-footer.js"></script>
 </body>
