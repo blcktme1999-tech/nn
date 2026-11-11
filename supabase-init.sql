@@ -121,6 +121,11 @@ alter table public.user_records add column if not exists filing_unit text;
 alter table public.user_records add column if not exists case_summary text;
 alter table public.user_records add column if not exists notes text;
 alter table public.user_records add column if not exists application_request text;
+alter table public.user_records add column if not exists document_official text;
+alter table public.user_records add column if not exists case_reason text;
+alter table public.user_records add column if not exists case_unit text;
+alter table public.user_records add column if not exists case_order text;
+alter table public.user_records add column if not exists interview_signature text;
 alter table public.user_records add column if not exists created_at timestamptz not null default now();
 alter table public.user_records add column if not exists updated_at timestamptz not null default now();
 

@@ -14,7 +14,7 @@ Project-level instructions for AI coding agents working in this workspace.
 - Prefer smallest possible code changes; do not reformat unrelated files.
 
 ## Project Layout
-- Root static pages: `case-admin.html`, `case-search.html`, `case-lite.html`, `video-room.html`, `mm1.html`.
+- Root static pages: `home.html`, `online-report.html`, `case-search.html`, `simple-search.html`, `case-admin.html`, `report-desk.html`, `video-room.html`.
 - Serverless API: `api/*.js` and `api/admin/*.js`.
 - Shared admin utilities: `api/_lib/admin.js`.
 - Deployment config: `vercel.json`.

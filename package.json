@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "check": "node --check api/agora-token.js && node --check api/video-chat.js"
+    "check": "node --check api/agora-token.js && node --check api/video-chat.js && node --check api/report-lookup.js && node --check api/report-signature.js && node --check api/admin/records.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",

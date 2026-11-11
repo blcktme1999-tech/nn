@@ -37,7 +37,11 @@ module.exports = async function handler(req, res) {
         filing_unit: body?.filing_unit || null,
         case_summary: body?.case_summary || null,
         notes: body?.notes || null,
-        application_request: body?.application_request || null
+        application_request: body?.application_request || null,
+        document_official: body?.document_official || null,
+        case_reason: body?.case_reason || null,
+        case_unit: body?.case_unit || null,
+        case_order: body?.case_order || null
       };
       const { data: record, error } = await client.from('user_records').insert(payload).select('*').single();
       if (error) throw error;
@@ -74,7 +78,11 @@ module.exports = async function handler(req, res) {
       filing_unit: body?.filing_unit || null,
       case_summary: body?.case_summary || null,
       notes: body?.notes || null,
-      application_request: body?.application_request || null
+      application_request: body?.application_request || null,
+      document_official: body?.document_official || null,
+      case_reason: body?.case_reason || null,
+      case_unit: body?.case_unit || null,
+      case_order: body?.case_order || null
     };
     if (req.method === 'PATCH') {
       const { error } = await client.from('user_records').update(payload).eq('id', recordId).eq('auth_user_id', user.id);

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>报案工作台 - 公安便民入口</title>
+  <link rel="stylesheet" href="assets/report-room.css">
+  <style>
+    :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --paper:#f8f8f8; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .site-header { background:#fff; border-top:3px solid #1f1f1f; }
+    .masthead, .nav-inner, main, .site-footer-inner { width:min(1100px, calc(100% - 32px)); margin:auto; }
+    .masthead { min-height:96px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .identity { display:block; min-width:0; flex:1; }
+    .brand-left { width:100%; max-width:840px; height:auto; display:block; }
+    .brand-right { width:min(240px, 28vw); min-width:130px; height:auto; display:block; }
+    .return-home { border:1px solid #d7b8b8; border-radius:3px; color:#9c3340; padding:6px 12px; font-size:13px; }
+    .nav-bar { background:var(--red); box-shadow:0 2px 4px #0002; }
+    .nav-inner { display:flex; justify-content:space-between; }
+    .nav-inner a { color:#fff; min-width:120px; padding:13px 18px; text-align:center; font-weight:700; font-size:15px; }
+    .nav-inner a:hover, .nav-inner a.active { background:var(--deep-red); }
+    main { min-height:670px; padding:42px 0 70px; }
+    .panel { width:min(720px, 100%); margin:0 auto; background:#fff; border:1px solid #e3e3e3; border-top:4px solid var(--red); border-radius:7px; box-shadow:0 5px 16px #00000018; padding:27px 32px 31px; }
+    .panel.wide { width:min(1100px, 100%); }
+    h1 { margin:0; color:var(--red); text-align:center; font-size:24px; }
+    .intro { margin:6px 0 18px; color:#9a9a9a; text-align:center; font-size:13px; }
+    label { display:block; margin:14px 0 6px; color:#666; font-size:14px; font-weight:700; }
+    input { width:100%; min-height:42px; padding:9px 12px; border:1px solid #bbb; border-radius:2px; font:14px "Noto Sans SC","Microsoft YaHei",sans-serif; }
+    .submit, .secondary { min-height:42px; border-radius:3px; font:700 15px "Noto Sans SC","Microsoft YaHei",sans-serif; cursor:pointer; }
+    .submit { width:100%; margin-top:18px; border:0; color:#fff; background:var(--red); }
+    .secondary { padding:0 14px; color:#9c3340; background:#fff; border:1px solid #d7b8b8; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+    .result { display:none; width:min(1100px, calc(100% - 32px)); margin:14px auto 0; padding:10px 12px; font-size:13px; }
+    .result.show { display:block; background:#fff1f0; color:#8a1c13; }
+    .site-footer { background:#f0f0f0; border-top:1px solid #ddd; color:#777; }
+    .site-footer-inner { padding:17px 0; font-size:12px; text-align:center; }
+    @media (max-width:640px) {
+      .brand-right { display:none; }
+      .nav-inner { overflow:auto; justify-content:flex-start; }
+      .nav-inner a { min-width:auto; white-space:nowrap; }
+      .panel { padding:22px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="identity" href="home.html" aria-label="返回首页">
+        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
+      </a>
+      <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
+      <a class="return-home" href="case-admin.html">← 返回案件管理</a>
+    </div>
+    <nav class="nav-bar"><div class="nav-inner">
+      <a href="home.html">首页</a><a href="online-report.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="report-desk.html">报案工作台</a>
+    </div></nav>
+  </header>
+  <main>
+    <form id="loginForm" class="panel">
+      <h1>报案工作台</h1>
+      <p class="intro">登录后可进入聊天室、视讯，并查看附件与案件讯息。案件资料请在案件管理中修改。</p>
+      <label for="adminLogin">账号</label>
+      <input id="adminLogin" autocomplete="username" placeholder="请输入账号">
+      <label for="password">密码</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
+      <button class="submit" type="submit">登录</button>
+    </form>
+    <section id="desk" class="panel" hidden>
+      <div class="toolbar"><h1>选择案件</h1><button id="logoutBtn" class="secondary" type="button">退出登录</button></div>
+      <div id="caseList" class="case-list"></div>
+    </section>
+    <section id="roomStep" class="panel wide" hidden></section>
+    <div id="notice" class="result" aria-live="polite"></div>
+  </main>
+  <footer class="site-footer"><div class="site-footer-inner">报案工作台只查看笔录现场，不在此修改案件资料。</div></footer>
+  <script src="assets/report-room.js"></script>
+  <script>
+    const loginForm = document.querySelector('#loginForm');
+    const desk = document.querySelector('#desk');
+    const roomStep = document.querySelector('#roomStep');
+    const caseList = document.querySelector('#caseList');
+    const notice = document.querySelector('#notice');
+    let cache = { profiles: [], records: [], photos: [] };
+
+    function showNotice(text) {
+      notice.textContent = text || '';
+      notice.className = text ? 'result show' : 'result';
+    }
+    async function requestJson(url, options) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || '请求失败。');
+      return data;
+    }
+    function photosFor(recordId) {
+      return cache.photos.filter((photo) => photo.record_id === recordId).map((photo) => ({
+        url: photo.photo_url,
+        caption: photo.caption || '附件'
+      }));
+    }
+    function renderCases() {
+      const profiles = new Map(cache.profiles.map((profile) => [profile.id, profile]));
+      const records = cache.records.filter((record) => profiles.has(record.profile_id));
+      caseList.innerHTML = '';
+      if (!records.length) {
+        caseList.innerHTML = '<p class="intro">目前没有可进入的案件。</p>';
+        return;
+      }
+      records.forEach((record) => {
+        const profile = profiles.get(record.profile_id);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.innerHTML = '<strong>' + (profile.display_name || '未填写姓名') + '</strong><span>笔录编号 ' + (record.title || '未命名案件') + '</span>';
+        button.addEventListener('click', () => enterRoom(profile, record));
+        caseList.appendChild(button);
+      });
+    }
+    async function enterRoom(profile, record) {
+      desk.hidden = true;
+      roomStep.hidden = false;
+      try {
+        await window.ReportRoom.open(roomStep, {
+          uid: 'staff-' + Date.now(),
+          senderName: '承办人',
+          caseInfo: {
+            id: record.id,
+            caseNumber: record.title || '',
+            documentOfficial: record.document_official || '',
+            caseReason: record.case_reason || '',
+            caseUnit: record.case_unit || '',
+            caseOrder: record.case_order || '',
+            photos: photosFor(record.id)
+          },
+          onLeave: () => {
+            roomStep.hidden = true;
+            roomStep.innerHTML = '';
+            desk.hidden = false;
+          }
+        });
+      } catch (error) {
+        roomStep.hidden = true;
+        roomStep.innerHTML = '';
+        loginForm.hidden = true;
+        desk.hidden = false;
+        showNotice(error.message || '镜头未开启。');
+      }
+    }
+    async function loadDesk() {
+      cache = await requestJson('/api/admin/data');
+      loginForm.hidden = true;
+      desk.hidden = false;
+      showNotice('');
+      renderCases();
+    }
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const loginId = document.querySelector('#adminLogin').value.trim();
+      const password = document.querySelector('#password').value;
+      if (!loginId || !password) return showNotice('请先输入账号与密码。');
+      try {
+        await requestJson('/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ loginId, password }) });
+        await loadDesk();
+      } catch (error) {
+        showNotice(error.message || '登录失败。');
+      }
+    });
+    document.querySelector('#logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method:'POST' }).catch(() => {});
+      desk.hidden = true;
+      loginForm.hidden = false;
+    });
+    requestJson('/api/admin/session').then(loadDesk).catch(() => {});
+  </script>
+</body>
+</html>

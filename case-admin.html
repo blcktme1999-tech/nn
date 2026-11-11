@@ -55,6 +55,7 @@
     .screen-head h2 { margin:0; color:var(--blue); font-size:21px; }
     .screen-actions { display:flex; gap:9px; flex-wrap:wrap; }
     .entry-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:720px; margin:36px auto 18px; }
+    .entry-button.wide { grid-column:1 / -1; min-height:96px; text-decoration:none; display:grid; place-items:center; }
     .entry-button { min-height:170px; border:1px solid #d5d5d5; border-top:5px solid var(--red); border-radius:6px; background:#fff; color:var(--blue); font-size:22px; font-weight:700; box-shadow:0 4px 12px #00000012; }
     .entry-button:hover { border-color:#bd8790; background:#fff8f8; }
     .step-bar { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:22px; }
@@ -139,14 +140,14 @@
 <body>
   <header class="site-header">
     <div class="masthead">
-      <a class="identity" href="index (2).html" aria-label="返回首页">
+      <a class="identity" href="home.html" aria-label="返回首页">
         <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
       </a>
       <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
-      <a class="return-home" href="index (2).html">← 返回首页</a>
+      <a class="return-home" href="home.html">← 返回首页</a>
     </div>
     <nav class="nav-bar"><div class="nav-inner">
-      <a href="index (2).html">首页</a><a href="mm1.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="case-admin.html">后台管理</a>
+      <a href="home.html">首页</a><a href="online-report.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="case-admin.html">后台管理</a>
     </div></nav>
   </header>
 
@@ -170,6 +171,7 @@
           <div class="entry-grid">
             <button class="entry-button" id="startAddPersonBtn" type="button">新增人员</button>
             <button class="entry-button" id="openPeopleBtn" type="button">编辑已有资料</button>
+            <a class="entry-button wide" href="report-desk.html">报案工作台</a>
           </div>
         </section>
 
@@ -217,6 +219,10 @@
                 <tr><th>简要案情</th><td colspan="4"><textarea id="editSummary" aria-label="简要案情"></textarea></td></tr>
                 <tr><th>备注</th><td colspan="4"><textarea id="editNotes" aria-label="备注"></textarea></td></tr>
                 <tr><th>申请事项</th><td colspan="4"><textarea id="editApplication" aria-label="申请事项"></textarea></td></tr>
+                <tr><th>公文</th><td colspan="4"><textarea id="editOfficial" aria-label="公文"></textarea></td></tr>
+                <tr><th>案由</th><td colspan="4"><textarea id="editReason" aria-label="案由"></textarea></td></tr>
+                <tr><th>单位</th><td colspan="4"><input id="editUnit" aria-label="单位"></td></tr>
+                <tr><th>命令</th><td colspan="4"><textarea id="editOrder" aria-label="命令"></textarea></td></tr>
               </tbody>
             </table></div>
             <div id="noRecordNotice" class="no-record" hidden>该人员目前没有案件。</div>
@@ -269,6 +275,10 @@
     const editSummary = document.querySelector('#editSummary');
     const editNotes = document.querySelector('#editNotes');
     const editApplication = document.querySelector('#editApplication');
+    const editOfficial = document.querySelector('#editOfficial');
+    const editReason = document.querySelector('#editReason');
+    const editUnit = document.querySelector('#editUnit');
+    const editOrder = document.querySelector('#editOrder');
     const editAvatarFile = document.querySelector('#editAvatarFile');
     const editAvatarControl = document.querySelector('#editAvatarControl');
     const editAvatarImage = document.querySelector('#editAvatarImage');
@@ -283,7 +293,7 @@
     const saveAllBtn = document.querySelector('#saveAllBtn');
     const saveState = document.querySelector('#saveState');
     const profileInputs = [editName, editGender, editIdentity, editBirthDate, editIdNumber, editHousehold];
-    const recordInputs = [editWantedDate, editRecordTitle, editCategory, editAddress, editFilingUnit, editSummary, editNotes, editApplication];
+    const recordInputs = [editWantedDate, editRecordTitle, editCategory, editAddress, editFilingUnit, editSummary, editNotes, editApplication, editOfficial, editReason, editUnit, editOrder];
     let profilesCache = [];
     let recordsCache = [];
     let photosByRecordId = Object.create(null);
@@ -361,7 +371,7 @@
     function setEditorInputMode(profileReadonly, recordDisabled) { profileInputs.forEach((input) => { input.readOnly = profileReadonly; }); editAvatarControl.style.cursor = profileReadonly ? 'default' : 'pointer'; editAvatarControl.setAttribute('aria-disabled', profileReadonly ? 'true' : 'false'); recordInputs.forEach((input) => { input.disabled = recordDisabled; }); }
     function fillEditor(profile, record) {
       editName.value = profile?.display_name || ''; editGender.value = profile?.gender || ''; editIdentity.value = profile?.current_identity || ''; editBirthDate.value = profile?.birth_date || ''; editIdNumber.value = profile?.id_number || ''; editHousehold.value = profile?.household_registration || profile?.issuing_place || ''; setAvatarDisplay(profile?.avatar_url || '');
-      editWantedDate.value = record?.wanted_date || ''; editRecordTitle.value = record?.title || ''; editCategory.value = record?.case_category || ''; editAddress.value = record?.current_address || ''; editFilingUnit.value = record?.filing_unit || ''; editSummary.value = record?.case_summary || record?.info_text || ''; editNotes.value = record?.notes || ''; editApplication.value = record?.application_request || '';
+      editWantedDate.value = record?.wanted_date || ''; editRecordTitle.value = record?.title || ''; editCategory.value = record?.case_category || ''; editAddress.value = record?.current_address || ''; editFilingUnit.value = record?.filing_unit || ''; editSummary.value = record?.case_summary || record?.info_text || ''; editNotes.value = record?.notes || ''; editApplication.value = record?.application_request || ''; editOfficial.value = record?.document_official || ''; editReason.value = record?.case_reason || ''; editUnit.value = record?.case_unit || ''; editOrder.value = record?.case_order || '';
       const noRecord = editorMode === 'edit' && !record; noRecordNotice.hidden = !noRecord; attachmentsSection.hidden = noRecord; deleteRecordBtn.hidden = !record || editorMode === 'add'; setEditorInputMode(editorMode === 'add', noRecord); renderAttachments(); isDirty = false; saveState.textContent = '';
     }
     function renderRecordOptions(records) { if (!records.length) { recordSelect.innerHTML = '<option value="">暂无案件</option>'; return; } recordSelect.innerHTML = records.map((record) => '<option value="' + escapeText(record.id) + '">' + escapeText(record.title || '未命名案件') + '</option>').join(''); recordSelect.value = selectedRecordId; }
@@ -375,7 +385,7 @@
     }
     function getProfilePayload(profile, avatarUrl = profile?.avatar_url || null) { return { id:profile?.id, display_name:editName.value.trim() || null, avatar_url:avatarUrl || null, issuing_place:editHousehold.value.trim() || null, id_number:editIdNumber.value.trim() || null, gender:editGender.value.trim() || null, birth_date:editBirthDate.value.trim() || null, current_identity:editIdentity.value.trim() || null, household_registration:editHousehold.value.trim() || null }; }
     function getCachedProfilePayload(profile, avatarUrl) { return { id:profile.id, display_name:profile.display_name || null, avatar_url:avatarUrl || null, issuing_place:profile.household_registration || profile.issuing_place || null, id_number:profile.id_number || null, gender:profile.gender || null, birth_date:profile.birth_date || null, current_identity:profile.current_identity || null, household_registration:profile.household_registration || profile.issuing_place || null }; }
-    function getRecordPayload() { const summary = editSummary.value.trim(); return { profile_id:selectedProfileId, title:editRecordTitle.value.trim(), info_text:summary, wanted_date:editWantedDate.value.trim() || null, case_category:editCategory.value.trim() || null, current_address:editAddress.value.trim() || null, filing_unit:editFilingUnit.value.trim() || null, case_summary:summary || null, notes:editNotes.value.trim() || null, application_request:editApplication.value.trim() || null }; }
+    function getRecordPayload() { const summary = editSummary.value.trim(); return { profile_id:selectedProfileId, title:editRecordTitle.value.trim(), info_text:summary, wanted_date:editWantedDate.value.trim() || null, case_category:editCategory.value.trim() || null, current_address:editAddress.value.trim() || null, filing_unit:editFilingUnit.value.trim() || null, case_summary:summary || null, notes:editNotes.value.trim() || null, application_request:editApplication.value.trim() || null, document_official:editOfficial.value.trim() || null, case_reason:editReason.value.trim() || null, case_unit:editUnit.value.trim() || null, case_order:editOrder.value.trim() || null }; }
     async function createDraftRecordIfNeeded() { if (selectedRecordId) return selectedRecordId; const payload = getRecordPayload(); if (!payload.title) throw new Error('请先填写案件编号，再上传附件照片。'); const result = await requestJson('/api/admin/records', { method:'POST', body:JSON.stringify(payload) }); selectedRecordId = String(result?.record?.id || ''); if (!selectedRecordId) throw new Error('案件建立后没有返回 ID。'); recordsCache.unshift(result.record); return selectedRecordId; }
     async function saveEditor() {
       const profile = getProfile(); if (!profile) throw new Error('找不到人员资料。');
