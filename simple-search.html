@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>簡易案件查詢 - 公安便民入口</title>
+  <link rel="stylesheet" href="assets/mps-chrome.css">
   <style>
     :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --line:#d8d8d8; --paper:#f8f8f8; --muted:#707070; }
     * { box-sizing:border-box; }
@@ -63,11 +64,12 @@
 <body>
   <header class="site-header">
     <div class="masthead">
-      <a class="identity" href="home.html" aria-label="返回首頁">
-        <span class="seal" aria-hidden="true">★</span>
-        <span class="title-group"><strong>中華人民共和國公安部</strong><span>Ministry of Public Security of the People's Republic of China</span></span>
-      </a>
-      <a class="return-home" href="home.html">← 返回首頁</a>
+      <div class="mps-top">
+        <a class="mps-logo" href="home.html" aria-label="返回首頁">
+          <img src="assets/mps-logo.png" alt="中华人民共和国公安部">
+        </a>
+        <img class="mps-banner" src="assets/mps-banner.png" alt="">
+      </div>
     </div>
     <nav class="nav-bar"><div class="nav-inner">
       <a href="home.html">首頁</a><a href="online-report.html">便民服務</a><a class="active" href="simple-search.html">簡易查詢</a><a href="home.html">返回主站</a>

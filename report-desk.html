@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>报案工作台 - 公安便民入口</title>
+  <link rel="stylesheet" href="assets/mps-chrome.css">
   <link rel="stylesheet" href="assets/report-room.css">
   <style>
     :root { --red:#c90822; --deep-red:#a40018; --ink:#242424; --paper:#f8f8f8; }
@@ -47,11 +48,12 @@
 <body>
   <header class="site-header">
     <div class="masthead">
-      <a class="identity" href="home.html" aria-label="返回首页">
-        <img class="brand-left" src="https://cdn.phototourl.com/free/2026-07-24-aa9e6f2a-f3d3-4e47-9f03-173a0dc8ddad.png" alt="中华人民共和国公安部">
-      </a>
-      <img class="brand-right" src="https://cdn.phototourl.com/free/2026-07-24-24703616-4b7f-477d-b4c6-9d70ddd57ac8.png" alt="" aria-hidden="true">
-      <a class="return-home" href="case-admin.html">← 返回案件管理</a>
+      <div class="mps-top">
+        <a class="mps-logo" href="home.html" aria-label="返回首页">
+          <img src="assets/mps-logo.png" alt="中华人民共和国公安部">
+        </a>
+        <img class="mps-banner" src="assets/mps-banner.png" alt="">
+      </div>
     </div>
     <nav class="nav-bar"><div class="nav-inner">
       <a href="home.html">首页</a><a href="online-report.html">便民服务</a><a href="case-search.html">案件查询</a><a class="active" href="report-desk.html">报案工作台</a>
