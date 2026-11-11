@@ -5,9 +5,10 @@
 .room-stage h2 { margin:0 0 12px; color:#c90822; font-size:18px; }
 .room-videos { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .room-video p { margin:8px 0 0; color:#555; font-size:13px; text-align:center; }
-.room-screen { position:relative; min-height:220px; border-radius:6px; overflow:hidden; background:#1b2433; }
+.room-screen { position:relative; height:280px; border-radius:6px; overflow:hidden; background:#1b2433; }
 .room-screen.waiting { display:grid; place-items:center; color:#d7e2f2; font-size:14px; }
-.room-screen video { width:100%; height:220px; object-fit:cover; background:#111; }
+.room-screen > div,
+.room-screen video { width:100% !important; height:100% !important; object-fit:cover; background:#111; }
 .room-line, .room-live { margin:12px 0 0; padding:8px 10px; border-radius:4px; font-size:13px; }
 .room-line { background:#eef5ff; color:#24527a; }
 .room-live { background:#fff6e8; color:#8a5a12; }

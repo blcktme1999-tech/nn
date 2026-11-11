@@ -60,6 +60,14 @@
     return data;
   }
 
+  function fitPlayer(slot) {
+    slot.querySelectorAll('div, video').forEach((node) => {
+      node.style.width = '100%';
+      node.style.height = '100%';
+      node.style.objectFit = 'cover';
+    });
+  }
+
   function fieldText(value) {
     const text = String(value || '').trim();
     return text || '—';
@@ -185,7 +193,8 @@
       throw new Error('镜头未开启，请重新进入。');
     }
 
-    cameraTrack.play(localSlot);
+    cameraTrack.play(localSlot, { fit: 'cover', mirror: true });
+    fitPlayer(localSlot);
     try {
       micTrack = await AgoraRTC.createMicrophoneAudioTrack();
       micOn = true;
@@ -209,7 +218,8 @@
       if (mediaType === 'video' && user.videoTrack) {
         remoteSlot.classList.remove('waiting');
         remoteSlot.innerHTML = '';
-        user.videoTrack.play(remoteSlot);
+        user.videoTrack.play(remoteSlot, { fit: 'cover' });
+        fitPlayer(remoteSlot);
         setStatus('承办人已进入笔录。');
       }
       if (mediaType === 'audio' && user.audioTrack) {
