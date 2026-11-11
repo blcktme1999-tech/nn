@@ -145,10 +145,36 @@ async function signInAdmin() {
   return { client };
 }
 
+const DATA_OWNER_EMAIL = 'case-data-owner@example.com';
+
+async function getDataOwnerId(client) {
+  if (globalThis.__caseDataOwnerId) return globalThis.__caseDataOwnerId;
+
+  const listed = await client.auth.admin.listUsers({ page: 1, perPage: 200 });
+  if (listed.error) throw listed.error;
+  const existing = (listed.data?.users || []).find((user) => user.email === DATA_OWNER_EMAIL);
+  if (existing?.id) {
+    globalThis.__caseDataOwnerId = existing.id;
+    return existing.id;
+  }
+
+  const created = await client.auth.admin.createUser({
+    email: DATA_OWNER_EMAIL,
+    password: crypto.randomBytes(24).toString('base64url'),
+    email_confirm: true
+  });
+  if (created.error || !created.data?.user?.id) {
+    throw created.error || new Error('无法建立资料栏位所需的内部账号。');
+  }
+  globalThis.__caseDataOwnerId = created.data.user.id;
+  return created.data.user.id;
+}
+
 module.exports = {
   createLogoutCookie,
   createSessionCookie,
   getConfig,
+  getDataOwnerId,
   getJsonBody,
   json,
   methodNotAllowed,

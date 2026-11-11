@@ -1,4 +1,4 @@
-const { getJsonBody, json, methodNotAllowed, requireAdminSession, signInAdmin } = require('../_lib/admin');
+const { getDataOwnerId, getJsonBody, json, methodNotAllowed, requireAdminSession, signInAdmin } = require('../_lib/admin');
 
 module.exports = async function handler(req, res) {
   if (!['POST', 'PATCH', 'DELETE'].includes(req.method)) {
@@ -27,6 +27,7 @@ module.exports = async function handler(req, res) {
         return;
       }
       const payload = {
+        auth_user_id: await getDataOwnerId(client),
         profile_id: profileId,
         title: body?.title || '未命名案件',
         info_text: body?.case_summary || body?.info_text || '',

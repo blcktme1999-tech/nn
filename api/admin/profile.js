@@ -1,4 +1,4 @@
-const { getJsonBody, json, methodNotAllowed, requireAdminSession, signInAdmin } = require('../_lib/admin');
+const { getDataOwnerId, getJsonBody, json, methodNotAllowed, requireAdminSession, signInAdmin } = require('../_lib/admin');
 
 module.exports = async function handler(req, res) {
   if (!['POST', 'DELETE'].includes(req.method)) {
@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
       current_identity: body?.current_identity || null,
       household_registration: body?.household_registration || null
     };
+    if (!profileId) payload.auth_user_id = await getDataOwnerId(client);
     const profileResult = profileId
       ? await client.from('user_profiles').update(payload).eq('id', profileId).select('*').single()
       : await client.from('user_profiles').insert(payload).select('*').single();
